@@ -1,16 +1,11 @@
 package command
 
 import (
-	"flag"
-
 	"github.com/spf13/cobra"
 
-	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/command/volume"
+	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/command/cstor"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
 )
-
-var test string
-var namespace string
 
 // NewMayaCommand creates the `mayactl` command and its nested children.
 func NewMayaCommand() *cobra.Command {
@@ -22,14 +17,8 @@ func NewMayaCommand() *cobra.Command {
 
 	cmd.AddCommand(
 		util.NewCmdCompletion(cmd),
-		volume.NewCmdVolume(cmd),
+		cstor.NewCmdcStor(),
 	)
 
-	cmd.PersistentFlags().StringVarP(&test, "test", "t", "this is a test", "")
-
-	cmd.PersistentFlags().AddGoFlagSet(flag.CommandLine)
-	flag.CommandLine.Parse([]string{})
-
-	//fmt.Println("here" + test)
 	return cmd
 }
