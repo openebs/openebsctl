@@ -70,7 +70,6 @@ func RunVolumesList(cmd *cobra.Command) error {
 			pvols[item.ObjectMeta.Name].AttachementStatus,
 			pvols[item.ObjectMeta.Name].AccessMode,
 		)
-		fmt.Println(item.ObjectMeta.Annotations)
 	}
 	if len(out) == 2 {
 		fmt.Println("No Volumes are running")

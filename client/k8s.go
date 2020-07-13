@@ -233,7 +233,6 @@ func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 	}
 
 	for _, i := range PVCs.Items {
-		fmt.Println(i.Name)
 		vol := &util.Volume{
 			StorageClass:            i.Spec.Attacher,
 			Node:                    i.Spec.NodeName,
