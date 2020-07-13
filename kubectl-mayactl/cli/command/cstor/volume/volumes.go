@@ -8,26 +8,25 @@ import (
 
 const (
 	volumeCommandHelpText = `# List Volumes:
-	$ kubectl mayactl jiba volume list
+	$ kubectl mayactl cStor volume list
 
   # Statistics of a Volume:
-	$ kubectl mayactl zfs volume stats --volname <vol>
+	$ kubectl mayactl cStor volume stats --volname <vol>
 
-  #TODO: fix commands here
   # Statistics of a Volume created in 'test' namespace:
-	$ mayactl volume stats --volname <vol> --namespace test
+	$ kubectl mayactl cStor volume stats --volname <vol> --namespace test
 
   # Info of a Volume:
-	$ mayactl volume describe --volname <vol>
+	$ kubectl mayactl cStor volume describe --volname <vol>
 
   # Info of a Volume created in 'test' namespace:
-	$ mayactl volume describe --volname <vol> --namespace test
+	$ kubectl mayactl cStor volume describe --volname <vol> --namespace test
 
   # Delete a Volume:
-	$ mayactl volume delete --volname <vol>
+	$ kubectl mayactl cStor volume delete --volname <vol>
 
   # Delete a Volume created in 'test' namespace:
-	$ mayactl volume delete --volname <vol> --namespace test
+	$ kubectl mayactl cStor volume delete --volname <vol> --namespace test
  `
 )
 

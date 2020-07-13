@@ -8,6 +8,7 @@ This repository is a WIP for the creation of a command line tool plugin for kube
 - run `make mayactl`
 - use the command `kubectl mayactl` to use the plugin !
 
-DONT FORGET TO CHECKOUT BRANCHES FOR FEATURES THAT ARE BEING DEVELOPED
+## Usage
 
-... say tuned for addition of features & instructions :)
+commands that have been implemented currently :
+* kubectl mayactl cStor volume list

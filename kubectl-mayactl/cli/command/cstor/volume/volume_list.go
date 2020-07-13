@@ -14,7 +14,7 @@ var (
 This command displays status of available zfs Volumes.
 If no volume ID is given, a list of all known volumes will be displayed.
 
-Usage: kubectl mayactl volume list [options]
+Usage: kubectl mayactl cStor volume list [options]
 	`
 	namespace string
 )
