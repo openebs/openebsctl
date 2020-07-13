@@ -12,4 +12,5 @@
 *.out
 
 # binary directories
-*./bin
+/bin
+*/.bin

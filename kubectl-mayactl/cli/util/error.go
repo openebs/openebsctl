@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/storage/v1"
 )
 
 // CheckError prints err to stderr and exits with code 1 if err is not nil. Otherwise, it is a
@@ -23,4 +26,25 @@ func CheckErr(err error, handleErr func(string)) {
 		return
 	}
 	handleErr(err.Error())
+}
+
+// CheckVolAttachmentError is used to check if the volume is correctly attached
+// to the cspc
+func CheckVolAttachmentError(attachementStatus v1.VolumeAttachmentStatus) string {
+
+	if attachementStatus.Attached == true {
+		return "Attached"
+	}
+
+	return attachementStatus.AttachError.Message
+}
+
+// CheckIfAccessable is used to check if the we can get the spec for volume
+func CheckIfAccessable(attachment v1.VolumeAttachment) []corev1.PersistentVolumeAccessMode {
+
+	if attachment.Status.Attached == true {
+		return attachment.Spec.Source.InlineVolumeSpec.AccessModes
+	}
+
+	return make([]corev1.PersistentVolumeAccessMode, 0)
 }

@@ -14,18 +14,20 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
-	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
-	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
-
-	cstorv1CS "github.com/openebs/api/pkg/client/clientset/versioned/typed/cstor/v1"
-	openebsv1 "github.com/openebs/api/pkg/client/clientset/versioned/typed/openebs.io/v1alpha1"
-
 	//rest "k8s.io/client-go/rest"
 
 	"k8s.io/klog"
 
+	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
+
+	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
+	cstorv1CS "github.com/openebs/api/pkg/client/clientset/versioned/typed/cstor/v1"
+	openebsv1 "github.com/openebs/api/pkg/client/clientset/versioned/typed/openebs.io/v1alpha1"
+
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+
+	util "github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
 )
 
 // K8sAPIVersion represents valid kubernetes api version of a native or custom
@@ -51,8 +53,6 @@ type K8sClient struct {
 
 	openebsCS *openebsv1.OpenebsV1alpha1Client
 	//Service v1.ServiceInterface
-
-	//discoveryCS *discovery.DiscoveryClient
 
 	kubeconfig string
 }
@@ -160,21 +160,6 @@ func (k *K8sClient) GetService(name string) {
 	fmt.Println(sops.Items[0])
 }
 
-/*
-func getDiscoveryCS(configFlags *genericclioptions.ConfigFlags, config string) *discovery.DiscoveryClient {
-
-	restConfig, err := configFlags.ToRESTConfig()
-
-	client, err := discovery.NewDiscoveryClientForConfig(restConfig)
-
-	if err != nil {
-		panic(err.Error())
-	}
-
-	return client
-}
-*/
-
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
@@ -186,11 +171,6 @@ func homeDir() string {
 func (k K8sClient) GetStorageClass(driver string) *v1.StorageClass {
 
 	scs, err := k.sc.StorageClasses().Get(driver, metav1.GetOptions{})
-
-	//fmt.Println("-------")
-	//fmt.Println(k.sc.CSINodes().List(metav1.ListOptions{}))
-	//fmt.Println("----")
-	//fmt.Println(k.sc.VolumeAttachments().List(metav1.ListOptions{}))
 
 	if err != nil {
 		klog.Errorf("Error while while getting storage class: %s\n", err)
@@ -240,9 +220,29 @@ func (k K8sClient) GetcStorVolume(volName string, namespace string) *cstorv1.CSt
 	return volInfo
 }
 
-// GetPVCInfo used to get the infor for the underlying
+// GetcStorPVCs used to get the infor for the underlying
 // PVC
-//func (k K8sClient) GetPVCInfo(namespace string) v1.PersistentVolumeInterface {
-//	PVCInfo := k.cs.CoreV1().PersistentVolumes()
-//	return PVCInfo
-//}
+func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
+
+	volumes := make(map[string]*util.Volume)
+
+	PVCs, err := k.sc.VolumeAttachments().List(metav1.ListOptions{})
+	if err != nil {
+		klog.Errorf("Error while while getting storage volume attachments on %s", node, err)
+		os.Exit(1)
+	}
+
+	for _, i := range PVCs.Items {
+		fmt.Println(i.Name)
+		vol := &util.Volume{
+			StorageClass:            i.Spec.Attacher,
+			Node:                    i.Spec.NodeName,
+			PVC:                     *i.Spec.Source.PersistentVolumeName,
+			CSIVolumeAttachmentName: i.Name,
+			AttachementStatus:       util.CheckVolAttachmentError(i.Status),
+			AccessMode:              util.CheckIfAccessable(i),
+		}
+		volumes[vol.PVC] = vol
+	}
+	return volumes
+}
