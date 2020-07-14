@@ -22,3 +22,15 @@ type Volume struct {
 	VolType                 string
 	Version                 string
 }
+
+// PortalInfo keep info about the ISCSI Target Portal.
+type PortalInfo struct {
+	IQN           string
+	VolumeName    string
+	Portal        string
+	Size          string
+	Status        []v1.CStorVolumeCondition
+	ReplicaCount  int
+	ReplicaStatus []v1.ReplicaStatus
+	//ControllerNode string
+}

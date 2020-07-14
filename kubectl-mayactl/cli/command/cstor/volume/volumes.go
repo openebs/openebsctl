@@ -10,6 +10,9 @@ const (
 	volumeCommandHelpText = `# List Volumes:
 	$ kubectl mayactl cStor volume list
 
+	# Info of a Volume:
+	$ kubectl mayactl cStor volume info --volname <vol>
+
   # Statistics of a Volume:
 	$ kubectl mayactl cStor volume stats --volname <vol>
 
@@ -44,7 +47,7 @@ func NewCmdVolume(rootCmd *cobra.Command) *cobra.Command {
 
 	cmd.AddCommand(
 		NewCmdVolumesList(),
-		//NewCmdVolumesInfo(),
+		NewCmdVolumeInfo(),
 	)
 
 	return cmd
