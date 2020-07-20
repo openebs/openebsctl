@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -48,7 +49,6 @@ type K8sClient struct {
 	cStorCS *cstorv1CS.CstorV1Client
 
 	openebsCS *openebsv1.OpenebsV1alpha1Client
-	//Service v1.ServiceInterface
 
 	kubeconfig string
 }
@@ -203,13 +203,13 @@ func (k K8sClient) GetcStorVolumes() cstorv1.CStorVolumeList {
 }
 
 // GetcStorVolume fetches the volume object of the given name in the given namespace
-func (k K8sClient) GetcStorVolume(volName string, namespace string) *cstorv1.CStorVolume {
-	vols := k.cStorCS.CStorVolumes(namespace)
+func (k K8sClient) GetcStorVolume(volName string) *cstorv1.CStorVolume {
+	vols := k.cStorCS.CStorVolumes(k.ns)
 	volInfo, err := vols.Get(volName, metav1.GetOptions{})
 
 	if err != nil {
 		klog.Errorf("Error while while getting volume %s in %s namespace %s\n",
-			volName, namespace, err)
+			volName, k.ns, err)
 		os.Exit(1)
 	}
 
@@ -235,9 +235,65 @@ func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 			PVC:                     *i.Spec.Source.PersistentVolumeName,
 			CSIVolumeAttachmentName: i.Name,
 			AttachementStatus:       util.CheckVolAttachmentError(i.Status),
-			AccessMode:              util.CheckIfAccessable(i),
+			AccessMode:              k.GetPV(*i.Spec.Source.PersistentVolumeName).Spec.AccessModes,
 		}
 		volumes[vol.PVC] = vol
 	}
 	return volumes
+}
+
+// GetPV used to get pvc information
+func (k K8sClient) GetPV(name string) *corev1.PersistentVolume {
+
+	vol, err := k.cs.CoreV1().PersistentVolumes().Get(name, metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Error while getting volume %s", name)
+	}
+
+	return vol
+}
+
+// GetCVC used to get cStor Volume Config information for cStor a given volume
+func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
+
+	cStorVolumeConfig, err := k.cStorCS.CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("Error while getting cStor Volume Config for  %s in %s", name, k.ns)
+	}
+
+	return cStorVolumeConfig
+}
+
+// GetCVR used to get cStor Volume Replicas for a given cStor volumes
+func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
+
+	label := "cstorvolume.openebs.io/name" + "=" + name
+
+	CStorVolumeReplicas, err := k.cStorCS.CStorVolumeReplicas("").List(metav1.ListOptions{LabelSelector: label})
+	if err != nil {
+		klog.Errorf("Error while getting cStor Volume Replica for  %s in %s", name, k.ns)
+	}
+
+	if len(CStorVolumeReplicas.Items) == 0 {
+		klog.Errorf("Error while getting cStor Volume Replica for  %s , couldnot fild any replicas", name)
+	}
+
+	return CStorVolumeReplicas.Items
+}
+
+// NodeForVolume used to get NodeName for the volume
+func (k K8sClient) NodeForVolume(volName string) string {
+
+	label := "openebs.io/persistent-volume" + "=" + volName
+
+	PodInfo, err := k.cs.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: label})
+	if err != nil {
+		klog.Errorf("Error while getting target Pod for volume %s", volName)
+	}
+
+	if len(PodInfo.Items) != 1 {
+		klog.Errorf("Error invalid number of Pods for volume %s", volName)
+	}
+
+	return PodInfo.Items[0].Spec.NodeName
 }

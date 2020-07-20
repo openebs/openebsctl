@@ -48,6 +48,7 @@ func NewCmdVolume(rootCmd *cobra.Command) *cobra.Command {
 	cmd.AddCommand(
 		NewCmdVolumesList(),
 		NewCmdVolumeInfo(),
+		NewCmdVolumeStats(),
 	)
 
 	return cmd

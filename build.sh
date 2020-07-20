@@ -23,7 +23,6 @@ GIT_COMMIT="$PWD/(git rev-parse HEAD)"
 #fi
 
 # Get the version details
-VERSION="$(cat $PWD/VERSION)"
 VERSION_META="$(cat $PWD/BUILDMETA)"
 
 # Determine the arch/os combos we're building for
@@ -93,12 +92,6 @@ env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags \
     -o $output_name\
     ./${CTLNAME}/
 #-o $optput_name $(PKG)/cmd/$
-
-
-#TODO: do all this in the end when approved
-#    "-X github.com/openebs/mayactl/pkg/version.GitCommit=${GIT_COMMIT} \
-#    -X github.com/openebs/mayactl/pkg/version.Version=${VERSION} \
-#    -X github.com/openebs/maya/pkg/version.VersionMeta=${VERSION_META}"\
 
 
 # Move all the compiled things to the $GOPATH/bin

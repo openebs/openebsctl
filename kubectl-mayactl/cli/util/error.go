@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 )
 
@@ -37,14 +36,4 @@ func CheckVolAttachmentError(attachementStatus v1.VolumeAttachmentStatus) string
 	}
 
 	return attachementStatus.AttachError.Message
-}
-
-// CheckIfAccessable is used to check if the we can get the spec for volume
-func CheckIfAccessable(attachment v1.VolumeAttachment) []corev1.PersistentVolumeAccessMode {
-
-	if attachment.Status.Attached == true {
-		return attachment.Spec.Source.InlineVolumeSpec.AccessModes
-	}
-
-	return make([]corev1.PersistentVolumeAccessMode, 0)
 }
