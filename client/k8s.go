@@ -53,7 +53,7 @@ type K8sClient struct {
 
 // NewK8sClient creates a new K8sClient
 func NewK8sClient(ns string) (*K8sClient, error) {
-	// get the appropriate clientset
+	// get the appropriate clientsets
 	cs := GetOutofClusterCS()
 
 	config := os.Getenv("KUBECONFIG")
@@ -253,7 +253,7 @@ func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 // GetCVR used to get cStor Volume Replicas for a given cStor volumes using cStor Client
 func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 
-	label := cStorTypes.CStorPoolInstanceNameLabelKey + "=" + name
+	label := "cstorvolume.openebs.io/name" + "=" + name
 
 	CStorVolumeReplicas, err := k.cStorCS.CStorVolumeReplicas("").List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {

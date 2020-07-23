@@ -35,6 +35,7 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 		return vols[name]
 	}
 
+	// create & return an empty object to display details as Not Available
 	errVol := &Volume{
 		StorageClass:      "N/A",
 		Node:              "N/A",

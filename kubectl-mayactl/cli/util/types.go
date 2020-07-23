@@ -41,9 +41,11 @@ type VolumeInfo struct {
 	//cStor Instance Driver
 	CSIDriver               string
 	CSIVolumeAttachmentName string
-	Name                    string
-	Namespace               string
-	PVC                     string
+	// Name of the volume & Namespace on which it exists
+	Name      string
+	Namespace string
+	// Name of the underlying PVC
+	PVC string
 	//Number of replicas user has specified for thw cStorVolume
 	ReplicaCount int
 	VolumePhase  corev1.PersistentVolumePhase
