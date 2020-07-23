@@ -8,23 +8,27 @@ import (
 //Volume struct will have all the details we want to give in the output for
 // mayactl commands
 type Volume struct {
-	// AccessMode of the underlying PV
+	// AccessModes contains all ways the volume can be mounted
 	AccessMode string
 	// Attachment status of the PV and it's claim
 	AttachementStatus string
-	//Size of PV
+	// Represents the actual capacity of the underlying volume.
 	Capacity string
-	//CStorPoolCluster that this volume belongs to
+	// CStorPoolCluster that this volume belongs to
 	CSPC string
 	// The unique volume name returned by the CSI volume plugin to
 	// refer to the volume on all subsequent calls.
 	CSIVolumeAttachmentName string
 	Name                    string
-	Namespace               string
-	Node                    string
-	PVC                     string
+	//Namespace defines the space within each name must be unique.
+	// An empty namespace is equivalent to the "default" namespace
+	Namespace string
+	Node      string
+	// Name of the PVClaim of the underlying Persistent Volume
+	PVC string
 	// Status of the CStor Volume
-	Status       v1.CStorVolumePhase
+	Status v1.CStorVolumePhase
+	// Name of StorageClass to which this persistent volume belongs.
 	StorageClass string
 	// will be cStorVolume for all cStor volumes
 	VolType string
@@ -36,9 +40,11 @@ type Volume struct {
 // mayactl command volume describe
 type VolumeInfo struct {
 	AccessMode string
-	Capacity   string
-	CSPC       string
-	//cStor Instance Driver
+	// Capacity of the underlying PV
+	Capacity string
+	// CStorPoolCluster that the volume belongs to
+	CSPC string
+	// cStor Instance Driver
 	CSIDriver               string
 	CSIVolumeAttachmentName string
 	// Name of the volume & Namespace on which it exists
@@ -46,34 +52,43 @@ type VolumeInfo struct {
 	Namespace string
 	// Name of the underlying PVC
 	PVC string
-	//Number of replicas user has specified for thw cStorVolume
+	// ReplicationFactor represents number of volume replica created during
+	// volume provisioning connect to the target
 	ReplicaCount int
-	VolumePhase  corev1.PersistentVolumePhase
+	// Phase indicates if a volume is available, bound to a claim, or released
+	// by a claim.
+	VolumePhase corev1.PersistentVolumePhase
+	// Name of StorageClass to which this persistent volume belongs.
 	StorageClass string
-	Version      string
-	Size         string
+	// Version of the OpenEBS resource definition being used
+	Version string
+	Size    string
 	// Status of the CStor volume
 	Status v1.CStorVolumePhase
 }
 
 // PortalInfo keep info about the ISCSI Target Portal.
 type PortalInfo struct {
-	//iSCSI qualified name to configure the target
+	// Target iSCSI Qualified Name.combination of nodeBase
 	IQN        string
 	VolumeName string
-	Portal     string
-	TargetIP   string
+	// iSCSI Target Portal. The Portal is combination of IP:port
+	// (typically TCP ports 3260)
+	Portal string
+	// TargetIP IP of the iSCSI target service
+	TargetIP string
 	//Node Name on which the application pod is running
 	TargetNodeName string
 }
 
-// CStorReplicaInfo holds information about the cstor replicas
+// CStorReplicaInfo holds information about the cStor replicas
 type CStorReplicaInfo struct {
-	//replica name
+	// Replica name present on ObjectMetadata
 	Name string
-	//Node on ehoch it is presemt
+	// Node on which the replica is present
 	NodeName string
 	ID       v1.ReplicaID
-	// replica status
+	//Replica Status reflects the phase, i.e hold result of last action.
+	// ec. Healthy, Offline ,Degraded etc.
 	Status string
 }

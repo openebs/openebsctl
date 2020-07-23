@@ -44,13 +44,13 @@ type K8sClient struct {
 	// components
 	openeEBSCS *openebsclientset.Clientset
 
-	//string pointing to the current kubeconfig
+	// string pointing to the current kubeconfig (used by the kubectl command)
 	kubeconfig string
 }
 
 // NewK8sClient creates a new K8sClient
 func NewK8sClient(ns string) (*K8sClient, error) {
-	// get the appropriate clientsets
+	// get the appropriate clientsets & set the kubeconfig accordingly
 	cs := GetOutofClusterCS()
 
 	config := os.Getenv("KUBECONFIG")
@@ -180,7 +180,7 @@ func (k K8sClient) GetcStorVolume(volName string) *cstorv1.CStorVolume {
 	return volInfo
 }
 
-// GetcStorPVCs used to get the infor for the underlying
+// GetcStorPVCs used to get the info for for the underlying
 // PVC
 func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 
