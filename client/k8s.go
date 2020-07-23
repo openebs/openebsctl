@@ -15,11 +15,9 @@ import (
 
 	"k8s.io/klog"
 
-	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
-
 	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
 	cStorTypes "github.com/openebs/api/pkg/apis/types"
-	cstorv1CS "github.com/openebs/api/pkg/client/clientset/versioned/typed/cstor/v1"
+	openebsclientset "github.com/openebs/api/pkg/client/clientset/versioned"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -42,12 +40,11 @@ type K8sClient struct {
 	// with the K8s cluster
 	cs *kubernetes.Clientset
 
-	// sc is the client to interact with the CSI driver/nodes/volumes etc.
-	sc *storagev1.StorageV1Client
+	// openEBS Clientset capacble of accessing the OpneEBS
+	// components
+	openeEBSCS *openebsclientset.Clientset
 
-	// cstor Clientset
-	cStorCS *cstorv1CS.CstorV1Client
-
+	//string pointing to the current kubeconfig
 	kubeconfig string
 }
 
@@ -58,15 +55,12 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 
 	config := os.Getenv("KUBECONFIG")
 
-	sc := getStorageClient(config)
-
-	cStorCS := getCStorClient(config)
+	openeEBSCS := getOpenEBSClient(config)
 
 	return &K8sClient{
 		ns:         ns,
 		cs:         cs,
-		sc:         sc,
-		cStorCS:    cStorCS,
+		openeEBSCS: openeEBSCS,
 		kubeconfig: config,
 	}, nil
 
@@ -98,25 +92,10 @@ func GetOutofClusterCS() (client *kubernetes.Clientset) {
 	return clientset
 }
 
-// getStorageClass is a function that returns the storage client for the
-// config
-func getStorageClient(kubeconfig string) *storagev1.StorageV1Client {
+func getOpenEBSClient(kubeconfig string) *openebsclientset.Clientset {
 
 	config, _ := clientcmd.BuildConfigFromFlags("", kubeconfig)
-
-	sc, err := storagev1.NewForConfig(config)
-
-	if err != nil {
-		klog.Error(err)
-	}
-
-	return sc
-}
-
-func getCStorClient(kubeconfig string) *cstorv1CS.CstorV1Client {
-
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	client := cstorv1CS.NewForConfigOrDie(config)
+	client := openebsclientset.NewForConfigOrDie(config)
 
 	return client
 }
@@ -152,7 +131,7 @@ func homeDir() string {
 // GetStorageClass using the K8sClient's storage class client
 func (k K8sClient) GetStorageClass(driver string) *v1.StorageClass {
 
-	scs, err := k.sc.StorageClasses().Get(driver, metav1.GetOptions{})
+	scs, err := k.cs.StorageV1().StorageClasses().Get(driver, metav1.GetOptions{})
 
 	if err != nil {
 		klog.Errorf("Error while while getting storage class: {%s}", err)
@@ -164,7 +143,7 @@ func (k K8sClient) GetStorageClass(driver string) *v1.StorageClass {
 
 // GetCSIVolume using the K8sClient's storage class client
 func (k K8sClient) GetCSIVolume(volname string) *v1.VolumeAttachment {
-	vol, err := k.sc.VolumeAttachments().Get(volname, metav1.GetOptions{})
+	vol, err := k.cs.StorageV1().VolumeAttachments().Get(volname, metav1.GetOptions{})
 
 	if err != nil {
 		klog.Errorf("Error while while getting volumes: {%s}", err)
@@ -177,7 +156,7 @@ func (k K8sClient) GetCSIVolume(volname string) *v1.VolumeAttachment {
 // GetcStorVolumes using the K8sClient's storage class client
 func (k K8sClient) GetcStorVolumes() cstorv1.CStorVolumeList {
 
-	cStorVols, err := k.cStorCS.CStorVolumes("").List(metav1.ListOptions{})
+	cStorVols, err := k.openeEBSCS.CstorV1().CStorVolumes("").List(metav1.ListOptions{})
 
 	if err != nil {
 		klog.Errorf("Error while while getting volumes: {%s}", err)
@@ -190,7 +169,7 @@ func (k K8sClient) GetcStorVolumes() cstorv1.CStorVolumeList {
 
 // GetcStorVolume fetches the volume object of the given name in the given namespace
 func (k K8sClient) GetcStorVolume(volName string) *cstorv1.CStorVolume {
-	vols := k.cStorCS.CStorVolumes(k.ns)
+	vols := k.openeEBSCS.CstorV1().CStorVolumes(k.ns)
 	volInfo, err := vols.Get(volName, metav1.GetOptions{})
 
 	if err != nil {
@@ -207,7 +186,7 @@ func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 
 	volumes := make(map[string]*util.Volume)
 
-	PVCs, err := k.sc.VolumeAttachments().List(metav1.ListOptions{})
+	PVCs, err := k.cs.StorageV1().VolumeAttachments().List(metav1.ListOptions{})
 	if err != nil {
 		klog.Errorf("Error while while getting storage volume attachments on %s: {%s}", node, err)
 		os.Exit(1)
@@ -242,7 +221,7 @@ func (k K8sClient) GetPV(name string) *corev1.PersistentVolume {
 // GetCVC used to get cStor Volume Config information for cStor a given volume using a cStorClient
 func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 
-	cStorVolumeConfig, err := k.cStorCS.CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
+	cStorVolumeConfig, err := k.openeEBSCS.CstorV1().CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
 	if err != nil {
 		klog.Errorf("Error while getting cStor Volume Config for  %s in %s: {%s}", name, k.ns, err.Error())
 	}
@@ -255,7 +234,7 @@ func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 
 	label := "cstorvolume.openebs.io/name" + "=" + name
 
-	CStorVolumeReplicas, err := k.cStorCS.CStorVolumeReplicas("").List(metav1.ListOptions{LabelSelector: label})
+	CStorVolumeReplicas, err := k.openeEBSCS.CstorV1().CStorVolumeReplicas("").List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
 		klog.Errorf("Error while getting cStor Volume Replica for volume %s : {%s}", name, err.Error())
 	}
