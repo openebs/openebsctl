@@ -36,9 +36,9 @@ type Volume struct {
 // mayactl command volume describe
 type VolumeInfo struct {
 	AccessMode string
-	//
-	Capacity                string
-	CSPC                    string
+	Capacity   string
+	CSPC       string
+	//cStor Instance Driver
 	CSIDriver               string
 	CSIVolumeAttachmentName string
 	Name                    string

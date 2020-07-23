@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"os"
 
-	apiTypes "github.com/openebs/api/pkg/apis/types"
+	cStorTypes "github.com/openebs/api/pkg/apis/types"
 
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
@@ -90,7 +90,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	//5. cStor Volume Replicas
 	cvrInfo := clientset.GetCVR(volName)
 
-	cSPCLabel := apiTypes.CStorPoolClusterLabelKey
+	cSPCLabel := cStorTypes.CStorPoolClusterLabelKey
 
 	volume := util.VolumeInfo{
 		util.AccessModeToString(pvInfo.Spec.AccessModes),
@@ -157,7 +157,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		klog.Errorf("WARNING: Desired replica count %s while known replicas are %s", replicaCount, knownReplicas)
 	}
 
-	cSPILabel := apiTypes.CStorPoolInstanceNameLabelKey
+	cSPILabel := cStorTypes.CStorPoolInstanceNameLabelKey
 
 	fmt.Printf("Replica Details :\n----------------\n")
 	out := make([]string, len(cvrInfo)+2)

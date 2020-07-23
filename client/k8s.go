@@ -18,6 +18,7 @@ import (
 	storagev1 "k8s.io/client-go/kubernetes/typed/storage/v1"
 
 	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
+	cStorTypes "github.com/openebs/api/pkg/apis/types"
 	cstorv1CS "github.com/openebs/api/pkg/client/clientset/versioned/typed/cstor/v1"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
@@ -154,7 +155,7 @@ func (k K8sClient) GetStorageClass(driver string) *v1.StorageClass {
 	scs, err := k.sc.StorageClasses().Get(driver, metav1.GetOptions{})
 
 	if err != nil {
-		klog.Errorf("Error while while getting storage class: %s\n", err)
+		klog.Errorf("Error while while getting storage class: {%s}", err)
 		os.Exit(1)
 	}
 
@@ -166,7 +167,7 @@ func (k K8sClient) GetCSIVolume(volname string) *v1.VolumeAttachment {
 	vol, err := k.sc.VolumeAttachments().Get(volname, metav1.GetOptions{})
 
 	if err != nil {
-		klog.Errorf("Error while while getting volumes: %s\n", err)
+		klog.Errorf("Error while while getting volumes: {%s}", err)
 		os.Exit(1)
 	}
 
@@ -179,7 +180,7 @@ func (k K8sClient) GetcStorVolumes() cstorv1.CStorVolumeList {
 	cStorVols, err := k.cStorCS.CStorVolumes("").List(metav1.ListOptions{})
 
 	if err != nil {
-		klog.Errorf("Error while while getting volumes: %s\n", err)
+		klog.Errorf("Error while while getting volumes: {%s}", err)
 		os.Exit(1)
 	}
 
@@ -193,8 +194,7 @@ func (k K8sClient) GetcStorVolume(volName string) *cstorv1.CStorVolume {
 	volInfo, err := vols.Get(volName, metav1.GetOptions{})
 
 	if err != nil {
-		klog.Errorf("Error while while getting volume %s in %s namespace %s\n",
-			volName, k.ns, err)
+		klog.Errorf("Error while while getting volume %s : {%s}", volName, err)
 		os.Exit(1)
 	}
 
@@ -209,7 +209,7 @@ func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 
 	PVCs, err := k.sc.VolumeAttachments().List(metav1.ListOptions{})
 	if err != nil {
-		klog.Errorf("Error while while getting storage volume attachments on %s", node, err)
+		klog.Errorf("Error while while getting storage volume attachments on %s: {%s}", node, err)
 		os.Exit(1)
 	}
 
@@ -233,7 +233,7 @@ func (k K8sClient) GetPV(name string) *corev1.PersistentVolume {
 
 	vol, err := k.cs.CoreV1().PersistentVolumes().Get(name, metav1.GetOptions{})
 	if err != nil {
-		klog.Errorf("Error while getting volume %s", name)
+		klog.Errorf("Error while getting volume %s: {%s}", name, err.Error())
 	}
 
 	return vol
@@ -244,7 +244,7 @@ func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 
 	cStorVolumeConfig, err := k.cStorCS.CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
 	if err != nil {
-		klog.Errorf("Error while getting cStor Volume Config for  %s in %s", name, k.ns)
+		klog.Errorf("Error while getting cStor Volume Config for  %s in %s: {%s}", name, k.ns, err.Error())
 	}
 
 	return cStorVolumeConfig
@@ -253,11 +253,11 @@ func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 // GetCVR used to get cStor Volume Replicas for a given cStor volumes using cStor Client
 func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 
-	label := "cstorvolume.openebs.io/name" + "=" + name
+	label := cStorTypes.CStorPoolInstanceNameLabelKey + "=" + name
 
 	CStorVolumeReplicas, err := k.cStorCS.CStorVolumeReplicas("").List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
-		klog.Errorf("Error while getting cStor Volume Replica for  %s in %s", name, k.ns)
+		klog.Errorf("Error while getting cStor Volume Replica for volume %s : {%s}", name, err.Error())
 	}
 
 	if len(CStorVolumeReplicas.Items) == 0 {
@@ -270,15 +270,15 @@ func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 // NodeForVolume used to get NodeName for the volume from the Kubernetes API
 func (k K8sClient) NodeForVolume(volName string) string {
 
-	label := "openebs.io/persistent-volume" + "=" + volName
+	label := cStorTypes.PersistentVolumeLabelKey + "=" + volName
 
 	podInfo, err := k.cs.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
-		klog.Errorf("Error while getting target Pod for volume %s", volName)
+		klog.Errorf("Error while getting target Pod for volume %s : {%s}", volName, err.Error())
 	}
 
 	if len(podInfo.Items) != 1 {
-		klog.Errorf("Error invalid number of Pods for volume %s", volName)
+		klog.Errorf("Error invalid number of Pods for volume %s : {%s}", volName, err.Error())
 	}
 
 	return podInfo.Items[0].Spec.NodeName
