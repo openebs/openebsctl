@@ -17,8 +17,8 @@ commands that have been implemented currently & sample outputs:
 ```bash
 Namespace  Name                                      Status   Version     Capacity  StorageClass          Attached  Access Mode      Attached Node
 ---------  ----                                      ------   -------     --------  ------------          --------  -----------      -------------
-openebs    pvc-cb978ab8-9045-4d40-abc5-98dfd4fd82fb  Healthy  master-dev  5Gi       cstor.csi.openebs.io  Attached  [ReadWriteOnce]  vanisingh
-openebs    pvc-e20c1212-1ef6-42c4-9638-0145fa3fb4f9  Healthy  master-dev  5Gi       N/A                   N/A       []               N/A
+openebs    pvc-cb978ab8-9045-4d40-abc5-98dfd4fd82fb  Healthy  master-dev  5Gi       cstor.csi.openebs.io  Attached  ReadWriteOnce    vanisingh
+openebs    pvc-e20c1212-1ef6-42c4-9638-0145fa3fb4f9  Healthy  master-dev  5Gi       N/A                   N/A                        N/A
 ```
 
 * `kubectl mayactl cStor volume describe --volname <volname>`
@@ -26,7 +26,7 @@ openebs    pvc-e20c1212-1ef6-42c4-9638-0145fa3fb4f9  Healthy  master-dev  5Gi   
 Volume Details :
 ----------------
 Name            : pvc-cbe030cb-63ca-4dfd-ba57-7719a8c93fb2
-Access Mode     : [ReadWriteOnce]
+Access Mode     : ReadWriteOnce
 CSI Driver      : cstor.csi.openebs.io
 Storage Class   : openebs-csi-cstor-sparse
 Volume Phase    : Bound

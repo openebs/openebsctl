@@ -19,7 +19,6 @@ import (
 
 	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
 	cstorv1CS "github.com/openebs/api/pkg/client/clientset/versioned/typed/cstor/v1"
-	openebsv1 "github.com/openebs/api/pkg/client/clientset/versioned/typed/openebs.io/v1alpha1"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -48,8 +47,6 @@ type K8sClient struct {
 	// cstor Clientset
 	cStorCS *cstorv1CS.CstorV1Client
 
-	openebsCS *openebsv1.OpenebsV1alpha1Client
-
 	kubeconfig string
 }
 
@@ -64,15 +61,11 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 
 	cStorCS := getCStorClient(config)
 
-	openebsCS := getOpenEBSClient(config)
-	//discoveryCS := getDiscoveryCS(*configFlags, config)
-
 	return &K8sClient{
 		ns:         ns,
 		cs:         cs,
 		sc:         sc,
 		cStorCS:    cStorCS,
-		openebsCS:  openebsCS,
 		kubeconfig: config,
 	}, nil
 
@@ -123,14 +116,6 @@ func getCStorClient(kubeconfig string) *cstorv1CS.CstorV1Client {
 
 	config, _ := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	client := cstorv1CS.NewForConfigOrDie(config)
-
-	return client
-}
-
-func getOpenEBSClient(kubeconfig string) *openebsv1.OpenebsV1alpha1Client {
-
-	config, _ := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	client := openebsv1.NewForConfigOrDie(config)
 
 	return client
 }
@@ -235,14 +220,15 @@ func (k K8sClient) GetcStorPVCs(node string) map[string]*util.Volume {
 			PVC:                     *i.Spec.Source.PersistentVolumeName,
 			CSIVolumeAttachmentName: i.Name,
 			AttachementStatus:       util.CheckVolAttachmentError(i.Status),
-			AccessMode:              k.GetPV(*i.Spec.Source.PersistentVolumeName).Spec.AccessModes,
+			// first fetch access modes & then convert to string
+			AccessMode: util.AccessModeToString(k.GetPV(*i.Spec.Source.PersistentVolumeName).Spec.AccessModes),
 		}
 		volumes[vol.PVC] = vol
 	}
 	return volumes
 }
 
-// GetPV used to get pvc information
+// GetPV returns a PV object after querying Kubernetes API
 func (k K8sClient) GetPV(name string) *corev1.PersistentVolume {
 
 	vol, err := k.cs.CoreV1().PersistentVolumes().Get(name, metav1.GetOptions{})
@@ -253,7 +239,7 @@ func (k K8sClient) GetPV(name string) *corev1.PersistentVolume {
 	return vol
 }
 
-// GetCVC used to get cStor Volume Config information for cStor a given volume
+// GetCVC used to get cStor Volume Config information for cStor a given volume using a cStorClient
 func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 
 	cStorVolumeConfig, err := k.cStorCS.CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
@@ -264,7 +250,7 @@ func (k K8sClient) GetCVC(name string) *cstorv1.CStorVolumeConfig {
 	return cStorVolumeConfig
 }
 
-// GetCVR used to get cStor Volume Replicas for a given cStor volumes
+// GetCVR used to get cStor Volume Replicas for a given cStor volumes using cStor Client
 func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 
 	label := "cstorvolume.openebs.io/name" + "=" + name
@@ -281,19 +267,19 @@ func (k K8sClient) GetCVR(name string) []cstorv1.CStorVolumeReplica {
 	return CStorVolumeReplicas.Items
 }
 
-// NodeForVolume used to get NodeName for the volume
+// NodeForVolume used to get NodeName for the volume from the Kubernetes API
 func (k K8sClient) NodeForVolume(volName string) string {
 
 	label := "openebs.io/persistent-volume" + "=" + volName
 
-	PodInfo, err := k.cs.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: label})
+	podInfo, err := k.cs.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
 		klog.Errorf("Error while getting target Pod for volume %s", volName)
 	}
 
-	if len(PodInfo.Items) != 1 {
+	if len(podInfo.Items) != 1 {
 		klog.Errorf("Error invalid number of Pods for volume %s", volName)
 	}
 
-	return PodInfo.Items[0].Spec.NodeName
+	return podInfo.Items[0].Spec.NodeName
 }

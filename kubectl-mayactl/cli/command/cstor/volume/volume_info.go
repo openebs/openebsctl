@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"os"
 
+	apiTypes "github.com/openebs/api/pkg/apis/types"
+
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
@@ -59,7 +61,6 @@ func NewCmdVolumeInfo() *cobra.Command {
 		Long:    volumeInfoCommandHelpText,
 		Example: `mayactl cStor volume describe --volname <vol>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			//util.CheckErr(errors.Validate(cmd, false, false, true), util.Fatal)
 			util.CheckErr(RunVolumeInfo(cmd), util.Fatal)
 		},
 	}
@@ -89,11 +90,12 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	//5. cStor Volume Replicas
 	cvrInfo := clientset.GetCVR(volName)
 
-	volume := util.VolumeInfo{
+	cSPCLabel := apiTypes.CStorPoolClusterLabelKey
 
-		pvInfo.Spec.AccessModes,
+	volume := util.VolumeInfo{
+		util.AccessModeToString(pvInfo.Spec.AccessModes),
 		volumeInfo.Status.Capacity.String(),
-		cvcInfo.Labels["openebs.io/cstor-pool-cluster"],
+		cvcInfo.Labels[cSPCLabel],
 		pvInfo.Spec.CSI.Driver,
 		pvInfo.Spec.CSI.VolumeHandle,
 		volumeInfo.Name,
@@ -155,6 +157,8 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		klog.Errorf("WARNING: Desired replica count %s while known replicas are %s", replicaCount, knownReplicas)
 	}
 
+	cSPILabel := apiTypes.CStorPoolInstanceNameLabelKey
+
 	fmt.Printf("Replica Details :\n----------------\n")
 	out := make([]string, len(cvrInfo)+2)
 	out[0] = "Name|Pool Instance|Status"
@@ -162,7 +166,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	for i, cvr := range cvrInfo {
 		out[i+2] = fmt.Sprintf("%s|%s|%s",
 			cvr.ObjectMeta.Name,
-			cvr.Labels["cstorpoolinstance.openebs.io/name"],
+			cvr.Labels[cSPILabel],
 			cvr.Status.Phase,
 		)
 	}
@@ -170,46 +174,3 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	fmt.Println(util.FormatList(out))
 	return nil
 }
-
-/*
-TODO: old method remove after review
-	replicaStatusInfo := make(map[string]string)
-
-	for _, replica := range replicaStatus {
-		replicaStatusInfo[replica.ID] = replica.Mode
-	}
-
-	replicas := make([]util.CStorReplicaInfo, 0)
-	target := "false"
-
-	for ID, replica := range knownReplicas {
-		if cvrInfo.Spec.ReplicaID == string(ID) {
-			target = "true"
-		}
-
-		replica := util.CStorReplicaInfo{
-			Name:     replica,
-			ID:       ID,
-			Status:   replicaStatusInfo[replica],
-			IsTarget: target,
-		}
-		replicas = append(replicas, replica)
-
-	}
-
-	out := make([]string, len(replicas)+2)
-	out[0] = "NodeName|ID|Status|IsTaret"
-	out[1] = "--------|--|------|-------"
-	for i, item := range replicas {
-		out[i+2] = fmt.Sprintf("%s|%s|%s|%s",
-			"",
-			item.ID,
-			item.Status,
-			item.IsTarget,
-		)
-	}
-
-	fmt.Println(util.FormatList(out))
-	return nil
-}
-*/

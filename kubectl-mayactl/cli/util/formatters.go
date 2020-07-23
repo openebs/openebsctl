@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/ryanuber/columnize"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // FormatList takes a set of strings and formats them into properly
@@ -33,4 +34,14 @@ func Print(format string, obj interface{}) error {
 		return fmt.Errorf("Error in executing replica template, found error : %v", err)
 	}
 	return w.Flush()
+}
+
+//AccessModeToString Flattens the arrat of AccessModes and returns a string fit to display in the output
+func AccessModeToString(accessModeArray []corev1.PersistentVolumeAccessMode) string {
+
+	accessModes := ""
+	for _, mode := range accessModeArray {
+		accessModes = accessModes + string(mode) + " "
+	}
+	return accessModes
 }

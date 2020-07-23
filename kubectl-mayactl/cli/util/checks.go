@@ -35,13 +35,11 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 		return vols[name]
 	}
 
-	accessMode := make([]corev1.PersistentVolumeAccessMode, 0)
-
 	errVol := &Volume{
 		StorageClass:      "N/A",
 		Node:              "N/A",
 		AttachementStatus: "N/A",
-		AccessMode:        accessMode,
+		AccessMode:        "N/A",
 	}
 
 	return errVol
