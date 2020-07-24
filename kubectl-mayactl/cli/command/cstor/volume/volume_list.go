@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
@@ -48,8 +49,14 @@ func RunVolumesList(cmd *cobra.Command) error {
 	client, err := client.NewK8sClient(namespace)
 	util.CheckErr(err, util.Fatal)
 
-	cvols := client.GetcStorVolumes()
-	pvols := client.GetcStorPVCs("")
+	cvols, err := client.GetcStorVolumes()
+	if err != nil {
+		return errors.Wrap(err, "error listing volumes")
+	}
+	pvols, err := client.GetcStorPVCs("")
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command")
+	}
 
 	// tally status of cvols to pvols
 	//give output according to volume status

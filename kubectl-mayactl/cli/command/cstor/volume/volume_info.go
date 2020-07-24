@@ -7,6 +7,7 @@ import (
 
 	cStorTypes "github.com/openebs/api/pkg/apis/types"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
@@ -76,19 +77,40 @@ func NewCmdVolumeInfo() *cobra.Command {
 func RunVolumeInfo(cmd *cobra.Command) error {
 
 	clientset, err := client.NewK8sClient(namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command")
+	}
 
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	//1. cStor volume info
-	volumeInfo := clientset.GetcStorVolume(volName)
+	volumeInfo, err := clientset.GetcStorVolume(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor volumes")
+	}
 	//2. Persistent Volume info
-	pvInfo := clientset.GetPV(volName)
+	pvInfo, err := clientset.GetPV(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting persistant volumes")
+	}
+
 	//3. cStor Volume Config
-	cvcInfo := clientset.GetCVC(volName)
+	cvcInfo, err := clientset.GetCVC(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume config")
+	}
+
 	//4. Get Node Name for Target Pod
-	NodeName := clientset.NodeForVolume(volName)
+	NodeName, err := clientset.NodeForVolume(volName)
+	if err != nil {
+		klog.Errorf("error executeing volume info command, getting Node for Volume %s:{%s}", volName, err)
+	}
+
 	//5. cStor Volume Replicas
-	cvrInfo := clientset.GetCVR(volName)
+	cvrInfo, err := clientset.GetCVR(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume Replicas")
+	}
 
 	cSPCLabel := cStorTypes.CStorPoolClusterLabelKey
 
@@ -112,13 +134,12 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	// Print the output for the portal status info
 	tmpl, err := template.New("volume").Parse(volInfoTemplate)
 	if err != nil {
-		fmt.Println("Error displaying output, found error :", err)
-		return nil
+		return errors.Wrap(err, "error displaying output for volume info")
 	}
 	err = tmpl.Execute(os.Stdout, volume)
 	if err != nil {
-		fmt.Println("Error displaying volume details, found error :", err)
-		return nil
+		return errors.Wrap(err, "error displaying volume details")
+
 	}
 
 	portalInfo := util.PortalInfo{
@@ -132,12 +153,11 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	// Print the output for the portal status info
 	tmpl, err = template.New("PortalInfo").Parse(portalTemplate)
 	if err != nil {
-		fmt.Println("Error displaying output, found error :", err)
-		return nil
+		return errors.Wrap(err, "error creating output for portal info")
 	}
 	err = tmpl.Execute(os.Stdout, portalInfo)
 	if err != nil {
-		fmt.Println("Error displaying protal details, found error :", err)
+		fmt.Println(err, "error displaying protal detail")
 		return nil
 	}
 
