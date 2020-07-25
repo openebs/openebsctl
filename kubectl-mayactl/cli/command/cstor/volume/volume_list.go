@@ -53,7 +53,7 @@ func RunVolumesList(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.Wrap(err, "error listing volumes")
 	}
-	pvols, err := client.GetcStorPVCs("")
+	pvols, err := client.GetCStorVolumeInfoMap("")
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}

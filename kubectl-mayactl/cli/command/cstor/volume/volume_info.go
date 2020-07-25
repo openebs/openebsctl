@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"os"
 
-	cStorTypes "github.com/openebs/api/pkg/apis/types"
+	cstortypes "github.com/openebs/api/pkg/apis/types"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -68,7 +68,7 @@ func NewCmdVolumeInfo() *cobra.Command {
 	cmd.Flags().StringVarP(&volName, "volname", "", volName,
 		"unique volume name.")
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if volume is not in the `default` namespace")
+		"namespace name, required if the OpenEBS is not in the openebs namespace")
 
 	return cmd
 }
@@ -112,23 +112,23 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume Replicas")
 	}
 
-	cSPCLabel := cStorTypes.CStorPoolClusterLabelKey
+	cSPCLabel := cstortypes.CStorPoolClusterLabelKey
 
 	volume := util.VolumeInfo{
-		util.AccessModeToString(pvInfo.Spec.AccessModes),
-		volumeInfo.Status.Capacity.String(),
-		cvcInfo.Labels[cSPCLabel],
-		pvInfo.Spec.CSI.Driver,
-		pvInfo.Spec.CSI.VolumeHandle,
-		volumeInfo.Name,
-		volumeInfo.Namespace,
-		pvInfo.Spec.ClaimRef.Name,
-		volumeInfo.Spec.ReplicationFactor,
-		pvInfo.Status.Phase,
-		pvInfo.Spec.StorageClassName,
-		util.CheckVersion(volumeInfo.VersionDetails),
-		volumeInfo.Status.Capacity.String(),
-		volumeInfo.Status.Phase,
+		AccessMode:              util.AccessModeToString(&pvInfo.Spec.AccessModes),
+		Capacity:                volumeInfo.Status.Capacity.String(),
+		CSPC:                    cvcInfo.Labels[cSPCLabel],
+		CSIDriver:               pvInfo.Spec.CSI.Driver,
+		CSIVolumeAttachmentName: pvInfo.Spec.CSI.VolumeHandle,
+		Name:                    volumeInfo.Name,
+		Namespace:               volumeInfo.Namespace,
+		PVC:                     pvInfo.Spec.ClaimRef.Name,
+		ReplicaCount:            volumeInfo.Spec.ReplicationFactor,
+		VolumePhase:             pvInfo.Status.Phase,
+		StorageClass:            pvInfo.Spec.StorageClassName,
+		Version:                 util.CheckVersion(volumeInfo.VersionDetails),
+		Size:                    volumeInfo.Status.Capacity.String(),
+		Status:                  volumeInfo.Status.Phase,
 	}
 
 	// Print the output for the portal status info
@@ -143,11 +143,11 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	}
 
 	portalInfo := util.PortalInfo{
-		volumeInfo.Spec.Iqn,
-		volumeInfo.Name,
-		volumeInfo.Spec.TargetPortal,
-		volumeInfo.Spec.TargetIP,
-		NodeName,
+		IQN:            volumeInfo.Spec.Iqn,
+		VolumeName:     volumeInfo.Name,
+		Portal:         volumeInfo.Spec.TargetPortal,
+		TargetIP:       volumeInfo.Spec.TargetIP,
+		TargetNodeName: NodeName,
 	}
 
 	// Print the output for the portal status info
@@ -170,23 +170,15 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		return nil
 	}
 
-	//map of replica ID to replica
-	knownReplicas := volumeInfo.Status.ReplicaDetails.KnownReplicas
-
-	if len(knownReplicas) != replicaCount {
-		klog.Errorf("WARNING: Desired replica count %s while known replicas are %s", replicaCount, knownReplicas)
-	}
-
-	cSPILabel := cStorTypes.CStorPoolInstanceNameLabelKey
-
+	//Print replica details
 	fmt.Printf("Replica Details :\n----------------\n")
-	out := make([]string, len(cvrInfo)+2)
+	out := make([]string, len(cvrInfo.Items)+2)
 	out[0] = "Name|Pool Instance|Status"
 	out[1] = "----|-------------|------"
-	for i, cvr := range cvrInfo {
+	for i, cvr := range cvrInfo.Items {
 		out[i+2] = fmt.Sprintf("%s|%s|%s",
 			cvr.ObjectMeta.Name,
-			cvr.Labels[cSPILabel],
+			cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
 			cvr.Status.Phase,
 		)
 	}

@@ -30,9 +30,8 @@ func CheckIfAccessable(attachment storagev1.VolumeAttachment) []corev1.Persisten
 // to SC for the corresponding volume is found display error
 func CheckForVol(name string, vols map[string]*Volume) *Volume {
 
-	_, found := vols[name]
-	if found == true {
-		return vols[name]
+	if vol, found := vols[name]; found {
+		return vol
 	}
 
 	// create & return an empty object to display details as Not Available
@@ -44,4 +43,19 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 	}
 
 	return errVol
+}
+
+//AccessModeToString Flattens the arrat of AccessModes and returns a string fit to display in the output
+func AccessModeToString(accessModeArray *[]corev1.PersistentVolumeAccessMode) string {
+
+	accessModes := ""
+
+	if accessModeArray == nil {
+		return accessModes
+	}
+
+	for _, mode := range *accessModeArray {
+		accessModes = accessModes + string(mode) + " "
+	}
+	return accessModes
 }

@@ -21,7 +21,7 @@ openebs    pvc-cb978ab8-9045-4d40-abc5-98dfd4fd82fb  Healthy  master-dev  5Gi   
 openebs    pvc-e20c1212-1ef6-42c4-9638-0145fa3fb4f9  Healthy  master-dev  5Gi       N/A                   N/A                        N/A
 ```
 
-* `kubectl mayactl cStor volume describe --volname <volname>`
+* `kubectl mayactl cStor volume describe --volname pvc-cbe030cb-63ca-4dfd-ba57-7719a8c93fb2`
 ```bash
 Volume Details :
 ----------------
@@ -53,7 +53,7 @@ pvc-cbe030cb-63ca-4dfd-ba57-7719a8c93fb2-cspc-stripe-56pv   cspc-stripe-56pv  He
 
 ```
 
-* `kubectl mayactl cStor volume stats --volname <volname>`
+* `kubectl mayactl cStor volume stats --volname <pv-name>`
 ```
 
 	// volume stats needed :
