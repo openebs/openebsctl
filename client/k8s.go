@@ -200,6 +200,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 
 		if err != nil {
 			klog.Errorf("Failed to get PV", i.ObjectMeta.Name)
+			continue
 		}
 		vol := &util.Volume{
 			StorageClass:            i.Spec.Attacher,
@@ -208,7 +209,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 			CSIVolumeAttachmentName: i.Name,
 			AttachementStatus:       util.CheckVolAttachmentError(i.Status),
 			// first fetch access modes & then convert to string
-			AccessMode: util.AccessModeToString(&pv.Spec.AccessModes),
+			AccessMode: util.AccessModeToString(pv.Spec.AccessModes),
 		}
 		volumes[vol.PVC] = vol
 	}

@@ -46,15 +46,11 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 }
 
 //AccessModeToString Flattens the arrat of AccessModes and returns a string fit to display in the output
-func AccessModeToString(accessModeArray *[]corev1.PersistentVolumeAccessMode) string {
+func AccessModeToString(accessModeArray []corev1.PersistentVolumeAccessMode) string {
 
 	accessModes := ""
 
-	if accessModeArray == nil {
-		return accessModes
-	}
-
-	for _, mode := range *accessModeArray {
+	for _, mode := range accessModeArray {
 		accessModes = accessModes + string(mode) + " "
 	}
 	return accessModes

@@ -115,7 +115,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	cSPCLabel := cstortypes.CStorPoolClusterLabelKey
 
 	volume := util.VolumeInfo{
-		AccessMode:              util.AccessModeToString(&pvInfo.Spec.AccessModes),
+		AccessMode:              util.AccessModeToString(pvInfo.Spec.AccessModes),
 		Capacity:                volumeInfo.Status.Capacity.String(),
 		CSPC:                    cvcInfo.Labels[cSPCLabel],
 		CSIDriver:               pvInfo.Spec.CSI.Driver,
@@ -170,7 +170,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		return nil
 	}
 
-	//Print replica details
+	// Print replica details
 	fmt.Printf("Replica Details :\n----------------\n")
 	out := make([]string, len(cvrInfo.Items)+2)
 	out[0] = "Name|Pool Instance|Status"
