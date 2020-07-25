@@ -265,7 +265,7 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 	}
 
 	if len(podInfo.Items) != 1 {
-		klog.Errorf("Error invalid number of Pods %s for volume %s : {%s}", len(podInfo.Items), volName, err.Error())
+		klog.Errorf("Error invalid number of Pods %d for volume %s", len(podInfo.Items), volName)
 	}
 
 	return podInfo.Items[0].Spec.NodeName, nil
