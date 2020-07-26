@@ -157,7 +157,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	}
 	err = tmpl.Execute(os.Stdout, portalInfo)
 	if err != nil {
-		fmt.Println(err, "error displaying protal detail")
+		fmt.Println(err, "error displaying target portal detail")
 		return nil
 	}
 
