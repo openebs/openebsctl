@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
@@ -48,28 +49,36 @@ func RunVolumesList(cmd *cobra.Command) error {
 	client, err := client.NewK8sClient(namespace)
 	util.CheckErr(err, util.Fatal)
 
-	cvols := client.GetcStorVolumes()
-	pvols := client.GetcStorPVCs("")
+	cvols, err := client.GetcStorVolumes()
+	if err != nil {
+		return errors.Wrap(err, "error listing volumes")
+	}
+	pvols, err := client.GetCStorVolumeInfoMap("")
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command")
+	}
 
 	// tally status of cvols to pvols
 	//give output according to volume status
 	out := make([]string, len(cvols.Items)+2)
-	out[0] = "Node|Namespace|Name|csiVolumeAttachmentName|Status|Type|Version|Capacity|StorageClass|Attached|Access Mode"
-	out[1] = "----|---------|----|-----------------------|------|----|-------|--------|------------|--------|-----------"
+	out[0] = "Namespace|Name|Status|Version|Capacity|StorageClass|Attached|Access Mode|Attached Node"
+	out[1] = "---------|----|------|-------|--------|------------|--------|-----------|-------------"
 	for i, item := range cvols.Items {
-		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
-			pvols[item.ObjectMeta.Name].Node,
+		pvols[item.ObjectMeta.Name] = util.CheckForVol(item.ObjectMeta.Name, pvols)
+		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s",
 			item.ObjectMeta.Namespace,
 			item.ObjectMeta.Name,
-			pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName,
 			item.Status.Phase,
-			item.TypeMeta.Kind,
 			item.VersionDetails.Status.Current,
 			item.Status.Capacity.String(),
 			pvols[item.ObjectMeta.Name].StorageClass,
 			pvols[item.ObjectMeta.Name].AttachementStatus,
 			pvols[item.ObjectMeta.Name].AccessMode,
+			pvols[item.ObjectMeta.Name].Node,
 		)
+
+		//TODO: find a fix
+		//pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName field removed for readability
 	}
 	if len(out) == 2 {
 		fmt.Println("No Volumes are running")

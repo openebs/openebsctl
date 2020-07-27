@@ -5,13 +5,14 @@ import (
 	"html/template"
 	"os"
 
-	//"strconv"
+	cstortypes "github.com/openebs/api/pkg/apis/types"
 
-	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
-
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/vaniisgh/mayactl/client"
 	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
+
+	"k8s.io/klog"
 )
 
 var (
@@ -22,48 +23,35 @@ aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 Usage: mayactl cstor volume describe --volname <vol>
 `
 
-	cStorVolumeSpec   *cstorv1.CStorVolumeSpec
-	cStorVolumeStatus *cstorv1.CStorVolumeStatus
-	versionDetails    *cstorv1.VersionDetails
-	metaDataDetails   *metaDataInfo
-	volName           string
+	volName string
 )
-
-type metaDataInfo struct {
-	test string
-}
 
 const (
 	volInfoTemplate = `
-Replica Details :
------------------
-{{ printf "NAME\t ACCESSMODE\t STATUS\t IP\t NODE" }}
-{{ printf "-----\t -----------\t -------\t ---\t -----" }} {{range $key, $value := .}}
-{{ printf "%s\t" $value.Name }} {{ printf "%s\t" $value.AccessMode }} {{ printf "%s\t" $value.Status }} {{ printf "%s\t" $value.IP }} {{ $value.NodeName }} {{end}}
-`
-
-	cstorReplicaTemplate = `
-Replica Details :
------------------
-{{ printf "%s\t" "NAME"}} {{ printf "%s\t" "STATUS"}} {{ printf "%s\t" "POOL NAME"}} {{ printf "%s\t" "NODE"}}
-{{ printf "----\t ------\t ---------\t -----" }} {{range $key, $value := .}}
-{{ printf "%s\t" $value.Name }} {{ printf "%s\t" $value.Status }} {{ printf "%s\t" $value.PoolName }} {{ $value.NodeName }} {{end}}
+Volume Details :
+----------------
+Name            : {{.Name}}
+Access Mode     : {{.AccessMode}}
+CSI Driver      : {{.CSIDriver}}
+Storage Class   : {{.StorageClass}}
+Volume Phase    : {{.VolumePhase }}
+Version         : {{.Version}}
+CSPC            : {{.CSPC}}
+Size            : {{.Size}}
+Status          : {{.Status}}
+ReplicaCount	: {{.ReplicaCount}}
 `
 
 	portalTemplate = `
 Portal Details :
 ----------------
-IQN               :   {{.IQN}}
-Volume            :   {{.VolumeName}}
-Portal            :   {{.Portal}}
-Size              :   {{.Size}}
-Controller Status :   {{.Status}}
-Replica Count     :   {{.ReplicaCount}}
-Replica Status     :   {{.ReplicaStatus}}
+IQN             :  {{.IQN}}
+Volume          :  {{.VolumeName}}
+TargetNodeName  :  {{.TargetNodeName}}
+Portal          :  {{.Portal}}
+TargetIP        :  {{.TargetIP}}
+
 `
-
-//Controller Node   :   {{.ControllerNode}}
-
 )
 
 // NewCmdVolumeInfo displays OpenEBS Volume information.
@@ -74,14 +62,13 @@ func NewCmdVolumeInfo() *cobra.Command {
 		Long:    volumeInfoCommandHelpText,
 		Example: `mayactl cStor volume describe --volname <vol>`,
 		Run: func(cmd *cobra.Command, args []string) {
-			//util.CheckErr(errors.Validate(cmd, false, false, true), util.Fatal)
 			util.CheckErr(RunVolumeInfo(cmd), util.Fatal)
 		},
 	}
 	cmd.Flags().StringVarP(&volName, "volname", "", volName,
 		"unique volume name.")
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if volume is not in the `default` namespace")
+		"namespace name, required if the OpenEBS is not in the openebs namespace")
 
 	return cmd
 }
@@ -89,31 +76,88 @@ func NewCmdVolumeInfo() *cobra.Command {
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
 func RunVolumeInfo(cmd *cobra.Command) error {
 
-	client, err := client.NewK8sClient(namespace)
+	clientset, err := client.NewK8sClient(namespace)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command")
+	}
 
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
-	volumeInfo := client.GetcStorVolume(volName, namespace)
+	//1. cStor volume info
+	volumeInfo, err := clientset.GetcStorVolume(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor volumes")
+	}
+	//2. Persistent Volume info
+	pvInfo, err := clientset.GetPV(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting persistant volumes")
+	}
 
-	portalInfo := util.PortalInfo{
-		volumeInfo.Spec.Iqn,
-		volumeInfo.Name,
-		volumeInfo.Spec.TargetPortal,
-		volumeInfo.Status.Capacity.String(),
-		volumeInfo.Status.Conditions,
-		volumeInfo.Spec.ReplicationFactor,
-		volumeInfo.Status.ReplicaStatuses,
+	//3. cStor Volume Config
+	cvcInfo, err := clientset.GetCVC(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume config")
+	}
+
+	//4. Get Node Name for Target Pod
+	NodeName, err := clientset.NodeForVolume(volName)
+	if err != nil {
+		klog.Errorf("error executeing volume info command, getting Node for Volume %s:{%s}", volName, err)
+	}
+
+	//5. cStor Volume Replicas
+	cvrInfo, err := clientset.GetCVR(volName)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume Replicas")
+	}
+
+	cSPCLabel := cstortypes.CStorPoolClusterLabelKey
+
+	volume := util.VolumeInfo{
+		AccessMode:              util.AccessModeToString(pvInfo.Spec.AccessModes),
+		Capacity:                volumeInfo.Status.Capacity.String(),
+		CSPC:                    cvcInfo.Labels[cSPCLabel],
+		CSIDriver:               pvInfo.Spec.CSI.Driver,
+		CSIVolumeAttachmentName: pvInfo.Spec.CSI.VolumeHandle,
+		Name:                    volumeInfo.Name,
+		Namespace:               volumeInfo.Namespace,
+		PVC:                     pvInfo.Spec.ClaimRef.Name,
+		ReplicaCount:            volumeInfo.Spec.ReplicationFactor,
+		VolumePhase:             pvInfo.Status.Phase,
+		StorageClass:            pvInfo.Spec.StorageClassName,
+		Version:                 util.CheckVersion(volumeInfo.VersionDetails),
+		Size:                    volumeInfo.Status.Capacity.String(),
+		Status:                  volumeInfo.Status.Phase,
 	}
 
 	// Print the output for the portal status info
-	tmpl, err := template.New("VolumeInfo").Parse(portalTemplate)
+	tmpl, err := template.New("volume").Parse(volInfoTemplate)
 	if err != nil {
-		fmt.Println("Error displaying output, found error :", err)
-		return nil
+		return errors.Wrap(err, "error displaying output for volume info")
+	}
+	err = tmpl.Execute(os.Stdout, volume)
+	if err != nil {
+		return errors.Wrap(err, "error displaying volume details")
+
+	}
+
+	portalInfo := util.PortalInfo{
+		IQN:            volumeInfo.Spec.Iqn,
+		VolumeName:     volumeInfo.Name,
+		Portal:         volumeInfo.Spec.TargetPortal,
+		TargetIP:       volumeInfo.Spec.TargetIP,
+		TargetNodeName: NodeName,
+	}
+
+	// Print the output for the portal status info
+	tmpl, err = template.New("PortalInfo").Parse(portalTemplate)
+	if err != nil {
+		return errors.Wrap(err, "error creating output for portal info")
 	}
 	err = tmpl.Execute(os.Stdout, portalInfo)
 	if err != nil {
-		fmt.Println("Error displaying volume details, found error :", err)
+		fmt.Println(err, "error displaying target portal detail")
 		return nil
 	}
 
@@ -125,9 +169,20 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 		//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
 		return nil
 	}
-	// Splitting strings with delimiter ','
-	//replicaStatusStrings := strings.Split(volumeInfo.Status.Message, ",")
-	//addressIPStrings := strings.Split(volumeInfo.Spec.TargetIP, ",")
 
+	// Print replica details
+	fmt.Printf("Replica Details :\n----------------\n")
+	out := make([]string, len(cvrInfo.Items)+2)
+	out[0] = "Name|Pool Instance|Status"
+	out[1] = "----|-------------|------"
+	for i, cvr := range cvrInfo.Items {
+		out[i+2] = fmt.Sprintf("%s|%s|%s",
+			cvr.ObjectMeta.Name,
+			cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
+			cvr.Status.Phase,
+		)
+	}
+
+	fmt.Println(util.FormatList(out))
 	return nil
 }
