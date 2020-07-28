@@ -67,8 +67,8 @@ fi
 
 # Delete the old dir
 echo "==> Removing old directory..."
-rm -rf bin/"${MAYACTL}"/*
-mkdir -p bin/"${MAYACTL}"/
+rm -rf bin/"${OPENEBS}"/*
+mkdir -p bin/"${OPENEBS}"/
 
 # If its dev mode, only build for ourself
 if [[ "${DEV}" ]]; then

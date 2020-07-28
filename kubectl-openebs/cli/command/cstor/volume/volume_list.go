@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/openebs/openebsctl/client"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/vaniisgh/mayactl/client"
-	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 This command displays status of available zfs Volumes.
 If no volume ID is given, a list of all known volumes will be displayed.
 
-Usage: kubectl mayactl cStor volume list [options]
+Usage: kubectl openebs cStor volume list [options]
 	`
 	namespace string
 )

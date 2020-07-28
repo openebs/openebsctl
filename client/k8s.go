@@ -19,11 +19,10 @@ import (
 	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
 	cstortypes "github.com/openebs/api/pkg/apis/types"
 	openebsclientset "github.com/openebs/api/pkg/client/clientset/versioned"
+	util "github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-
-	util "github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
 )
 
 // K8sAPIVersion represents valid kubernetes api version of a native or custom

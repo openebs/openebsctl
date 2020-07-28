@@ -3,11 +3,11 @@ GOBIN := $(or $(shell go env GOBIN 2>/dev/null), $(shell go env GOPATH 2>/dev/nu
 
 PACKAGES = $(shell go list ./... | grep -v 'vendor\|pkg/generated')
 
-#name mayactl to be a kubectl-plugin
-MAYACTL=kubectl-mayactl
+#name openebsctl to be a kubectl-plugin
+OPENEBSCTL=kubectl-openebs
 
 .PHONY: all
-all: deps verify-deps mayactl
+all: deps verify-deps openebsctl
 
 
 # deps ensures fresh go.mod and go.sum.
@@ -34,17 +34,17 @@ format:
 #test:
 #	go test ./...
 
-.PHONY: mayactl
-mayactl:
+.PHONY: openebsctl
+openebsctl:
 	@echo "----------------------------"
-	@echo "--> mayactl                    "
+	@echo "--> openebsctl                    "
 	@echo "----------------------------"
-	@PNAME=MAYACTL CTLNAME=${MAYACTL} sh -c "'$(PWD)/build.sh'"
+	@PNAME=OPENEBSCTL CTLNAME=${OPENEBSCTL} sh -c "'$(PWD)/build.sh'"
 	@echo "--> Removing old directory..."
-	@sudo rm -rf /usr/local/bin/${MAYACTL}
+	@sudo rm -rf /usr/local/bin/${OPENEBSCTL}
 	@echo "----------------------------"
-	@echo "copying new mayactl"
+	@echo "copying new openebsctl"
 	@echo "----------------------------"
 	@sudo mkdir -p  /usr/local/bin/
-	@sudo cp -a "$(PWD)/bin/MAYACTL/${MAYACTL}"  /usr/local/bin/${MAYACTL}
+	@sudo cp -a "$(PWD)/bin/OPENEBSCTL/${OPENEBSCTL}"  /usr/local/bin/${OPENEBSCTL}
 	@echo "=> copied to /usr/local/bin"
