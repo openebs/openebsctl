@@ -6,7 +6,7 @@ import (
 )
 
 //Volume struct will have all the details we want to give in the output for
-// mayactl commands
+// openebsctl commands
 type Volume struct {
 	// AccessModes contains all ways the volume can be mounted
 	AccessMode string
@@ -37,7 +37,7 @@ type Volume struct {
 }
 
 //VolumeInfo struct will have all the details we want to give in the output for
-// mayactl command volume describe
+// openebsctl command volume describe
 type VolumeInfo struct {
 	AccessMode string
 	// Capacity of the underlying PV

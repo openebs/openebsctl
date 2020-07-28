@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/command/cstor/volume"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor/volume"
 )
 
 const (
@@ -22,18 +22,18 @@ const (
 
 var (
 	cStorCommandHelpText = `
-The following commands helps in retreiving information of the zfs realted to
+The following commands helps in retreiving information of the cStor realted to
 volumes, pools,  and so on.
 
-Usage: kubectl mayactl cStor <subcommand> [options] [args]
+Usage: kubectl openebs cStor <subcommand> [options] [args]
 
 Examples:
 
  # Status
-	$ kubectl mayactl cStor status
+	$ kubectl openebs cStor status
 
  #Volume
-	$ kubectl mayactl cStor volume --help
+	$ kubectl openebs cStor volume --help
 
 `
 	namespace string

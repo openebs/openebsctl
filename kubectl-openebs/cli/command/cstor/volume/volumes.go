@@ -8,28 +8,28 @@ import (
 
 const (
 	volumeCommandHelpText = `# List Volumes:
-	$ kubectl mayactl cStor volume list
+	$ kubectl openebs cStor volume list
 
 	# Info of a Volume:
-	$ kubectl mayactl cStor volume info --volname <vol>
+	$ kubectl openebs cStor volume info --volname <vol>
 
   # Statistics of a Volume:
-	$ kubectl mayactl cStor volume stats --volname <vol>
+	$ kubectl openebs cStor volume stats --volname <vol>
 
   # Statistics of a Volume created in 'test' namespace:
-	$ kubectl mayactl cStor volume stats --volname <vol> --namespace test
+	$ kubectl openebs cStor volume stats --volname <vol> --namespace test
 
   # Info of a Volume:
-	$ kubectl mayactl cStor volume describe --volname <vol>
+	$ kubectl openebs cStor volume describe --volname <vol>
 
   # Info of a Volume created in 'test' namespace:
-	$ kubectl mayactl cStor volume describe --volname <vol> --namespace test
+	$ kubectl openebs cStor volume describe --volname <vol> --namespace test
 
   # Delete a Volume:
-	$ kubectl mayactl cStor volume delete --volname <vol>
+	$ kubectl openebs cStor volume delete --volname <vol>
 
   # Delete a Volume created in 'test' namespace:
-	$ kubectl mayactl cStor volume delete --volname <vol> --namespace test
+	$ kubectl openebs cStor volume delete --volname <vol> --namespace test
  `
 )
 

@@ -1,4 +1,4 @@
-module github.com/vaniisgh/mayactl
+module github.com/openebs/openebsctl
 
 go 1.14
 
