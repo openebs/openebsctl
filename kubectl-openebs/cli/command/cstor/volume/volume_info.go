@@ -7,10 +7,10 @@ import (
 
 	cstortypes "github.com/openebs/api/pkg/apis/types"
 
+	"github.com/openebs/openebsctl/client"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"github.com/vaniisgh/mayactl/client"
-	"github.com/vaniisgh/mayactl/kubectl-mayactl/cli/util"
 
 	"k8s.io/klog"
 )
@@ -20,7 +20,7 @@ var (
 This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
-Usage: mayactl cstor volume describe --volname <vol>
+Usage: openebs cstor volume describe --volname <vol>
 `
 
 	volName string
@@ -60,7 +60,7 @@ func NewCmdVolumeInfo() *cobra.Command {
 		Use:     "describe",
 		Short:   "Displays Openebs Volume information",
 		Long:    volumeInfoCommandHelpText,
-		Example: `mayactl cStor volume describe --volname <vol>`,
+		Example: `openebs cStor volume describe --volname <vol>`,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(RunVolumeInfo(cmd), util.Fatal)
 		},

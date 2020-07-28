@@ -18,18 +18,18 @@ func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 Outputs shell completion code for the specified shell (bash or zsh)	
 
 To load completion to current bash shell,
-. <(mayactl completion bash)
+. <(openebs completion bash)
 
 To configure your bash shell to load completions for each session add to your bashrc
 # ~/.bashrc or ~/.profile
-. <(mayactl completion bash)
+. <(openebs completion bash)
 
 To load completion to current zsh shell,
-. <(mayactl completion zsh)
+. <(openebs completion zsh)
 
 To configure your zsh shell to load completions for each session add to your zshrc
 # ~/.zshrc
-. <(mayactl completion zsh)
+. <(openebs completion zsh)
 		`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		},
@@ -67,7 +67,7 @@ func RunCompletionBash(out io.Writer, cmd *cobra.Command) {
 
 func RunCompletionZsh(out io.Writer, cmd *cobra.Command) {
 	zsh_initialization := `
-__mayactl_bash_source() {
+__openebs_bash_source() {
 	alias shopt=':'
 	alias _expand=_bash_expand
 	alias _complete=_bash_comp
@@ -77,7 +77,7 @@ __mayactl_bash_source() {
 	source "$@"
 }
 
-__mayactl_type() {
+__openebs_type() {
 	# -t is not supported by zsh
 	if [ "$1" == "-t" ]; then
 		shift
@@ -86,7 +86,7 @@ __mayactl_type() {
 		# "compopt +-o nospace" is used in the code to toggle trailing
 		# spaces. We don't support that, but leave trailing spaces on
 		# all the time
-		if [ "$1" = "__mayactl_compopt" ]; then
+		if [ "$1" = "__openebs_compopt" ]; then
 			echo builtin
 			return 0
 		fi
@@ -94,7 +94,7 @@ __mayactl_type() {
 	type "$@"
 }
 
-__mayactl_compgen() {
+__openebs_compgen() {
 	local completions w
 	completions=( $(compgen "$@") ) || return $?
 
@@ -113,11 +113,11 @@ __mayactl_compgen() {
 	done
 }
 
-__mayactl_compopt() {
+__openebs_compopt() {
 	true # don't do anything. Not supported by bashcompinit in zsh
 }
 
-__mayactl_ltrim_colon_completions()
+__openebs_ltrim_colon_completions()
 {
 	if [[ "$1" == *:* && "$COMP_WORDBREAKS" == *:* ]]; then
 		# Remove colon-word prefix from COMPREPLY items
@@ -129,7 +129,7 @@ __mayactl_ltrim_colon_completions()
 	fi
 }
 
-__mayactl_get_comp_words_by_ref() {
+__openebs_get_comp_words_by_ref() {
 	cur="${COMP_WORDS[COMP_CWORD]}"
 	prev="${COMP_WORDS[${COMP_CWORD}-1]}"
 	words=("${COMP_WORDS[@]}")
@@ -146,20 +146,20 @@ if sed --help 2>&1 | grep -q GNU; then
 	RWORD='\>'
 fi
 
-__mayactl_convert_bash_to_zsh() {
+__openebs_convert_bash_to_zsh() {
 	sed \
 	-e 's/declare -F/whence -w/' \
 	-e 's/_get_comp_words_by_ref "\$@"/_get_comp_words_by_ref "\$*"/' \
 	-e 's/local \([a-zA-Z0-9_]*\)=/local \1; \1=/' \
 	-e 's/flags+=("\(--.*\)=")/flags+=("\1"); two_word_flags+=("\1")/' \
 	-e 's/must_have_one_flag+=("\(--.*\)=")/must_have_one_flag+=("\1")/' \
-	-e "s/${LWORD}_filedir${RWORD}/__mayactl_filedir/g" \
-	-e "s/${LWORD}_get_comp_words_by_ref${RWORD}/__mayactl_get_comp_words_by_ref/g" \
-	-e "s/${LWORD}__ltrim_colon_completions${RWORD}/__mayactl_ltrim_colon_completions/g" \
-	-e "s/${LWORD}compgen${RWORD}/__mayactl_compgen/g" \
-	-e "s/${LWORD}compopt${RWORD}/__mayactl_compopt/g" \
+	-e "s/${LWORD}_filedir${RWORD}/__openebs_filedir/g" \
+	-e "s/${LWORD}_get_comp_words_by_ref${RWORD}/__openebs_get_comp_words_by_ref/g" \
+	-e "s/${LWORD}__ltrim_colon_completions${RWORD}/__openebs_ltrim_colon_completions/g" \
+	-e "s/${LWORD}compgen${RWORD}/__openebs_compgen/g" \
+	-e "s/${LWORD}compopt${RWORD}/__openebs_compopt/g" \
 	-e "s/${LWORD}declare${RWORD}/builtin declare/g" \
-	-e "s/\\\$(type${RWORD}/\$(__mayactl_type/g" \
+	-e "s/\\\$(type${RWORD}/\$(__openebs_type/g" \
 	<<'BASH_COMPLETION_EOF'
 `
 	out.Write([]byte(zsh_initialization))
@@ -172,8 +172,8 @@ __mayactl_convert_bash_to_zsh() {
 BASH_COMPLETION_EOF
 }
 
-__mayactl_bash_source <(__mayactl_convert_bash_to_zsh)
-_complete mayactl 2>/dev/null
+__openebs_bash_source <(__openebs_convert_bash_to_zsh)
+_complete openebs 2>/dev/null
 `
 	out.Write([]byte(zsh_tail))
 }
