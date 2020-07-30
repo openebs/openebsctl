@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	err := command.NewMayaCommand().Execute()
+	err := command.NewOpenebsCommand().Execute()
 	util.CheckError(err)
 }

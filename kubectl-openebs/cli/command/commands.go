@@ -7,8 +7,8 @@ import (
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 )
 
-// NewMayaCommand creates the `openebs` command and its nested children.
-func NewMayaCommand() *cobra.Command {
+// NewOpenebsCommand creates the `openebs` command and its nested children.
+func NewOpenebsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kubectl-openebs",
 		Short: "OpenEBSctl is a a tool for interacting with OpenEBS storage components",

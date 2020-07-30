@@ -8,6 +8,7 @@ require (
 	github.com/ryanuber/columnize v2.1.0+incompatible
 	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.4.0
+	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
 	k8s.io/client-go v0.17.3
