@@ -16,7 +16,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: build openebsctl
+    - name: Build Openebsctl
       run: make openebsctl
 
   lint:
@@ -33,5 +33,22 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: run golint
+    - name: Run Golint
       run: make golint
+
+  verify dependencies:
+    name: verify-deps
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14.4
+      id: go_3
+
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Run Deps Check
+      run:  make verify-deps
