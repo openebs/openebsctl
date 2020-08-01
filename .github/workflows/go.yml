@@ -36,7 +36,7 @@ jobs:
     - name: Run Golint
       run: make golint
 
-  verify dependencies:
+  verify-dependencies:
     name: verify-deps
     runs-on: ubuntu-latest
     steps:
