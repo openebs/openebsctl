@@ -32,9 +32,6 @@ type K8sAPIVersion string
 // K8sClient provides the necessary utility to operate over
 // various K8s Kind objects
 type K8sClient struct {
-	// ns refers to K8s namespace where the operation
-	// will be performed
-	ns string
 
 	// K8sCS refers to the Clientset capable of communicating
 	// with the K8s cluster
@@ -46,9 +43,8 @@ type K8sClient struct {
 }
 
 // NewK8sClient creates a new K8sClient
-// TODO: improve K8sClientset instantiation. for example remove the ns from
-// K8sClient struct
-func NewK8sClient(ns string) (*K8sClient, error) {
+// TODO: improve K8sClientset instantiation.
+func NewK8sClient() (*K8sClient, error) {
 	// get the appropriate clientsets & set the kubeconfig accordingly
 
 	GetOutofClusterKubeConfig()
@@ -66,7 +62,6 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 	}
 
 	return &K8sClient{
-		ns:        ns,
 		K8sCS:     k8sCS,
 		OpenebsCS: openebsCS,
 	}, nil
@@ -77,6 +72,13 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 // sets the env variable for the same
 func GetOutofClusterKubeConfig() {
 	var kubeconfig *string
+
+	config := os.Getenv("KUBECONFIG")
+	if config != "" {
+		klog.Infof("Using KUBECONFIG from environment varibale: %s", config)
+		return
+	}
+
 	if home := homeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.
 			Join(home, ".kube", "config"), "absolute path to kubeconfig")
@@ -85,6 +87,7 @@ func GetOutofClusterKubeConfig() {
 	}
 	flag.Parse()
 
+	klog.Info("No KUBECONFIG environment variable found using config at: ", *kubeconfig)
 	os.Setenv("KUBECONFIG", *kubeconfig)
 
 }
@@ -150,7 +153,6 @@ func (k K8sClient) GetCSIVolume(volname string) (*v1.VolumeAttachment, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "error while while getting storage csi volume")
 	}
-
 	return vol, nil
 }
 
@@ -168,8 +170,8 @@ func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
 }
 
 // GetcStorVolume fetches the volume object of the given name in the given namespace
-func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) {
-	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(k.ns).Get(volName, metav1.GetOptions{})
+func (k K8sClient) GetcStorVolume(volName string, namespace string) (*cstorv1.CStorVolume, error) {
+	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(namespace).Get(volName, metav1.GetOptions{})
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while while getting volume %s", volName)
@@ -227,11 +229,11 @@ func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
 }
 
 // GetCVC used to get cStor Volume Config information for cStor a given volume using a cStorClient
-func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
+func (k K8sClient) GetCVC(name string, namespace string) (*cstorv1.CStorVolumeConfig, error) {
 
-	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(k.ns).Get(name, metav1.GetOptions{})
+	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while getting cStor Volume Config for  %s in %s", name, k.ns)
+		return nil, errors.Wrapf(err, "error while getting cStor Volume Config for  %s in %s", name, namespace)
 	}
 
 	return cStorVolumeConfig, nil
@@ -255,11 +257,11 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 }
 
 // NodeForVolume used to get NodeName for the volume from the Kubernetes API
-func (k K8sClient) NodeForVolume(volName string) (string, error) {
+func (k K8sClient) NodeForVolume(volName string, namespace string) (string, error) {
 
 	label := cstortypes.PersistentVolumeLabelKey + "=" + volName
 
-	podInfo, err := k.K8sCS.CoreV1().Pods("").List(metav1.ListOptions{LabelSelector: label})
+	podInfo, err := k.K8sCS.CoreV1().Pods(namespace).List(metav1.ListOptions{LabelSelector: label})
 	if err != nil {
 		return "", errors.Wrapf(err, "error while getting target Pod for volume %s", volName)
 	}

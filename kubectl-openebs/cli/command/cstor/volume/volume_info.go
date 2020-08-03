@@ -76,7 +76,7 @@ func NewCmdVolumeInfo() *cobra.Command {
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
 func RunVolumeInfo(cmd *cobra.Command) error {
 
-	clientset, err := client.NewK8sClient(namespace)
+	clientset, err := client.NewK8sClient()
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
@@ -84,7 +84,7 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	//1. cStor volume info
-	volumeInfo, err := clientset.GetcStorVolume(volName)
+	volumeInfo, err := clientset.GetcStorVolume(volName, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command, getting cStor volumes")
 	}
@@ -95,13 +95,13 @@ func RunVolumeInfo(cmd *cobra.Command) error {
 	}
 
 	//3. cStor Volume Config
-	cvcInfo, err := clientset.GetCVC(volName)
+	cvcInfo, err := clientset.GetCVC(volName, namespace)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume config")
 	}
 
 	//4. Get Node Name for Target Pod
-	NodeName, err := clientset.NodeForVolume(volName)
+	NodeName, err := clientset.NodeForVolume(volName, namespace)
 	if err != nil {
 		klog.Errorf("error executeing volume info command, getting Node for Volume %s:{%s}", volName, err)
 	}

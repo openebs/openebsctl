@@ -46,7 +46,7 @@ func NewCmdVolumesList() *cobra.Command {
 //RunVolumesList fetchs & lists the volumes
 func RunVolumesList(cmd *cobra.Command) error {
 
-	client, err := client.NewK8sClient(namespace)
+	client, err := client.NewK8sClient()
 	util.CheckErr(err, util.Fatal)
 
 	cvols, err := client.GetcStorVolumes()
