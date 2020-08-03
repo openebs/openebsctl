@@ -48,3 +48,12 @@ openebsctl:
 	@sudo mkdir -p  /usr/local/bin/
 	@sudo cp -a "$(PWD)/bin/OPENEBSCTL/${OPENEBSCTL}"  /usr/local/bin/${OPENEBSCTL}
 	@echo "=> copied to /usr/local/bin"
+
+.PHONY: golint
+golint:
+	@echo "+ Installing golint"
+	@GO111MODULE=on go get -u golang.org/x/lint/golint;
+	@echo "--> Running golint"
+	@golint -set_exit_status $(PACKAGES)
+	@echo "Golint successful !"
+	@echo "--------------------------------"

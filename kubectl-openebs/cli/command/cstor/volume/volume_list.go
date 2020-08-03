@@ -43,7 +43,7 @@ func NewCmdVolumesList() *cobra.Command {
 	return cmd
 }
 
-//RunVolumesList fetchs the volumes from maya-apiserver
+//RunVolumesList fetchs & lists the volumes
 func RunVolumesList(cmd *cobra.Command) error {
 
 	client, err := client.NewK8sClient(namespace)

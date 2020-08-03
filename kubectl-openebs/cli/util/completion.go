@@ -15,7 +15,7 @@ func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 		Use:   "completion SHELL",
 		Short: "Outputs shell completion code for the specified shell (bash or zsh)",
 		Long: `
-Outputs shell completion code for the specified shell (bash or zsh)	
+Outputs shell completion code for the specified shell (bash or zsh)
 
 To load completion to current bash shell,
 . <(openebs completion bash)
@@ -41,6 +41,7 @@ To configure your zsh shell to load completions for each session add to your zsh
 	return cmd
 }
 
+//RunCompletion is used to run the completion of the cobra commad
 func RunCompletion(out io.Writer, cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		fmt.Println("error: Shell not specified.")
@@ -61,12 +62,14 @@ func RunCompletion(out io.Writer, cmd *cobra.Command, args []string) {
 	fmt.Printf("Unsupported shell type %q.\n", args[0])
 }
 
+//RunCompletionBash is used for the bash shell
 func RunCompletionBash(out io.Writer, cmd *cobra.Command) {
 	cmd.GenBashCompletion(out)
 }
 
+//RunCompletionZsh is used for the zsh shell
 func RunCompletionZsh(out io.Writer, cmd *cobra.Command) {
-	zsh_initialization := `
+	zshInitialization := `
 __openebs_bash_source() {
 	alias shopt=':'
 	alias _expand=_bash_expand
@@ -162,18 +165,18 @@ __openebs_convert_bash_to_zsh() {
 	-e "s/\\\$(type${RWORD}/\$(__openebs_type/g" \
 	<<'BASH_COMPLETION_EOF'
 `
-	out.Write([]byte(zsh_initialization))
+	out.Write([]byte(zshInitialization))
 
 	buf := new(bytes.Buffer)
 	cmd.GenBashCompletion(buf)
 	out.Write(buf.Bytes())
 
-	zsh_tail := `
+	zshTail := `
 BASH_COMPLETION_EOF
 }
 
 __openebs_bash_source <(__openebs_convert_bash_to_zsh)
 _complete openebs 2>/dev/null
 `
-	out.Write([]byte(zsh_tail))
+	out.Write([]byte(zshTail))
 }
