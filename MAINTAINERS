@@ -1,0 +1,26 @@
+# Official list of OpenEBS Maintainers.
+#
+# Names added to this file should be in the following format:
+#     Individual's name,@githubhandle, Company Name
+#
+# Each of the OpenEBS sub project may have one or more of the 
+# following maintainers and list of reviewers who are 
+# in the process of becoming maintainers. 
+# 
+#
+# Each reviewer can be part of one or more GitHub 
+# team aliases created for maintaining sub projects. 
+# Current active team aliases for sub projects are:
+# - control-plane-maintainers
+#
+# Please keep the below list sorted in ascending order.
+#
+#Maintainers
+"Kiran Mova",@kmova,MayaData
+"Vishnu Itta",@vishnuitta,MayaData
+
+#Reviewers
+"Prateek Pandey",@prateekpandey14,MayaData #control-plane-maintainers
+"Ashutosh Kumar",@sonasingh46,MayaData #control-plane-maintainers
+"Sai Chaithanya",@mittachaitu,MayaData #control-plane-maintainers
+"Vani Singh",@vaniisgh
