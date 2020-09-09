@@ -36,6 +36,14 @@ jobs:
     - name: Run Golint
       run: make golint
 
+  verify-license:
+    name: Verify License
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: License Check
+      run: make license-check
+
   verify-dependencies:
     name: Verify Dependencies
     runs-on: ubuntu-latest
