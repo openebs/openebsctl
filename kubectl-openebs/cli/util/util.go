@@ -43,7 +43,8 @@ func Fatal(msg string) {
 	}
 	os.Exit(1)
 }
-
+// Duration return the time.Duration in no.of days,hour, mins, seconds format.
+// The number of terms to be shown can be increased or decreased using maxTerms constant.
 func Duration(d time.Duration) string {
 	days := d / (time.Hour * 24)
 	hours := d % (time.Hour * 24) / (time.Hour)
@@ -55,7 +56,7 @@ func Duration(d time.Duration) string {
 		age = age + strconv.Itoa(int(days)) + "d"
 		currentTerms++
 	}
-	if hours != 0 {
+	if hours != 0 && currentTerms < maxTerms{
 		age = age + strconv.Itoa(int(hours)) + "h"
 		currentTerms++
 	}
