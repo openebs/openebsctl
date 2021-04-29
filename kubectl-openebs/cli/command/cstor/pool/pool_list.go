@@ -71,13 +71,13 @@ func RunPoolsList(cmd *cobra.Command) error {
 	out[0] = "Name|Namespace|HealthyInstances|ProvisionedInstances|DesiredInstances|Age"
 	out[1] = "----|---------|----------------|--------------------|----------------|---"
 	for i, item := range cpools.Items {
-		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s",
+		out[i+2] = fmt.Sprintf("%s|%s|%d|%d|%d|%s",
 			item.ObjectMeta.Name,
 			item.ObjectMeta.Namespace,
 			item.Status.HealthyInstances,
 			item.Status.ProvisionedInstances,
 			item.Status.DesiredInstances,
-			time.Since(item.ObjectMeta.CreationTimestamp.Time).Hours(),
+			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time)),
 		)
 	}
 	if len(out) == 2 {

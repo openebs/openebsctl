@@ -20,9 +20,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"k8s.io/klog"
 )
+
+const day = time.Minute * 60 * 24
 
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
@@ -38,4 +41,23 @@ func Fatal(msg string) {
 		fmt.Fprint(os.Stderr, msg)
 	}
 	os.Exit(1)
+}
+
+func Duration(d time.Duration) string {
+	if d < 0 {
+		d *= -1
+	}
+
+	if d < day {
+		return d.String()
+	}
+
+	n := d / day
+	d -= n * day
+
+	if d == 0 {
+		return fmt.Sprintf("%dd", n)
+	}
+
+	return fmt.Sprintf("%dd%s", n, d)
 }
