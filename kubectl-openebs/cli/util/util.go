@@ -26,7 +26,7 @@ import (
 	"k8s.io/klog"
 )
 
-const day = time.Minute * 60 * 24
+const maxTerms = 2
 
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
@@ -50,16 +50,20 @@ func Duration(d time.Duration) string {
 	mins := d % (time.Hour * 24) % (time.Hour) / (time.Minute)
 	secs := d % (time.Hour * 24) % (time.Hour) % (time.Minute) / (time.Second)
 	age := ""
+	currentTerms := 0
 	if days != 0 {
 		age = age + strconv.Itoa(int(days)) + "d"
+		currentTerms++
 	}
 	if hours != 0 {
 		age = age + strconv.Itoa(int(hours)) + "h"
+		currentTerms++
 	}
-	if mins != 0 {
+	if mins != 0 && currentTerms < maxTerms{
 		age = age + strconv.Itoa(int(mins)) + "m"
+		currentTerms++
 	}
-	if secs != 0 {
+	if secs != 0 && currentTerms < maxTerms{
 		age = age + strconv.Itoa(int(secs)) + "s"
 	}
 	return age

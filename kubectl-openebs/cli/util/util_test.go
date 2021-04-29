@@ -17,17 +17,22 @@ func TestDuration(t *testing.T) {
 		{
 			"Duration in Days",
 			args{d: (time.Hour * 24 * 2) + time.Minute + (time.Second * 59) + (time.Millisecond * 300)},
-			"2d1m59s",
+			"2d1m",
+		},
+		{
+			"Duration in Hour",
+			args{d: (time.Hour * 24 * 2) + (time.Hour * 2) + time.Minute + (time.Second * 59) + (time.Millisecond * 300)},
+			"2d2h",
 		},
 		{
 			"Duration in Months",
 			args{d: (time.Hour * 24 * 30) + time.Minute + (time.Second * 59) + (time.Millisecond * 300)},
-			"30d1m59s",
+			"30d1m",
 		},
 		{
 			"Duration in Years",
 			args{d: (time.Hour * 24 * 365) + time.Minute + (time.Second * 59) + (time.Millisecond * 300)},
-			"365d1m59s",
+			"365d1m",
 		},
 		{
 			"Duration in Minutes",
@@ -35,7 +40,7 @@ func TestDuration(t *testing.T) {
 			"1m59s",
 		},
 		{
-			"Duration in Minutes",
+			"Duration in Seconds",
 			args{d: time.Second*59 + (time.Millisecond * 300)},
 			"59s",
 		},
