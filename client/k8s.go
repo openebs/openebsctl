@@ -286,3 +286,16 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 
 	return podInfo.Items[0].Spec.NodeName, nil
 }
+
+// GetcStorPools using the K8sClient's storage class client
+func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolClusterList, error) {
+
+	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolClusters("").List(metav1.ListOptions{})
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting volumes")
+	}
+
+	return cStorPools, nil
+
+}

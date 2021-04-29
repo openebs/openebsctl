@@ -19,6 +19,7 @@ package cstor
 import (
 	"flag"
 	"fmt"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor/pool"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -71,6 +72,7 @@ func NewCmdcStor() *cobra.Command {
 	cmd.AddCommand(
 
 		volume.NewCmdVolume(cmd),
+		pool.NewCmdPool(cmd),
 		//TODO: uncomment all one by one
 		//NewCmdVolumeDelete(),
 		//NewCmdVolumeStats(),
