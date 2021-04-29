@@ -19,8 +19,9 @@ package cstor
 import (
 	"flag"
 	"fmt"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor/pool"
 	"time"
+
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor/pool"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
