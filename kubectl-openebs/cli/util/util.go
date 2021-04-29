@@ -19,6 +19,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -44,20 +45,22 @@ func Fatal(msg string) {
 }
 
 func Duration(d time.Duration) string {
-	if d < 0 {
-		d *= -1
+	days := d / (time.Hour * 24)
+	hours := d % (time.Hour * 24) / (time.Hour)
+	mins := d % (time.Hour * 24) % (time.Hour) / (time.Minute)
+	secs := d % (time.Hour * 24) % (time.Hour) % (time.Minute) / (time.Second)
+	age := ""
+	if days != 0 {
+		age = age + strconv.Itoa(int(days)) + "d"
 	}
-
-	if d < day {
-		return d.String()
+	if hours != 0 {
+		age = age + strconv.Itoa(int(hours)) + "h"
 	}
-
-	n := d / day
-	d -= n * day
-
-	if d == 0 {
-		return fmt.Sprintf("%dd", n)
+	if mins != 0 {
+		age = age + strconv.Itoa(int(mins)) + "m"
 	}
-
-	return fmt.Sprintf("%dd%s", n, d)
+	if secs != 0 {
+		age = age + strconv.Itoa(int(secs)) + "s"
+	}
+	return age
 }

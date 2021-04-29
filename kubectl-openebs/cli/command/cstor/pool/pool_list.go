@@ -36,7 +36,6 @@ var (
 	namespace string
 )
 
-
 // NewCmdPoolsList displays status of OpenEBS Pool(s)
 func NewCmdPoolsList() *cobra.Command {
 	cmd := &cobra.Command{
