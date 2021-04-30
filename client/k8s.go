@@ -288,9 +288,9 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 }
 
 // GetcStorPools using the OpenEBS's Client
-func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolClusterList, error) {
+func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 
-	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolClusters("").List(metav1.ListOptions{})
+	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(metav1.ListOptions{})
 
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while while getting cspc")

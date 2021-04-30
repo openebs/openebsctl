@@ -67,15 +67,19 @@ func RunPoolsList(cmd *cobra.Command) error {
 	}
 
 	out := make([]string, len(cpools.Items)+2)
-	out[0] = "Name|Namespace|HealthyInstances|ProvisionedInstances|DesiredInstances|Age"
-	out[1] = "----|---------|----------------|--------------------|----------------|---"
+	out[0] = "Name|Namespace|HostName|Free|Capacity|ReadOnly|ProvisionedReplicas|HealthyReplicas|Status|Age"
+	out[1] = "----|---------|--------|----|--------|--------|-------------------|---------------|------|---"
 	for i, item := range cpools.Items {
-		out[i+2] = fmt.Sprintf("%s|%s|%d|%d|%d|%s",
+		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%v|%d|%d|%s|%s",
 			item.ObjectMeta.Name,
 			item.ObjectMeta.Namespace,
-			item.Status.HealthyInstances,
-			item.Status.ProvisionedInstances,
-			item.Status.DesiredInstances,
+			item.ObjectMeta.Labels["kubernetes.io/hostname"],
+			item.Status.Capacity.Free.String(),
+			item.Status.Capacity.Total.String(),
+			item.Status.ReadOnly,
+			item.Status.ProvisionedReplicas,
+			item.Status.HealthyReplicas,
+			item.Status.Phase,
 			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time)),
 		)
 	}
