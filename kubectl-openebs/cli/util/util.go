@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,10 +19,14 @@ package util
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"k8s.io/klog"
 )
+
+const maxTerms = 2
 
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
@@ -38,4 +42,31 @@ func Fatal(msg string) {
 		fmt.Fprint(os.Stderr, msg)
 	}
 	os.Exit(1)
+}
+
+// Duration return the time.Duration in no.of days,hour, mins, seconds format.
+// The number of terms to be shown can be increased or decreased using maxTerms constant.
+func Duration(d time.Duration) string {
+	days := d / (time.Hour * 24)
+	hours := d % (time.Hour * 24) / (time.Hour)
+	mins := d % (time.Hour * 24) % (time.Hour) / (time.Minute)
+	secs := d % (time.Hour * 24) % (time.Hour) % (time.Minute) / (time.Second)
+	age := ""
+	currentTerms := 0
+	if days != 0 {
+		age = age + strconv.Itoa(int(days)) + "d"
+		currentTerms++
+	}
+	if hours != 0 && currentTerms < maxTerms {
+		age = age + strconv.Itoa(int(hours)) + "h"
+		currentTerms++
+	}
+	if mins != 0 && currentTerms < maxTerms {
+		age = age + strconv.Itoa(int(mins)) + "m"
+		currentTerms++
+	}
+	if secs != 0 && currentTerms < maxTerms {
+		age = age + strconv.Itoa(int(secs)) + "s"
+	}
+	return age
 }

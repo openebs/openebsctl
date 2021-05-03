@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -285,4 +285,17 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 	}
 
 	return podInfo.Items[0].Spec.NodeName, nil
+}
+
+// GetcStorPools using the OpenEBS's Client
+func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
+
+	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(metav1.ListOptions{})
+
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting cspc")
+	}
+
+	return cStorPools, nil
+
 }

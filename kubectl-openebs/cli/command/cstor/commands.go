@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import (
 	"flag"
 	"fmt"
 	"time"
+
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor/pool"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,6 +73,7 @@ func NewCmdcStor() *cobra.Command {
 	cmd.AddCommand(
 
 		volume.NewCmdVolume(cmd),
+		pool.NewCmdPool(cmd),
 		//TODO: uncomment all one by one
 		//NewCmdVolumeDelete(),
 		//NewCmdVolumeStats(),
