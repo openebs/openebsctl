@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package volume
+package describe
 
 import (
 	"fmt"
@@ -38,8 +38,6 @@ aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
 Usage: openebs cstor volume describe --volname <vol>
 `
-
-	volName string
 )
 
 const (
@@ -73,30 +71,33 @@ TargetIP        :  {{.TargetIP}}
 // NewCmdVolumeInfo displays OpenEBS Volume information.
 func NewCmdVolumeInfo() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "describe",
-		Short:   "Displays Openebs Volume information",
-		Long:    volumeInfoCommandHelpText,
-		Example: `openebs cStor volume describe --volname <vol>`,
+		Use:       "describe",
+		Short:     "Displays Openebs Volume information",
+		Long:      volumeInfoCommandHelpText,
+		Example:   `openebs describe volume <vol>`,
+		ValidArgs: []string{"pool", "volume", "pools", "volumes"},
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(RunVolumeInfo(cmd), util.Fatal)
 		},
 	}
-	cmd.Flags().StringVarP(&volName, "volname", "", volName,
-		"unique volume name.")
-	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if the OpenEBS is not in the openebs namespace")
-
 	return cmd
 }
 
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
 func RunVolumeInfo(cmd *cobra.Command) error {
+	// the stuff automatically coming from kubectl command execution
+	if ns, err := cmd.Flags().GetString("namespace"); err != nil {
+		fmt.Println(ns)
+	} else {
+		fmt.Println(err)
+	}
 
-	clientset, err := client.NewK8sClient(namespace)
+	clientset, err := client.NewK8sClient("openebs")
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
-
+	// TODO: Get the volume name(s) from the command
+	volName := "fake"
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	//1. cStor volume info

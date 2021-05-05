@@ -25,18 +25,16 @@ import (
 
 // CheckVersion returns a message based on the status of the version
 func CheckVersion(versionDetail v1.VersionDetails) string {
-
 	if string(versionDetail.Status.State) == "Reconciled" || string(versionDetail.Status.State) == "" {
 		return versionDetail.Status.Current
 	}
-
 	return string(versionDetail.Status.State) + ", desired version " + versionDetail.Desired
 }
 
 // CheckIfAccessable is used to check if the we can get the spec for volume
 func CheckIfAccessable(attachment storagev1.VolumeAttachment) []corev1.PersistentVolumeAccessMode {
 
-	if attachment.Status.Attached == true {
+	if attachment.Status.Attached {
 		return attachment.Spec.Source.InlineVolumeSpec.AccessModes
 	}
 	return make([]corev1.PersistentVolumeAccessMode, 0)

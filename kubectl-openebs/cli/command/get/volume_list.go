@@ -1,11 +1,11 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package volume
+package get
 
 import (
 	"flag"
@@ -36,35 +36,27 @@ Usage: kubectl openebs cStor volume list [options]
 	namespace string
 )
 
-const (
-	volumeStatusOK = "Running"
-)
-
 // NewCmdVolumesList displays status of OpenEBS Volume(s)
 func NewCmdVolumesList() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "Displays status information about Volume(s)",
-		Long:  volumesListCommandHelpText,
+		Use:     "volume",
+		Aliases: []string{"vol", "v", "volumes"},
+		Short:   "Displays status information about Volume(s)",
+		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			util.CheckErr(RunVolumesList(cmd), util.Fatal)
 		},
 	}
-
 	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
 		"namespace name, required if volume is not in the `default` namespace")
-
-	flag.CommandLine.Parse([]string{})
-
+	_ = flag.CommandLine.Parse([]string{})
 	return cmd
 }
 
-//RunVolumesList fetchs & lists the volumes
+// RunVolumesList lists the volumes
 func RunVolumesList(cmd *cobra.Command) error {
-
 	client, err := client.NewK8sClient(namespace)
 	util.CheckErr(err, util.Fatal)
-
 	cvols, err := client.GetcStorVolumes()
 	if err != nil {
 		return errors.Wrap(err, "error listing volumes")
@@ -73,9 +65,8 @@ func RunVolumesList(cmd *cobra.Command) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
-
 	// tally status of cvols to pvols
-	//give output according to volume status
+	// give output according to volume status
 	out := make([]string, len(cvols.Items)+2)
 	out[0] = "Namespace|Name|Status|Version|Capacity|StorageClass|Attached|Access Mode|Attached Node"
 	out[1] = "---------|----|------|-------|--------|------------|--------|-----------|-------------"
@@ -90,9 +81,7 @@ func RunVolumesList(cmd *cobra.Command) error {
 			pvols[item.ObjectMeta.Name].StorageClass,
 			pvols[item.ObjectMeta.Name].AttachementStatus,
 			pvols[item.ObjectMeta.Name].AccessMode,
-			pvols[item.ObjectMeta.Name].Node,
-		)
-
+			pvols[item.ObjectMeta.Name].Node)
 		//TODO: find a fix
 		//pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName field removed for readability
 	}
@@ -100,8 +89,6 @@ func RunVolumesList(cmd *cobra.Command) error {
 		fmt.Println("No Volumes are running")
 		return nil
 	}
-
 	fmt.Println(util.FormatList(out))
-
 	return nil
 }

@@ -22,6 +22,5 @@ import (
 )
 
 func main() {
-	err := command.NewOpenebsCommand().Execute()
-	util.CheckError(err)
+	util.CheckError(command.NewOpenebsCommand().Execute())
 }
