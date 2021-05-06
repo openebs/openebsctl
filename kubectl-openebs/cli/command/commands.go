@@ -30,23 +30,18 @@ import (
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "kubectl openebs [get|describe] [volume|pool|...]",
+		Use:   "openebs",
 		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `Find out more about OpenEBS on https://docs.openebs.io/
-Usage:
-# get a list of pools
-kubectl openebs get pools
-# get a list of volumes
-kubectl openebs get volumes
-# describe a volume
-kubectl openebs describe volume pvc-name
 `,
+		// Version: show the version of this plugin
 	}
 	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())
-
 	cmd.AddCommand(
+		// TODO: Re-organize sub-commands into packages
+		// Add a helper command to show what version of X is installed
 		util.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),

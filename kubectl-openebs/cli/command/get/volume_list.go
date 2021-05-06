@@ -17,7 +17,6 @@ limitations under the License.
 package get
 
 import (
-	"flag"
 	"fmt"
 
 	"github.com/openebs/openebsctl/client"
@@ -32,12 +31,11 @@ This command displays status of available zfs Volumes.
 If no volume ID is given, a list of all known volumes will be displayed.
 
 Usage: kubectl openebs cStor volume list [options]
-	`
-	namespace string
+`
 )
 
-// NewCmdVolumesList displays status of OpenEBS Volume(s)
-func NewCmdVolumesList() *cobra.Command {
+// NewCmdGetVolume displays status of OpenEBS Volume(s)
+func NewCmdGetVolume() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"vol", "v", "volumes"},
@@ -47,15 +45,13 @@ func NewCmdVolumesList() *cobra.Command {
 			util.CheckErr(RunVolumesList(cmd), util.Fatal)
 		},
 	}
-	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if volume is not in the `default` namespace")
-	_ = flag.CommandLine.Parse([]string{})
 	return cmd
 }
 
 // RunVolumesList lists the volumes
 func RunVolumesList(cmd *cobra.Command) error {
-	client, err := client.NewK8sClient(namespace)
+	// TODO: Why is this working?
+	client, err := client.NewK8sClient("")
 	util.CheckErr(err, util.Fatal)
 	cvols, err := client.GetcStorVolumes()
 	if err != nil {

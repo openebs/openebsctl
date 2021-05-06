@@ -23,27 +23,28 @@ import (
 )
 
 const (
-	volumeCommandHelpText = `# List Volumes:
+	volumeCommandHelpText = `# Show detail of a specific OpenEBS resource:
 $ kubectl openebs describe [volumes|pools] [name]
 
-# Info of a Volume:
-$ kubectl openebs describe volume pvc-abcd -n [namespace]`
+# Describe a Volume:
+$ kubectl openebs describe volume pvc-abcd -n [namespace]
+`
 )
 
 // NewCmdDescribe provides options for managing OpenEBS Volume
 func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Provides operations related to a Volume",
+		Short: "Provide detailed information about an OpenEBS resource",
 		Long:  volumeCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf(volumeCommandHelpText)
+			fmt.Println(volumeCommandHelpText)
 		},
 	}
 
 	cmd.AddCommand(
-		NewCmdVolumeInfo(),
-		// TODO: Add Pool Info command
+		NewCmdDescribeVolume(),
+		// TODO: Add NewCmdPoolInfo()
 	)
 
 	return cmd
