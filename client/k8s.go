@@ -174,11 +174,11 @@ func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) 
 // PVC
 func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, error) {
 	volumes := make(map[string]*util.Volume)
-	PVCs, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
+	cstorVA, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return volumes, errors.Wrap(err, "error while while getting storage volume attachments")
 	}
-	for _, i := range PVCs.Items {
+	for _, i := range cstorVA.Items {
 		if i.Spec.Volume.Name == "" {
 			continue
 		}
@@ -192,11 +192,12 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 			Node:                    i.ObjectMeta.OwnerReferences[0].Name,
 			PVC:                     pv.Spec.ClaimRef.Name,
 			CSIVolumeAttachmentName: i.Name,
-			AttachementStatus:       string(i.Status),
+			AttachementStatus:       string(pv.Status.Phase),
 			// first fetch access modes & then convert to string
 			AccessMode: util.AccessModeToString(pv.Spec.AccessModes),
 		}
-		volumes[vol.PVC] = vol
+		// map the pv name to the vol obj
+		volumes[i.Spec.Volume.Name] = vol
 	}
 	return volumes, nil
 }
