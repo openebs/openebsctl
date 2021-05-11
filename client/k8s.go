@@ -143,8 +143,8 @@ func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 }
 
 // GetCSIVolume using the K8sClient's storage class client
-func (k K8sClient) GetCSIVolume(volname string) (*v1.VolumeAttachment, error) {
-	vol, err := k.K8sCS.StorageV1().VolumeAttachments().Get(context.TODO(), volname, metav1.GetOptions{})
+func (k K8sClient) GetCSIVolume(volname string) (*cstorv1.CStorVolumeAttachment, error) {
+	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").Get(context.TODO(), volname, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "error while while getting storage csi volume")
 	}
@@ -174,25 +174,25 @@ func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) 
 // PVC
 func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, error) {
 	volumes := make(map[string]*util.Volume)
-	PVCs, err := k.K8sCS.StorageV1().VolumeAttachments().List(context.TODO(), metav1.ListOptions{})
+	PVCs, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return volumes, errors.Wrap(err, "error while while getting storage volume attachments")
 	}
 	for _, i := range PVCs.Items {
-		if i.Spec.Source.PersistentVolumeName == nil {
+		if i.Spec.Volume.Name == "" {
 			continue
 		}
-		pv, err := k.GetPV(*i.Spec.Source.PersistentVolumeName)
+		pv, err := k.GetPV(i.Spec.Volume.Name)
 		if err != nil {
 			klog.Errorf("Failed to get PV %s", i.ObjectMeta.Name)
 			continue
 		}
 		vol := &util.Volume{
-			StorageClass:            i.Spec.Attacher,
-			Node:                    i.Spec.NodeName,
-			PVC:                     *i.Spec.Source.PersistentVolumeName,
+			StorageClass:            pv.Spec.StorageClassName,
+			Node:                    i.ObjectMeta.OwnerReferences[0].Name,
+			PVC:                     pv.Spec.ClaimRef.Name,
 			CSIVolumeAttachmentName: i.Name,
-			AttachementStatus:       util.CheckVolAttachmentError(i.Status),
+			AttachementStatus:       string(i.Status),
 			// first fetch access modes & then convert to string
 			AccessMode: util.AccessModeToString(pv.Spec.AccessModes),
 		}
