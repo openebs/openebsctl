@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pool
+package get
 
 import (
-	"flag"
 	"fmt"
 	"time"
 
@@ -29,36 +28,35 @@ import (
 
 var (
 	poolListCommandHelpText = `
-	This command lists of all known pools in the Cluster.
-	
-	Usage: kubectl openebs cStor pool list [options]
-	`
-	namespace string
+This command lists of all known pools in the Cluster.
+
+Usage:
+$ kubectl openebs get pool [options]
+`
 )
 
-// NewCmdPoolsList displays status of OpenEBS Pool(s)
-func NewCmdPoolsList() *cobra.Command {
+// NewCmdGetPool displays status of OpenEBS Pool(s)
+func NewCmdGetPool() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "Displays status information about Pool(s)",
-		Long:  poolListCommandHelpText,
+		Use:     "pool",
+		Aliases: []string{"pools", "p"},
+		Short:   "Displays status information about Pool(s)",
+		Long:    poolListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(RunPoolsList(cmd), util.Fatal)
+			ns, err := cmd.Flags().GetString("namespace")
+			if err != nil {
+				ns = "openebs"
+			}
+			// TODO: De-couple CLI code, logic code, API code
+			util.CheckErr(RunPoolsList(cmd, ns), util.Fatal)
 		},
 	}
-
-	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if pool is not in the `default` namespace")
-
-	flag.CommandLine.Parse([]string{})
-
 	return cmd
 }
 
 //RunPoolsList fetchs & lists the pools
-func RunPoolsList(cmd *cobra.Command) error {
-
-	client, err := client.NewK8sClient(namespace)
+func RunPoolsList(cmd *cobra.Command, ns string) error {
+	client, err := client.NewK8sClient(ns)
 	util.CheckErr(err, util.Fatal)
 
 	cpools, err := client.GetcStorPools()
@@ -87,8 +85,6 @@ func RunPoolsList(cmd *cobra.Command) error {
 		fmt.Println("No Pools are found")
 		return nil
 	}
-
 	fmt.Println(util.FormatList(out))
-
 	return nil
 }

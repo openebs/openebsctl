@@ -35,7 +35,7 @@ import (
 	cstorv1 "github.com/openebs/api/pkg/apis/cstor/v1"
 	cstortypes "github.com/openebs/api/pkg/apis/types"
 	openebsclientset "github.com/openebs/api/pkg/client/clientset/versioned"
-	util "github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -214,7 +214,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 		pv, err := k.GetPV(*i.Spec.Source.PersistentVolumeName)
 
 		if err != nil {
-			klog.Errorf("Failed to get PV", i.ObjectMeta.Name)
+			klog.Errorf("Failed to get PV %s", i.ObjectMeta.Name)
 			continue
 		}
 		vol := &util.Volume{

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package volume
+package describe
 
 import (
 	"fmt"
@@ -27,7 +27,6 @@ import (
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-
 	"k8s.io/klog"
 )
 
@@ -36,10 +35,10 @@ var (
 This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
-Usage: openebs cstor volume describe --volname <vol>
-`
+#
+$ kubectl openebs describe [pool|volume] [name]
 
-	volName string
+`
 )
 
 const (
@@ -56,6 +55,7 @@ CSPC            : {{.CSPC}}
 Size            : {{.Size}}
 Status          : {{.Status}}
 ReplicaCount	: {{.ReplicaCount}}
+
 `
 
 	portalTemplate = `
@@ -70,33 +70,39 @@ TargetIP        :  {{.TargetIP}}
 `
 )
 
-// NewCmdVolumeInfo displays OpenEBS Volume information.
-func NewCmdVolumeInfo() *cobra.Command {
+// NewCmdDescribeVolume displays OpenEBS Volume information.
+func NewCmdDescribeVolume() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "describe",
-		Short:   "Displays Openebs Volume information",
+		Use:     "volume",
+		Aliases: []string{"volumes", "vol", "v"},
+		Short:   "Displays Openebs information",
 		Long:    volumeInfoCommandHelpText,
-		Example: `openebs cStor volume describe --volname <vol>`,
+		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(RunVolumeInfo(cmd), util.Fatal)
+			// TODO: Get this from flags, pflag, etc
+			var ns string
+			if ns, _ = cmd.Flags().GetString("namespace"); ns == "" {
+				// NOTE: The error comes as nil even when the ns flag is not specified
+				ns = "openebs"
+			}
+			util.CheckErr(RunVolumeInfo(cmd, args, ns), util.Fatal)
 		},
 	}
-	cmd.Flags().StringVarP(&volName, "volname", "", volName,
-		"unique volume name.")
-	cmd.Flags().StringVarP(&namespace, "namespace", "n", "openebs",
-		"namespace name, required if the OpenEBS is not in the openebs namespace")
-
 	return cmd
 }
 
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
-func RunVolumeInfo(cmd *cobra.Command) error {
-
-	clientset, err := client.NewK8sClient(namespace)
+func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
+	// the stuff automatically coming from kubectl command execution
+	clientset, err := client.NewK8sClient(ns)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
-
+	// TODO: Print all volume info present in args or print all volume info if no args given
+	if len(vols) != 1 {
+		return errors.New("Please give at least one volume to describe")
+	}
+	volName := vols[0]
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	//1. cStor volume info

@@ -17,26 +17,37 @@ limitations under the License.
 package command
 
 import (
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/cstor"
+	"flag"
+
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/describe"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/get"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "kubectl-openebs",
-		Short: "OpenEBSctl is a a tool for interacting with OpenEBS storage components",
-		Long:  `OpenEBSctl is a kubectl plugin to interact with OpenEBS container Attached Storage components. `,
+		Use:   "openebs",
+		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
+		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
+Find out more about OpenEBS on https://docs.openebs.io/`,
+		// Version: show the version of this plugin
 	}
+	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())
-
 	cmd.AddCommand(
+		// TODO: Re-organize sub-commands into packages
+		// Add a helper command to show what version of X is installed
 		util.NewCmdCompletion(cmd),
-		cstor.NewCmdcStor(),
+		get.NewCmdGet(cmd),
+		describe.NewCmdDescribe(cmd),
 	)
-
+	cmd.Flags().AddGoFlagSet(flag.CommandLine)
+	_ = flag.CommandLine.Parse([]string{})
+	_ = viper.BindPFlag("namespace", cmd.PersistentFlags().Lookup("namespace"))
 	return cmd
 }

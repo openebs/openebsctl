@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package pool
+package get
 
 import (
 	"fmt"
@@ -23,26 +23,31 @@ import (
 )
 
 const (
-	poolCommandHelpText = `# List Pools:
-	$ kubectl openebs cStor pool list
- `
+	getCmdHelp = `Display one or many OpenEBS resources like volumes, pools
+
+$ kubectl openebs get [volumes|pools] [-n example-namespace]
+
+# Get volumes
+$ kubectl openebs get volume
+
+# Get pools
+$ kubectl openebs get pool
+`
 )
 
-// NewCmdPool provides options for managing OpenEBS Pool
-func NewCmdPool(rootCmd *cobra.Command) *cobra.Command {
-
+// NewCmdGet provides options for managing OpenEBS Volume
+func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pool",
-		Short: "Provides operations related to a Pool",
-		Long:  poolCommandHelpText,
+		Use:   "get",
+		Short: "Provides operations related to a Volume",
+		Long:  getCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf(poolCommandHelpText)
+			fmt.Println(getCmdHelp)
 		},
 	}
-
 	cmd.AddCommand(
-		NewCmdPoolsList(),
+		NewCmdGetVolume(),
+		NewCmdGetPool(),
 	)
-
 	return cmd
 }
