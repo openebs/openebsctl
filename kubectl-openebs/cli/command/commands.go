@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -32,8 +32,8 @@ func NewOpenebsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "openebs",
 		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
-		Long: `Find out more about OpenEBS on https://docs.openebs.io/
-`,
+		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
+Find out more about OpenEBS on https://docs.openebs.io/`,
 		// Version: show the version of this plugin
 	}
 	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
