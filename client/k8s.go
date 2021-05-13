@@ -153,7 +153,6 @@ func (k K8sClient) GetCSIVolume(volname string) (*cstorv1.CStorVolumeAttachment,
 
 // GetcStorVolumes using the K8sClient's storage class client
 func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
-	k.OpenebsCS.CstorV1().CStorVolumes("")
 	cStorVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while while getting volumes")
