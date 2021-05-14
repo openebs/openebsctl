@@ -17,7 +17,7 @@ limitations under the License.
 package util
 
 import (
-	v1 "github.com/openebs/api/pkg/apis/cstor/v1"
+	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 
 	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"

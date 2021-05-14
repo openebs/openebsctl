@@ -21,7 +21,7 @@ import (
 	"html/template"
 	"os"
 
-	cstortypes "github.com/openebs/api/pkg/apis/types"
+	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"

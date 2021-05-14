@@ -14,3 +14,6 @@
 # binary directories
 /bin
 */.bin
+
+# vendor directory
+vendor
