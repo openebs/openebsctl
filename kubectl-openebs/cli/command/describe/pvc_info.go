@@ -138,7 +138,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 			cvcInfo.ReplicaCount = len(cvc.Status.PoolInfo)
 			cvcInfo.PoolInfo = cvc.Status.PoolInfo
 			cvcInfo.Version = cvc.VersionDetails.Status.Current
-			cvcInfo.Upgrading = cvc.VersionDetails.Status.Current == cvc.VersionDetails.Desired
+			cvcInfo.Upgrading = !(cvc.VersionDetails.Status.Current == cvc.VersionDetails.Desired)
 
 			cva, err := clientset.GetCVA(item.Spec.VolumeName)
 			if err == nil {
