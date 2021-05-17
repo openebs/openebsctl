@@ -21,6 +21,8 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
@@ -252,4 +254,115 @@ func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 		return nil, errors.Wrapf(err, "Error while while getting cspc")
 	}
 	return cStorPools, nil
+}
+
+// GetPVCs list from the passed list of PVC names and the namespace
+func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.PersistentVolumeClaimList, error) {
+	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims("default").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	pvcNamePVCmap := make(map[string]corev1.PersistentVolumeClaim)
+	for _, item := range pvcs.Items {
+		pvcNamePVCmap[item.Name] = item
+	}
+	var items = make([]corev1.PersistentVolumeClaim, 0)
+	for _, name := range pvcNames {
+		items = append(items, pvcNamePVCmap[name])
+	}
+	return &corev1.PersistentVolumeClaimList{
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
+		Items:    items,
+	}, nil
+}
+
+func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
+	if val := GetCasTypeFromPV(v1PV); val != util.UNKNOWN {
+		return val
+	}
+	if val := GetCasTypeFromSC(v1SC); val != util.UNKNOWN {
+		return val
+	}
+	return util.UNKNOWN
+}
+
+// GetCasTypeFromPV from the passed PersistentVolume or the Stora
+func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
+	if v1PV.ObjectMeta.Labels != nil {
+		if _, ok := v1PV.ObjectMeta.Labels[util.OPENEBS_CAS_TYPE_KEY]; ok {
+			return v1PV.ObjectMeta.Labels[util.OPENEBS_CAS_TYPE_KEY]
+		}
+	} else if v1PV.ObjectMeta.Annotations != nil {
+		if _, ok := v1PV.ObjectMeta.Annotations[util.OPENEBS_CAS_TYPE_KEY]; ok {
+			return v1PV.ObjectMeta.Annotations[util.OPENEBS_CAS_TYPE_KEY]
+		}
+	} else if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
+		if _, ok := v1PV.Spec.CSI.VolumeAttributes[util.OPENEBS_CAS_TYPE_KEY]; ok {
+			return v1PV.Spec.CSI.VolumeAttributes[util.OPENEBS_CAS_TYPE_KEY]
+		}
+	}
+	return util.UNKNOWN
+}
+
+// GetCasTypeFromSC by passing the storage class
+func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
+	if v1SC.Parameters != nil {
+		if _, ok := v1SC.Parameters[util.OPENBEBS_CAS_TYPE_KEY_SC]; ok {
+			return v1SC.Parameters[util.OPENBEBS_CAS_TYPE_KEY_SC]
+		}
+	}
+	return util.UNKNOWN
+}
+
+// GetCVA from the passed cstorvolume name
+func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, error) {
+	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range cvaList.Items {
+		if item.Spec.Volume.Name == volumeName {
+			return &item, nil
+		}
+	}
+	return nil, errors.New("Couldn't find the CVA for the passed volume")
+}
+
+// GetUsedCapacityFromCVR as the healthy replicas would have the correct used capacity details
+func GetUsedCapacityFromCVR(cvrList *cstorv1.CStorVolumeReplicaList) string {
+	for _, item := range cvrList.Items {
+		if item.Status.Phase == util.Healthy {
+			return item.Status.Capacity.Used
+		}
+	}
+	return ""
+}
+
+// GetCstorVolumeTargetPod for the passed volume to show details
+func (k K8sClient) GetCstorVolumeTargetPod(volumeName string) (*corev1.Pod, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	for _, item := range pods.Items {
+		if strings.Contains(item.Name, volumeName+"-target-") {
+			return &item, nil
+		}
+	}
+	return nil, errors.New("The target pod for the given cstor volume was not found")
+}
+
+// GetReadyContainers to show the number of ready bs total containers of pod
+func GetReadyContainers(containers []corev1.ContainerStatus) string {
+	total := len(containers)
+	ready := 0
+	if total > 0 {
+		for _, item := range containers {
+			if item.Ready == true {
+				ready++
+			}
+		}
+	}
+	return strconv.Itoa(ready) + "/" + strconv.Itoa(total)
 }

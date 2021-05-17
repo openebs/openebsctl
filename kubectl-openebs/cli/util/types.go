@@ -108,3 +108,34 @@ type CStorReplicaInfo struct {
 	// ec. Healthy, Offline ,Degraded etc.
 	Status string
 }
+
+type CstorPVCInfo struct {
+	Name             string
+	Namespace        string
+	CasType          string
+	BoundVolume      string
+	AttachedToNode   string
+	Pool             string
+	StorageClassName string
+	Size             string
+	Used             string
+	PVStatus         v1.CStorVolumePhase
+}
+
+type CVCInfo struct {
+	Name         string
+	ReplicaCount int
+	PoolInfo     []string
+	Version      string
+	Upgrading    bool
+}
+
+type PVCInfo struct {
+	Name             string
+	Namespace        string
+	CasType          string
+	BoundVolume      string
+	StorageClassName string
+	Size             string
+	PVStatus         corev1.PersistentVolumePhase
+}

@@ -31,4 +31,14 @@ const (
 	MaxWidth = 0
 	// Padding used in tabwriter
 	Padding = 4
+	// CasType key in label of PV
+	OPENEBS_CAS_TYPE_KEY = "openebs.io/cas-type"
+	// Unknown to be retuned when cas type is not known
+	UNKNOWN = "unknown"
+	// CasType key in parameter of SC
+	OPENBEBS_CAS_TYPE_KEY_SC = "cas-type"
+	// cstor cas type
+	CSTOR_CAS_TYPE = "cstor"
+	// cstor volume, replica healthy status
+	Healthy = "Healthy"
 )

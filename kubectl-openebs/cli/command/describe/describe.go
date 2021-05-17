@@ -44,6 +44,7 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 
 	cmd.AddCommand(
 		NewCmdDescribeVolume(),
+		NewCmdDescribePVC(),
 		// TODO: Add NewCmdPoolInfo()
 	)
 
