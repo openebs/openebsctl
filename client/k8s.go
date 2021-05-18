@@ -283,41 +283,41 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.Persist
 // GetCasType from the v1pv and v1sc, this is a fallback checker method, it checks
 // both the resource only if the castype is not found.
 func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
-	if val := GetCasTypeFromPV(v1PV); val != util.UNKNOWN {
+	if val := GetCasTypeFromPV(v1PV); val != util.Unknown {
 		return val
 	}
-	if val := GetCasTypeFromSC(v1SC); val != util.UNKNOWN {
+	if val := GetCasTypeFromSC(v1SC); val != util.Unknown {
 		return val
 	}
-	return util.UNKNOWN
+	return util.Unknown
 }
 
 // GetCasTypeFromPV from the passed PersistentVolume or the Stora
 func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 	if v1PV.ObjectMeta.Labels != nil {
-		if _, ok := v1PV.ObjectMeta.Labels[util.OPENEBS_CAS_TYPE_KEY]; ok {
-			return v1PV.ObjectMeta.Labels[util.OPENEBS_CAS_TYPE_KEY]
+		if _, ok := v1PV.ObjectMeta.Labels[util.OpenEBSCasTypeKey]; ok {
+			return v1PV.ObjectMeta.Labels[util.OpenEBSCasTypeKey]
 		}
 	} else if v1PV.ObjectMeta.Annotations != nil {
-		if _, ok := v1PV.ObjectMeta.Annotations[util.OPENEBS_CAS_TYPE_KEY]; ok {
-			return v1PV.ObjectMeta.Annotations[util.OPENEBS_CAS_TYPE_KEY]
+		if _, ok := v1PV.ObjectMeta.Annotations[util.OpenEBSCasTypeKey]; ok {
+			return v1PV.ObjectMeta.Annotations[util.OpenEBSCasTypeKey]
 		}
 	} else if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
-		if _, ok := v1PV.Spec.CSI.VolumeAttributes[util.OPENEBS_CAS_TYPE_KEY]; ok {
-			return v1PV.Spec.CSI.VolumeAttributes[util.OPENEBS_CAS_TYPE_KEY]
+		if _, ok := v1PV.Spec.CSI.VolumeAttributes[util.OpenEBSCasTypeKey]; ok {
+			return v1PV.Spec.CSI.VolumeAttributes[util.OpenEBSCasTypeKey]
 		}
 	}
-	return util.UNKNOWN
+	return util.Unknown
 }
 
 // GetCasTypeFromSC by passing the storage class
 func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 	if v1SC.Parameters != nil {
-		if _, ok := v1SC.Parameters[util.OPENBEBS_CAS_TYPE_KEY_SC]; ok {
-			return v1SC.Parameters[util.OPENBEBS_CAS_TYPE_KEY_SC]
+		if _, ok := v1SC.Parameters[util.OpenEBSCasTypeKeySc]; ok {
+			return v1SC.Parameters[util.OpenEBSCasTypeKeySc]
 		}
 	}
-	return util.UNKNOWN
+	return util.Unknown
 }
 
 // GetCVA from the passed cstorvolume name

@@ -109,6 +109,8 @@ type CStorReplicaInfo struct {
 	Status string
 }
 
+// CstorPVCInfo struct will have all the details we want to give in the output for describe pvc
+// details section for cstor pvc
 type CstorPVCInfo struct {
 	Name             string
 	Namespace        string
@@ -122,6 +124,8 @@ type CstorPVCInfo struct {
 	PVStatus         v1.CStorVolumePhase
 }
 
+// CVCInfo struct will have all the details we want to give in the output for describe pvc
+// cvc section for cstor pvc
 type CVCInfo struct {
 	Name         string
 	ReplicaCount int
@@ -130,6 +134,8 @@ type CVCInfo struct {
 	Upgrading    bool
 }
 
+// PVCInfo struct will have all the details we want to give in the output for describe pvc
+// details section for non-cstor pvc
 type PVCInfo struct {
 	Name             string
 	Namespace        string

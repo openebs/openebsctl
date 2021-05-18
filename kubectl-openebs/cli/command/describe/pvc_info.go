@@ -78,6 +78,7 @@ PV Status	 : {{.PVStatus}}
 `
 )
 
+// NewCmdDescribePVC Displays the pvc describe details
 func NewCmdDescribePVC() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "pvc",
@@ -96,6 +97,7 @@ func NewCmdDescribePVC() *cobra.Command {
 	return cmd
 }
 
+// RunPVCInfo runs info command and make call to display the results
 func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 	if len(pvcs) == 0 {
 		return errors.New("Please give at least one pvc name to describe")
@@ -127,7 +129,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 			// TODO: Adding support for other casTypes
 			// Get the casType from the storage class and branch on basic of CSTOR and NON-CSTOR PVCs.
 			casType := client.GetCasTypeFromSC(sc)
-			if casType == util.CSTOR_CAS_TYPE {
+			if casType == util.CstorCasType {
 
 				// Create Empty template objects and fill gradually when underlying sub CRs are identified.
 				pvcInfo := util.CstorPVCInfo{}
@@ -241,7 +243,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 				pvcInfo.Name = item.Name
 				pvcInfo.Namespace = item.Namespace
 				pvcInfo.StorageClassName = *item.Spec.StorageClassName
-				quantity := item.Status.Capacity[util.STORAGE]
+				quantity := item.Status.Capacity[util.StorageKey]
 				pvcInfo.Size = quantity.String()
 				pv, err := clientset.GetPV(item.Spec.VolumeName)
 				if err == nil {
