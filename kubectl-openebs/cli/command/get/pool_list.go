@@ -64,12 +64,12 @@ func RunPoolsList(cmd *cobra.Command, pools []string, ns string) error {
 	}
 
 	out := make([]string, len(cpools.Items)+2)
-	out[0] = "Name|Namespace|HostName|Free|Capacity|ReadOnly|ProvisionedReplicas|HealthyReplicas|Status|Age"
-	out[1] = "----|---------|--------|----|--------|--------|-------------------|---------------|------|---"
-	for i, item := range cpools.Items {
-		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%v|%d|%d|%s|%s",
+	out[0] = "Name|HostName|Free|Capacity|ReadOnly|ProvisionedReplicas|HealthyReplicas|Status|Age"
+	out[1] = "----|--------|----|--------|--------|-------------------|---------------|------|---"
+	i := 2
+	for _, item := range cpools.Items {
+		out[i] = fmt.Sprintf("%s|%s|%s|%s|%v|%d|%d|%s|%s",
 			item.ObjectMeta.Name,
-			item.ObjectMeta.Namespace,
 			item.ObjectMeta.Labels["kubernetes.io/hostname"],
 			item.Status.Capacity.Free.String(),
 			item.Status.Capacity.Total.String(),
@@ -79,6 +79,7 @@ func RunPoolsList(cmd *cobra.Command, pools []string, ns string) error {
 			item.Status.Phase,
 			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time)),
 		)
+		i++
 	}
 	if len(out) == 2 {
 		fmt.Println("No Pools are found")
