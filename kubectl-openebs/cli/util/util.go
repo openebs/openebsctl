@@ -18,11 +18,13 @@ package util
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"k8s.io/klog"
 )
 
@@ -69,4 +71,17 @@ func Duration(d time.Duration) string {
 		age = age + strconv.Itoa(int(secs)) + "s"
 	}
 	return age
+}
+
+// PrintByTemplate of the provided template and resource
+func PrintByTemplate(templateName string, resourceTemplate string, resource interface{}) error {
+	genericTemplate, err := template.New(templateName).Parse(resourceTemplate)
+	if err != nil {
+		return errors.Wrap(err, "error creating for "+templateName)
+	}
+	err = genericTemplate.Execute(os.Stdout, resource)
+	if err != nil {
+		return errors.Wrap(err, "error displaying by template for"+templateName)
+	}
+	return nil
 }

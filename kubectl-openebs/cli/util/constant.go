@@ -41,4 +41,6 @@ const (
 	CSTOR_CAS_TYPE = "cstor"
 	// cstor volume, replica healthy status
 	Healthy = "Healthy"
+	// Total Storage key in pvc status.capacity
+	STORAGE = "storage"
 )

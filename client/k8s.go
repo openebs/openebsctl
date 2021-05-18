@@ -228,9 +228,10 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
 	}
-	if len(CStorVolumeReplicas.Items) == 0 {
-		klog.Errorf("Error while getting cStor Volume Replica for  %s , couldnot fild any replicas", name)
-	}
+	// Commenting the below code as we are already passing this message to user.
+	//if len(CStorVolumeReplicas.Items) == 0 {
+	//	klog.Errorf("Error while getting cStor Volume Replica for  %s , couldnot fild any replicas", name)
+	//}
 	return CStorVolumeReplicas, nil
 }
 
@@ -258,7 +259,7 @@ func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 
 // GetPVCs list from the passed list of PVC names and the namespace
 func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.PersistentVolumeClaimList, error) {
-	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims("default").List(context.TODO(), metav1.ListOptions{})
+	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +269,9 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.Persist
 	}
 	var items = make([]corev1.PersistentVolumeClaim, 0)
 	for _, name := range pvcNames {
-		items = append(items, pvcNamePVCmap[name])
+		if _, ok := pvcNamePVCmap[name]; ok {
+			items = append(items, pvcNamePVCmap[name])
+		}
 	}
 	return &corev1.PersistentVolumeClaimList{
 		TypeMeta: metav1.TypeMeta{},
@@ -342,8 +345,8 @@ func GetUsedCapacityFromCVR(cvrList *cstorv1.CStorVolumeReplicaList) string {
 // GetCstorVolumeTargetPod for the passed volume to show details
 func (k K8sClient) GetCstorVolumeTargetPod(volumeName string) (*corev1.Pod, error) {
 	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
+	if err != nil || len(pods.Items) == 0 {
+		return nil, errors.New("The " + k.ns + " namespace has no pods present")
 	}
 	for _, item := range pods.Items {
 		if strings.Contains(item.Name, volumeName+"-target-") {
