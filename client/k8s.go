@@ -350,3 +350,25 @@ func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstan
 		Items: list,
 	}, nil
 }
+
+func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeList, error) {
+	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting volumes")
+	}
+	csMap := make(map[string]cstorv1.CStorVolume)
+	for _, cv := range cVols.Items {
+		csMap[cv.Name] = cv
+	}
+	var list []cstorv1.CStorVolume
+	for _, name := range vols {
+		if pool, ok := csMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			klog.Errorf("Error from server (NotFound): cStorVolume %s not found", name)
+		}
+	}
+	return &cstorv1.CStorVolumeList{
+		Items: list,
+	}, nil
+}
