@@ -244,7 +244,7 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting cspc")
+		return nil, errors.Wrapf(err, "Error while getting cspi")
 	}
 	return cStorPools, nil
 }
@@ -325,6 +325,28 @@ func (k K8sClient) GetPVCNameByCVR(pvName string) string {
 		fmt.Println("error while getting pvc name")
 		return ""
 	}
-
 	return PV.Spec.ClaimRef.Name
+}
+
+// GetcStorPoolsByName returns a list of CSPI which have name in names
+func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstanceList, error) {
+	cspi, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting cspi")
+	}
+	poolMap := make(map[string]cstorv1.CStorPoolInstance)
+	for _, p := range cspi.Items {
+		poolMap[p.Name] = p
+	}
+	var list []cstorv1.CStorPoolInstance
+	for _, name := range names {
+		if pool, ok := poolMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			klog.Errorf("Error from server (NotFound): pool %s not found", name)
+		}
+	}
+	return &cstorv1.CStorPoolInstanceList{
+		Items: list,
+	}, nil
 }
