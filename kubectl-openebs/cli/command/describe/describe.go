@@ -24,10 +24,14 @@ import (
 
 const (
 	volumeCommandHelpText = `# Show detail of a specific OpenEBS resource:
-$ kubectl openebs describe [volumes|pools] [name]
+$ kubectl openebs describe [volumes|pools|pvc] [name]
 
 # Describe a Volume:
 $ kubectl openebs describe volume pvc-abcd -n [namespace]
+
+# Describe PVCs present in the same namespace:
+$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
+
 `
 )
 

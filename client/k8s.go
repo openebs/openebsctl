@@ -280,6 +280,8 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.Persist
 	}, nil
 }
 
+// GetCasType from the v1pv and v1sc, this is a fallback checker method, it checks
+// both the resource only if the castype is not found.
 func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
 	if val := GetCasTypeFromPV(v1PV); val != util.UNKNOWN {
 		return val
@@ -356,7 +358,7 @@ func (k K8sClient) GetCstorVolumeTargetPod(volumeName string) (*corev1.Pod, erro
 	return nil, errors.New("The target pod for the given cstor volume was not found")
 }
 
-// GetReadyContainers to show the number of ready bs total containers of pod
+// GetReadyContainers to show the number of ready vs total containers of pod i.e 2/3
 func GetReadyContainers(containers []corev1.ContainerStatus) string {
 	total := len(containers)
 	ready := 0

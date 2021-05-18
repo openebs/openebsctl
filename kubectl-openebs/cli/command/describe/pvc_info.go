@@ -29,11 +29,11 @@ import (
 
 var (
 	pvcInfoCommandHelpText = `
-This command fetches information and status of the various
-aspects of a PersistentVolumeClaim and its underlying related
-resources.
+This command fetches information and status  of  the  various  aspects 
+of  the  PersistentVolumeClaims  and  its underlying related resources 
+in the provided namespace. If no namespace is provided it uses default
+namespace for execution.
 
-#
 $ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
 
 `
@@ -84,7 +84,7 @@ func NewCmdDescribePVC() *cobra.Command {
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
 		Short:   "Displays PersistentVolumeClaim information",
 		Long:    pvcInfoCommandHelpText,
-		Example: `kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]`,
+		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var ns string // This namespace belongs to the PVC entered
 			if ns, _ = cmd.Flags().GetString("namespace"); ns == "" {
@@ -97,6 +97,9 @@ func NewCmdDescribePVC() *cobra.Command {
 }
 
 func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
+	if len(pvcs) == 0 {
+		return errors.New("Please give at least one pvc name to describe")
+	}
 	// TODO: Make K8sClient to be able to determine openebs namespace by itself.
 	// Below is currently hardcoded to support only if resources are in openebs ns
 	// because the -n flag is used to take the pvc namespace and same cannot be used to
@@ -251,6 +254,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 					return err
 				}
 			}
+			// A separator to separate multiple pvc describes
 			if len(pvcList.Items) > 1 && ind != len(pvcList.Items)-1 {
 				fmt.Println("-------------------------------------------------------------------------------------")
 			}
