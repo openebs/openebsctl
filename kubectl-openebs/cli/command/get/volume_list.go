@@ -42,14 +42,14 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(RunVolumesList(cmd), util.Fatal)
+			util.CheckErr(RunVolumesList(cmd, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command) error {
+func RunVolumesList(cmd *cobra.Command, vols []string) error {
 	// TODO: Why is this working?
 	client, err := client.NewK8sClient("")
 	util.CheckErr(err, util.Fatal)

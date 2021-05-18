@@ -48,17 +48,16 @@ func NewCmdGetPool() *cobra.Command {
 				ns = "openebs"
 			}
 			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(RunPoolsList(cmd, ns), util.Fatal)
+			util.CheckErr(RunPoolsList(cmd, args, ns), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 //RunPoolsList fetchs & lists the pools
-func RunPoolsList(cmd *cobra.Command, ns string) error {
+func RunPoolsList(cmd *cobra.Command, pools []string, ns string) error {
 	client, err := client.NewK8sClient(ns)
 	util.CheckErr(err, util.Fatal)
-
 	cpools, err := client.GetcStorPools()
 	if err != nil {
 		return errors.Wrap(err, "error listing pools")

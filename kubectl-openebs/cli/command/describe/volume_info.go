@@ -75,7 +75,7 @@ func NewCmdDescribeVolume() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"volumes", "vol", "v"},
-		Short:   "Displays Openebs information",
+		Short:   "Displays Openebs volume information",
 		Long:    volumeInfoCommandHelpText,
 		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
