@@ -87,11 +87,11 @@ func NewCmdDescribePVC() *cobra.Command {
 		Long:    pvcInfoCommandHelpText,
 		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var ns string // This namespace belongs to the PVC entered
-			if ns, _ = cmd.Flags().GetString("namespace"); ns == "" {
-				ns = "default"
+			var pvNs string // This namespace belongs to the PVC entered
+			if pvNs, _ = cmd.Flags().GetString("namespace"); pvNs == "" {
+				pvNs = "default"
 			}
-			util.CheckErr(RunPVCInfo(cmd, args, ns), util.Fatal)
+			util.CheckErr(RunPVCInfo(cmd, args, pvNs), util.Fatal)
 		},
 	}
 	return cmd
@@ -128,7 +128,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 			}
 			// TODO: Adding support for other casTypes
 			// Get the casType from the storage class and branch on basic of CSTOR and NON-CSTOR PVCs.
-			casType := client.GetCasTypeFromSC(sc)
+			casType := util.GetCasTypeFromSC(sc)
 			if casType == util.CstorCasType {
 
 				// Create Empty template objects and fill gradually when underlying sub CRs are identified.
@@ -178,7 +178,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 				// none of the replicas are running if the CStorVolumeReplicas are not found.
 				cvrs, err := clientset.GetCVR(item.Spec.VolumeName)
 				if err == nil && len(cvrs.Items) > 0 {
-					pvcInfo.Used = client.GetUsedCapacityFromCVR(cvrs)
+					pvcInfo.Used = util.GetUsedCapacityFromCVR(cvrs)
 				}
 
 				// Printing the Filled Details of the Cstor PVC
@@ -197,7 +197,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 					targetPodOutput[1] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s",
 						targetPod.Namespace,
 						targetPod.Name,
-						client.GetReadyContainers(targetPod.Status.ContainerStatuses),
+						util.GetReadyContainers(targetPod.Status.ContainerStatuses),
 						targetPod.Status.Phase,
 						util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)),
 						targetPod.Status.PodIP,
@@ -249,7 +249,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 				if err == nil {
 					pvcInfo.BoundVolume = item.Spec.VolumeName
 					pvcInfo.PVStatus = pv.Status.Phase
-					pvcInfo.CasType = client.GetCasType(pv, sc)
+					pvcInfo.CasType = util.GetCasType(pv, sc)
 				}
 				err = util.PrintByTemplate("pvc", genericPvcInfoTemplate, pvcInfo)
 				if err != nil {
