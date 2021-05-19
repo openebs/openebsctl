@@ -27,7 +27,6 @@ import (
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
 )
 
 var (
@@ -36,7 +35,7 @@ This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
 #
-$ kubectl openebs describe [pool|volume] [name]
+$ kubectl openebs describe [volume] [names...]
 
 `
 )
@@ -123,10 +122,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 	}
 
 	//4. Get Node Name for Target Pod
-	NodeName, err := clientset.NodeForVolume(volName)
-	if err != nil {
-		klog.Errorf("error executeing volume info command, getting Node for Volume %s:{%s}", volName, err)
-	}
+	NodeName := cvcInfo.Publish.NodeID
 
 	//5. cStor Volume Replicas
 	cvrInfo, err := clientset.GetCVR(volName)
