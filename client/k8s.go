@@ -19,13 +19,13 @@ package client
 import (
 	"context"
 	"flag"
+	"fmt"
+	"os"
+	"path/filepath"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
-	"path/filepath"
-	"strings"
-
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -293,15 +293,10 @@ func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, er
 }
 
 // GetCstorVolumeTargetPod for the passed volume to show details
-func (k K8sClient) GetCstorVolumeTargetPod(volumeName string) (*corev1.Pod, error) {
-	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{})
+func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string) (*corev1.Pod, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
 	if err != nil || len(pods.Items) == 0 {
-		return nil, errors.New("The " + k.ns + " namespace has no pods present")
+		return nil, errors.New("The target pod for the volume was not found")
 	}
-	for _, item := range pods.Items {
-		if strings.Contains(item.Name, volumeName+"-target-") {
-			return &item, nil
-		}
-	}
-	return nil, errors.New("The target pod for the given cstor volume was not found")
+	return &pods.Items[0], nil
 }

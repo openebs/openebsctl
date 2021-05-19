@@ -77,11 +77,9 @@ func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 func GetReadyContainers(containers []corev1.ContainerStatus) string {
 	total := len(containers)
 	ready := 0
-	if total > 0 {
-		for _, item := range containers {
-			if item.Ready == true {
-				ready++
-			}
+	for _, item := range containers {
+		if item.Ready {
+			ready++
 		}
 	}
 	return strconv.Itoa(ready) + "/" + strconv.Itoa(total)

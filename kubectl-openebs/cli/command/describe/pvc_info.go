@@ -189,7 +189,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 
 				// fetching the underlying TargetPod for the PV, to display its relevant details and notify the user
 				// if the TargetPod is not found.
-				targetPod, err := clientset.GetCstorVolumeTargetPod(item.Spec.VolumeName)
+				targetPod, err := clientset.GetCstorVolumeTargetPod(item.Name, item.Spec.VolumeName)
 				if err == nil {
 					targetPodOutput := make([]string, 2)
 					fmt.Printf("Target Details :\n")
