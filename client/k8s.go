@@ -23,20 +23,17 @@ import (
 	"os"
 	"path/filepath"
 
+	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
+	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
+	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
-
 	"k8s.io/klog"
-
-	"github.com/pkg/errors"
-
-	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
-	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
-	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -226,10 +223,6 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
 	}
-	// Commenting the below code as we are already passing this message to user.
-	//if len(CStorVolumeReplicas.Items) == 0 {
-	//	klog.Errorf("Error while getting cStor Volume Replica for  %s , couldnot fild any replicas", name)
-	//}
 	return CStorVolumeReplicas, nil
 }
 
@@ -280,16 +273,11 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.Persist
 
 // GetCVA from the passed cstorvolume name
 func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, error) {
-	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
+	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volumeName)})
+	if err != nil || len(cvaList.Items) == 0 {
+		return nil, errors.New("Couldn't find the CVA for the passed volume")
 	}
-	for _, item := range cvaList.Items {
-		if item.Spec.Volume.Name == volumeName {
-			return &item, nil
-		}
-	}
-	return nil, errors.New("Couldn't find the CVA for the passed volume")
+	return &cvaList.Items[0], nil
 }
 
 // GetCstorVolumeTargetPod for the passed volume to show details
