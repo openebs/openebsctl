@@ -140,8 +140,8 @@ func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 	return scs, nil
 }
 
-// GetCSIVolume using the K8sClient's storage class client
-func (k K8sClient) GetCSIVolume(volname string) (*cstorv1.CStorVolumeAttachment, error) {
+// GetCStorVolumeAttachment using the K8sClient's storage class client
+func (k K8sClient) GetCStorVolumeAttachment(volname string) (*cstorv1.CStorVolumeAttachment, error) {
 	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").Get(context.TODO(), volname, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "error while while getting storage csi volume")
@@ -223,6 +223,10 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	CStorVolumeReplicas, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
+	}
+	if len(CStorVolumeReplicas.Items) == 0 {
+		// TODO: This came during rebase, this shouldn't be required
+		klog.Errorf("Error while getting cStor Volume Replica for  %s , no replicas found", name)
 	}
 	return CStorVolumeReplicas, nil
 }

@@ -107,30 +107,31 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		//1. cStor volume info
 		volumeInfo, err := clientset.GetcStorVolume(volName)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute volume info command, getting cStor volumes")
+			fmt.Printf("failed to get CStorVolume %s\n", volName)
 		}
 		//2. Persistent Volume info
 		pvInfo, err := clientset.GetPV(volName)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute volume info command, getting persistant volumes")
+			fmt.Printf("failed to get PV %s\n", volName)
 		}
 		//3. cStor Volume Config
 		cvcInfo, err := clientset.GetCVC(volName)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume config")
+			fmt.Printf("failed to get cStor Volume config for %s", volName)
 		}
 
-		//4. Get Node Name for Target Pod
-		NodeName := cvcInfo.Publish.NodeID
+		//4. Get Node for Target Pod from the openebs-ns
+		nodeName, err := clientset.NodeForVolume(volName)
+		if err != nil {
+			fmt.Printf("failed to get CStorVolumeAttachments for %s\n", volName)
+		}
 
 		//5. cStor Volume Replicas
 		cvrInfo, err := clientset.GetCVR(volName)
 		if err != nil {
-			return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume Replicas")
+			fmt.Printf("failed to get cStor Volume Replicas for %s\n", volName)
 		}
-
 		cSPCLabel := cstortypes.CStorPoolClusterLabelKey
-
 		volume := util.VolumeInfo{
 			AccessMode:              util.AccessModeToString(pvInfo.Spec.AccessModes),
 			Capacity:                volumeInfo.Status.Capacity.String(),
@@ -164,7 +165,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 			VolumeName:     volumeInfo.Name,
 			Portal:         volumeInfo.Spec.TargetPortal,
 			TargetIP:       volumeInfo.Spec.TargetIP,
-			TargetNodeName: NodeName,
+			TargetNodeName: nodeName,
 		}
 
 		// Print the output for the portal status info
