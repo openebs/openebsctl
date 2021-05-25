@@ -23,8 +23,8 @@ import (
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	"github.com/openebs/openebsctl/client"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

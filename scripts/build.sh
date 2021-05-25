@@ -103,9 +103,8 @@ if [ $GOOS = "windows" ]; then
 fi
 
 env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags \
-    "-X main.CtlName='${CTLNAME}'" \
-    -o $output_name\
-    ./${CTLNAME}/
+    "-X github.com/openebs/openebsctl/cmd/openebs.version=$GIT_COMMIT" \
+    -o $output_name
 #-o $optput_name $(PKG)/cmd/$
 
 

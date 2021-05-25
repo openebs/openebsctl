@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package command
+package cmd
 
 import (
 	"flag"
 
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/describe"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/get"
-	v "github.com/openebs/openebsctl/kubectl-openebs/cli/command/version"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/cmd/completion"
+	"github.com/openebs/openebsctl/cmd/describe"
+	"github.com/openebs/openebsctl/cmd/get"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -45,9 +45,8 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.AddCommand(
-		// TODO: Re-organize sub-commands into packages
 		// Add a helper command to show what version of X is installed
-		util.NewCmdCompletion(cmd),
+		completion.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),

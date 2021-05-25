@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package util
+package completion
 
 import (
 	"bytes"
@@ -23,13 +23,16 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"k8s.io/klog"
 )
 
 // NewCmdCompletion creates the completion command
 func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "completion SHELL",
-		Short: "Outputs shell completion code for the specified shell (bash or zsh)",
+		Use:       "completion SHELL",
+		ValidArgs: []string{"bash", "zsh"},
+		Args:      cobra.ExactValidArgs(1),
+		Short:     "Outputs shell completion code for the specified shell (bash or zsh)",
 		Long: `
 Outputs shell completion code for the specified shell (bash or zsh)
 
@@ -38,14 +41,14 @@ To load completion to current bash shell,
 
 To configure your bash shell to load completions for each session add to your bashrc
 # ~/.bashrc or ~/.profile
-. <(openebs completion bash)
+. <(kubectl openebs completion bash)
 
 To load completion to current zsh shell,
-. <(openebs completion zsh)
+. <(kubectl openebs completion zsh)
 
 To configure your zsh shell to load completions for each session add to your zshrc
 # ~/.zshrc
-. <(openebs completion zsh)
+. <(kubectl openebs completion zsh)
 		`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		},
@@ -78,13 +81,17 @@ func RunCompletion(out io.Writer, cmd *cobra.Command, args []string) {
 	fmt.Printf("Unsupported shell type %q.\n", args[0])
 }
 
-//RunCompletionBash is used for the bash shell
+// RunCompletionBash is used for the bash shell
 func RunCompletionBash(out io.Writer, cmd *cobra.Command) {
-	cmd.GenBashCompletion(out)
+	err := cmd.GenBashCompletion(out)
+	if err != nil {
+		klog.Error(err)
+	}
 }
 
-//RunCompletionZsh is used for the zsh shell
+// RunCompletionZsh is used for the zsh shell
 func RunCompletionZsh(out io.Writer, cmd *cobra.Command) {
+	// TODO: Why not just use cmd.GenZshCompletion(out)
 	zshInitialization := `
 __openebs_bash_source() {
 	alias shopt=':'
@@ -184,7 +191,10 @@ __openebs_convert_bash_to_zsh() {
 	out.Write([]byte(zshInitialization))
 
 	buf := new(bytes.Buffer)
-	cmd.GenBashCompletion(buf)
+	err := cmd.GenBashCompletion(buf)
+	if err != nil {
+		klog.Error(err)
+	}
 	out.Write(buf.Bytes())
 
 	zshTail := `

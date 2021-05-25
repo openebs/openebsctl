@@ -25,9 +25,9 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 
-	"github.com/openebs/openebsctl/client"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )

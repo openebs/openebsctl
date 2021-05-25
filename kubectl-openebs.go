@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/cmd"
+	"github.com/openebs/openebsctl/pkg/util"
 )
 
 func main() {
-	util.CheckError(command.NewOpenebsCommand().Execute())
+	util.CheckError(cmd.NewOpenebsCommand().Execute())
 }
