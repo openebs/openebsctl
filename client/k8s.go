@@ -244,7 +244,7 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 	return podInfo.Items[0].Spec.NodeName, nil
 }
 
-// GetcStorPools using the OpenEBS's Client
+// GetcStorPools returns a list CSPIs
 func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
@@ -355,6 +355,7 @@ func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstan
 	}, nil
 }
 
+// GetcStorVolumesByNames gets the CStorVolume resource from all namespaces
 func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeList, error) {
 	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
