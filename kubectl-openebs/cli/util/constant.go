@@ -31,4 +31,16 @@ const (
 	MaxWidth = 0
 	// Padding used in tabwriter
 	Padding = 4
+	// OpenEBSCasTypeKey present in label of PV
+	OpenEBSCasTypeKey = "openebs.io/cas-type"
+	// Unknown to be retuned when cas type is not known
+	Unknown = "unknown"
+	// OpenEBSCasTypeKeySc present in parameter of SC
+	OpenEBSCasTypeKeySc = "cas-type"
+	// CstorCasType cas type name
+	CstorCasType = "cstor"
+	// Healthy cstor volume status
+	Healthy = "Healthy"
+	// StorageKey key present in pvc status.capacity
+	StorageKey = "storage"
 )

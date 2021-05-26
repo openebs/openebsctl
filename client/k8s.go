@@ -19,24 +19,21 @@ package client
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
-
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/storage/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
-	"k8s.io/klog"
-
-	"github.com/pkg/errors"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/klog"
 
 	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -226,9 +223,6 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
 	}
-	if len(CStorVolumeReplicas.Items) == 0 {
-		klog.Errorf("Error while getting cStor Volume Replica for  %s , couldnot fild any replicas", name)
-	}
 	return CStorVolumeReplicas, nil
 }
 
@@ -252,4 +246,45 @@ func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 		return nil, errors.Wrapf(err, "Error while while getting cspc")
 	}
 	return cStorPools, nil
+}
+
+// GetPVCs list from the passed list of PVC names and the namespace
+func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.PersistentVolumeClaimList, error) {
+	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	pvcNamePVCmap := make(map[string]corev1.PersistentVolumeClaim)
+	for _, item := range pvcs.Items {
+		pvcNamePVCmap[item.Name] = item
+	}
+	var items = make([]corev1.PersistentVolumeClaim, 0)
+	for _, name := range pvcNames {
+		if _, ok := pvcNamePVCmap[name]; ok {
+			items = append(items, pvcNamePVCmap[name])
+		}
+	}
+	return &corev1.PersistentVolumeClaimList{
+		TypeMeta: metav1.TypeMeta{},
+		ListMeta: metav1.ListMeta{},
+		Items:    items,
+	}, nil
+}
+
+// GetCVA from the passed cstorvolume name
+func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, error) {
+	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volumeName)})
+	if err != nil || len(cvaList.Items) == 0 {
+		return nil, errors.New("Couldn't find the CVA for the passed volume")
+	}
+	return &cvaList.Items[0], nil
+}
+
+// GetCstorVolumeTargetPod for the passed volume to show details
+func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string) (*corev1.Pod, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
+	if err != nil || len(pods.Items) == 0 {
+		return nil, errors.New("The target pod for the volume was not found")
+	}
+	return &pods.Items[0], nil
 }
