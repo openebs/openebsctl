@@ -32,6 +32,8 @@ $ kubectl openebs describe volume pvc-abcd -n [namespace]
 # Describe PVCs present in the same namespace:
 $ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
 
+# Describe a cStor Pool Instance:
+$ kubectl openebs describe pool [cspi-name] -n [namespace]
 `
 )
 
@@ -49,7 +51,7 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 	cmd.AddCommand(
 		NewCmdDescribeVolume(),
 		NewCmdDescribePVC(),
-		// TODO: Add NewCmdPoolInfo()
+		NewCmdDescribePool(),
 	)
 
 	return cmd
