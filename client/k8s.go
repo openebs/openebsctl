@@ -347,7 +347,7 @@ func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstan
 		if pool, ok := poolMap[name]; ok {
 			list = append(list, pool)
 		} else {
-			klog.Errorf("Error from server (NotFound): pool %s not found", name)
+			fmt.Printf("Error from server (NotFound): pool %s not found\n", name)
 		}
 	}
 	return &cstorv1.CStorPoolInstanceList{
@@ -370,7 +370,7 @@ func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeLi
 		if pool, ok := csMap[name]; ok {
 			list = append(list, pool)
 		} else {
-			klog.Errorf("Error from server (NotFound): cStorVolume %s not found", name)
+			fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
 		}
 	}
 	return &cstorv1.CStorVolumeList{

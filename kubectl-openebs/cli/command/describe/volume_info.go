@@ -121,9 +121,13 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		}
 
 		//4. Get Node for Target Pod from the openebs-ns
-		nodeName, err := clientset.NodeForVolume(volName)
+		node, err := clientset.GetCStorVolumeAttachment(volName)
+		var nodeName string
 		if err != nil {
+			nodeName = "N/A"
 			fmt.Printf("failed to get CStorVolumeAttachments for %s\n", volName)
+		} else {
+			nodeName = node.Spec.Volume.OwnerNodeID
 		}
 
 		//5. cStor Volume Replicas
