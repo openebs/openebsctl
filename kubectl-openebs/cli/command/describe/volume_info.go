@@ -18,8 +18,6 @@ package describe
 
 import (
 	"fmt"
-	"html/template"
-	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 
@@ -154,14 +152,9 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		}
 
 		// Print the output for the portal status info
-		tmpl, err := template.New("volume").Parse(volInfoTemplate)
+		err = util.PrintByTemplate("volume", volInfoTemplate, volume)
 		if err != nil {
-			return errors.Wrap(err, "error displaying output for volume info")
-		}
-		err = tmpl.Execute(os.Stdout, volume)
-		if err != nil {
-			return errors.Wrap(err, "error displaying volume details")
-
+			return err
 		}
 
 		portalInfo := util.PortalInfo{
@@ -173,14 +166,9 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		}
 
 		// Print the output for the portal status info
-		tmpl, err = template.New("PortalInfo").Parse(portalTemplate)
+		err = util.PrintByTemplate("PortalInfo", portalTemplate, portalInfo)
 		if err != nil {
 			return errors.Wrap(err, "error creating output for portal info")
-		}
-		err = tmpl.Execute(os.Stdout, portalInfo)
-		if err != nil {
-			fmt.Println(err, "error displaying target portal detail")
-			return nil
 		}
 
 		replicaCount := volumeInfo.Spec.ReplicationFactor
