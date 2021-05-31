@@ -18,6 +18,7 @@ package util
 
 import (
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
+	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -144,4 +145,33 @@ type PVCInfo struct {
 	StorageClassName string
 	Size             string
 	PVStatus         corev1.PersistentVolumePhase
+}
+
+// PoolInfo struct will have all the details we want to give in the output for describe pool
+// details section for cstor pool instance
+type PoolInfo struct {
+	Name           string
+	HostName       string
+	Size           string
+	FreeCapacity   string
+	ReadOnlyStatus bool
+	Status         v1.CStorPoolInstancePhase
+	RaidType       string
+}
+
+// BlockDevicesInfoInPool struct will have all the details we want to give in the output for describe pool
+// details section for block devices in the cstor pool instance
+type BlockDevicesInfoInPool struct {
+	Name     string
+	Capacity uint64
+	State    v1alpha1.BlockDeviceState
+}
+
+// CVRInfo struct will have all the details we want to give in the output for describe pool
+// details section for provisional replicas in the cstor pool instance
+type CVRInfo struct {
+	Name    string
+	PvcName string
+	Size    string
+	Status  v1.CStorVolumeReplicaPhase
 }

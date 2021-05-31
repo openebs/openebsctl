@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
+	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
@@ -287,4 +288,43 @@ func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string
 		return nil, errors.New("The target pod for the volume was not found")
 	}
 	return &pods.Items[0], nil
+}
+
+// GetcStorPool using the OpenEBS's Client
+func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, error) {
+	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.ns).Get(context.TODO(), poolName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting cspi")
+	}
+	return cStorPool, nil
+}
+
+// GetBlockDevice using the OpenEBS's Client
+func (k K8sClient) GetBlockDevice(bd string) (*v1alpha1.BlockDevice, error) {
+	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.ns).Get(context.TODO(), bd, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting block device")
+	}
+	return blockDevice, nil
+}
+
+// GetCVRByPoolName using the OpenEBS's Client
+func (k K8sClient) GetCVRByPoolName(poolName string) (*cstorv1.CStorVolumeReplicaList, error) {
+	label := "cstorpoolinstance.openebs.io/name" + "=" + poolName
+	CVRs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas(k.ns).List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+	if err != nil {
+		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for pool %s", poolName)
+	}
+	return CVRs, nil
+}
+
+// GetPVCNameByCVR using the OpenEBS's Client
+func (k K8sClient) GetPVCNameByCVR(pvName string) string {
+	PV, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), pvName, metav1.GetOptions{})
+	if err != nil {
+		fmt.Println("error while getting pvc name")
+		return ""
+	}
+
+	return PV.Spec.ClaimRef.Name
 }
