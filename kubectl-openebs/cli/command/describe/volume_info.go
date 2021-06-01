@@ -196,6 +196,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 				cvr.Status.Phase)
 		}
 		fmt.Println(util.FormatList(out))
+		fmt.Println()
 	}
 	return nil
 }
