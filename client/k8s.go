@@ -142,11 +142,14 @@ func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 
 // GetCStorVolumeAttachment using the K8sClient's storage class client
 func (k K8sClient) GetCStorVolumeAttachment(volname string) (*cstorv1.CStorVolumeAttachment, error) {
-	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").Get(context.TODO(), volname, metav1.GetOptions{})
+	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(),
+		metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volname)})
 	if err != nil {
-		return nil, errors.Wrap(err, "error while while getting storage csi volume")
+		return nil, errors.Wrap(err, "Error from server (NotFound): CVA not found")
+	} else if vol == nil || len(vol.Items) == 0 {
+		return nil, fmt.Errorf("Error from server (NotFound): CVA not found for volume %s", volname)
 	}
-	return vol, nil
+	return &vol.Items[0], nil
 }
 
 // GetcStorVolumes using the K8sClient's storage class client

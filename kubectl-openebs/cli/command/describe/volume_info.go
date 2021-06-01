@@ -106,16 +106,19 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		volumeInfo, err := clientset.GetcStorVolume(volName)
 		if err != nil {
 			fmt.Printf("failed to get CStorVolume %s\n", volName)
+			continue
 		}
 		//2. Persistent Volume info
 		pvInfo, err := clientset.GetPV(volName)
 		if err != nil {
 			fmt.Printf("failed to get PV %s\n", volName)
+			continue
 		}
 		//3. cStor Volume Config
 		cvcInfo, err := clientset.GetCVC(volName)
 		if err != nil {
 			fmt.Printf("failed to get cStor Volume config for %s", volName)
+			continue
 		}
 
 		//4. Get Node for Target Pod from the openebs-ns
@@ -132,6 +135,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		cvrInfo, err := clientset.GetCVR(volName)
 		if err != nil {
 			fmt.Printf("failed to get cStor Volume Replicas for %s\n", volName)
+			continue
 		}
 		cSPCLabel := cstortypes.CStorPoolClusterLabelKey
 		volume := util.VolumeInfo{
@@ -189,8 +193,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 			out[i+2] = fmt.Sprintf("%s|%s|%s",
 				cvr.ObjectMeta.Name,
 				cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
-				cvr.Status.Phase,
-			)
+				cvr.Status.Phase)
 		}
 		fmt.Println(util.FormatList(out))
 	}
