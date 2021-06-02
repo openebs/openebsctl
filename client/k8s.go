@@ -131,7 +131,7 @@ func homeDir() string {
 	}
 	return os.Getenv("KUBECONFIG")
 }
-
+// GetOpenEBSNamespace from the specific engine component based on cas-type
 func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
 	if err != nil || len(pods.Items) == 0 {

@@ -39,8 +39,6 @@ const (
 	OpenEBSCasTypeKeySc = "cas-type"
 	// CstorCasType cas type name
 	CstorCasType = "cstor"
-	// CstorCasType cas type name
-	JivaCasType = "jiva"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
