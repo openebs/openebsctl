@@ -47,6 +47,7 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 			fmt.Println(volumeCommandHelpText)
 		},
 	}
+
 	cmd.AddCommand(
 		NewCmdDescribeVolume(),
 		NewCmdDescribePVC(),
