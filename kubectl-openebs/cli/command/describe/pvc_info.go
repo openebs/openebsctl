@@ -80,6 +80,7 @@ PV Status	 : {{.PVStatus}}
 
 // NewCmdDescribePVC Displays the pvc describe details
 func NewCmdDescribePVC() *cobra.Command {
+	var openebsNs string
 	cmd := &cobra.Command{
 		Use:     "pvc",
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
@@ -87,18 +88,20 @@ func NewCmdDescribePVC() *cobra.Command {
 		Long:    pvcInfoCommandHelpText,
 		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var pvNs string // This namespace belongs to the PVC entered
+			var pvNs, openebsNamespace string
 			if pvNs, _ = cmd.Flags().GetString("namespace"); pvNs == "" {
 				pvNs = "default"
 			}
-			util.CheckErr(RunPVCInfo(cmd, args, pvNs), util.Fatal)
+			openebsNamespace, _ = cmd.Flags().GetString("openebs-namespace")
+			util.CheckErr(RunPVCInfo(cmd, args, pvNs, openebsNamespace), util.Fatal)
 		},
 	}
+	cmd.Flags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	return cmd
 }
 
 // RunPVCInfo runs info command and make call to display the results
-func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
+func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) error {
 	if len(pvcs) == 0 {
 		return errors.New("Please give at least one pvc name to describe")
 	}
@@ -106,7 +109,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 	// Below is currently hardcoded to support only if resources are in openebs ns
 	// because the -n flag is used to take the pvc namespace and same cannot be used to
 	// take the openebs namespace
-	clientset, err := client.NewK8sClient("openebs")
+	clientset, err := client.NewK8sClient(openebsNs)
 	if err != nil {
 		return errors.Wrap(err, "Failed to execute describe pvc command")
 	}
@@ -130,7 +133,13 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string) error {
 			// Get the casType from the storage class and branch on basic of CSTOR and NON-CSTOR PVCs.
 			casType := util.GetCasTypeFromSC(sc)
 			if casType == util.CstorCasType {
-
+				if openebsNs == "" {
+					nsFromCli, err := clientset.GetOpenEBSNamespace(util.CstorCasType)
+					if err != nil {
+						return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+					}
+					clientset.Ns = nsFromCli
+				}
 				// Create Empty template objects and fill gradually when underlying sub CRs are identified.
 				pvcInfo := util.CstorPVCInfo{}
 				cvcInfo := util.CVCInfo{}

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
@@ -47,9 +48,9 @@ type K8sAPIVersion string
 // K8sClient provides the necessary utility to operate over
 // various K8s Kind objects
 type K8sClient struct {
-	// ns refers to K8s namespace where the operation
+	// Ns refers to K8s namespace where the operation
 	// will be performed
-	ns string
+	Ns string
 	// K8sCS refers to the Clientset capable of communicating
 	// with the K8s cluster
 	K8sCS kubernetes.Interface
@@ -59,7 +60,7 @@ type K8sClient struct {
 }
 
 // NewK8sClient creates a new K8sClient
-// TODO: improve K8sClientset instantiation. for example remove the ns from
+// TODO: improve K8sClientset instantiation. for example remove the Ns from
 // K8sClient struct
 func NewK8sClient(ns string) (*K8sClient, error) {
 	// get the appropriate clientsets & set the kubeconfig accordingly
@@ -75,7 +76,7 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 		return nil, errors.Wrap(err, "failed to build OpenEBS clientset")
 	}
 	return &K8sClient{
-		ns:        ns,
+		Ns:        ns,
 		K8sCS:     k8sCS,
 		OpenebsCS: openebsCS,
 	}, nil
@@ -130,6 +131,14 @@ func homeDir() string {
 	}
 	return os.Getenv("KUBECONFIG")
 }
+// GetOpenEBSNamespace from the specific engine component based on cas-type
+func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
+	if err != nil || len(pods.Items) == 0 {
+		return "", errors.New("unable to determine openebs namespace")
+	}
+	return pods.Items[0].Namespace, nil
+}
 
 // GetStorageClass using the K8sClient's storage class client
 func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
@@ -160,7 +169,7 @@ func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
 
 // GetcStorVolume fetches the volume object of the given name in the given namespace
 func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) {
-	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(k.ns).Get(context.TODO(), volName, metav1.GetOptions{})
+	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(k.Ns).Get(context.TODO(), volName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while while getting volume %s", volName)
 	}
@@ -210,9 +219,9 @@ func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
 
 // GetCVC used to get cStor Volume Config information for cStor a given volume using a cStorClient
 func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
-	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(k.ns).Get(context.TODO(), name, metav1.GetOptions{})
+	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(k.Ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while getting cStor Volume Config for  %s in %s", name, k.ns)
+		return nil, errors.Wrapf(err, "error while getting cStor Volume Config for  %s in %s", name, k.Ns)
 	}
 	return cStorVolumeConfig, nil
 }
@@ -283,7 +292,7 @@ func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, er
 
 // GetCstorVolumeTargetPod for the passed volume to show details
 func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string) (*corev1.Pod, error) {
-	pods, err := k.K8sCS.CoreV1().Pods(k.ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
+	pods, err := k.K8sCS.CoreV1().Pods(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
 	if err != nil || len(pods.Items) == 0 {
 		return nil, errors.New("The target pod for the volume was not found")
 	}
@@ -292,7 +301,7 @@ func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string
 
 // GetcStorPool using the OpenEBS's Client
 func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, error) {
-	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.ns).Get(context.TODO(), poolName, metav1.GetOptions{})
+	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while while getting cspi")
 	}
@@ -301,7 +310,7 @@ func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, er
 
 // GetBlockDevice using the OpenEBS's Client
 func (k K8sClient) GetBlockDevice(bd string) (*v1alpha1.BlockDevice, error) {
-	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.ns).Get(context.TODO(), bd, metav1.GetOptions{})
+	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).Get(context.TODO(), bd, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while while getting block device")
 	}
@@ -311,7 +320,7 @@ func (k K8sClient) GetBlockDevice(bd string) (*v1alpha1.BlockDevice, error) {
 // GetCVRByPoolName using the OpenEBS's Client
 func (k K8sClient) GetCVRByPoolName(poolName string) (*cstorv1.CStorVolumeReplicaList, error) {
 	label := "cstorpoolinstance.openebs.io/name" + "=" + poolName
-	CVRs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas(k.ns).List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+	CVRs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: label})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for pool %s", poolName)
 	}
