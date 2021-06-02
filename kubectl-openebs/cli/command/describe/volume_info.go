@@ -18,6 +18,7 @@ package describe
 
 import (
 	"fmt"
+	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 
@@ -71,7 +72,7 @@ TargetIP        :  {{.TargetIP}}
 func NewCmdDescribeVolume() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "volume",
-		Aliases: []string{"volumes", "vol", "v"},
+		Aliases: []string{"volumes", "vol", "v", "vols"},
 		Short:   "Displays Openebs volume information",
 		Long:    volumeInfoCommandHelpText,
 		Example: `kubectl openebs describe volume [vol]`,
@@ -105,7 +106,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		//1. cStor volume info
 		volumeInfo, err := clientset.GetcStorVolume(volName)
 		if err != nil {
-			fmt.Printf("failed to get CStorVolume %s\n", volName)
+			fmt.Fprintf(os.Stderr, "failed to get CStorVolume %s\n", volName)
 			continue
 		}
 		//2. Persistent Volume info
@@ -126,7 +127,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		var nodeName string
 		if err != nil {
 			nodeName = "N/A"
-			fmt.Printf("failed to get CStorVolumeAttachments for %s\n", volName)
+			fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", volName)
 		} else {
 			nodeName = node.Spec.Volume.OwnerNodeID
 		}
@@ -134,8 +135,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		//5. cStor Volume Replicas
 		cvrInfo, err := clientset.GetCVR(volName)
 		if err != nil {
-			fmt.Printf("failed to get cStor Volume Replicas for %s\n", volName)
-			continue
+			fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", volName)
 		}
 		cSPCLabel := cstortypes.CStorPoolClusterLabelKey
 		volume := util.VolumeInfo{
@@ -172,30 +172,32 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		// Print the output for the portal status info
 		err = util.PrintByTemplate("PortalInfo", portalTemplate, portalInfo)
 		if err != nil {
-			return errors.Wrap(err, "error creating output for portal info")
+			return err
 		}
 
 		replicaCount := volumeInfo.Spec.ReplicationFactor
 		// This case will occur only if user has manually specified zero replica.
 		// or if none of the replicas are healthy & running
 		if replicaCount == 0 || len(volumeInfo.Status.ReplicaStatuses) == 0 {
-			fmt.Println("None of the replicas are running")
+			fmt.Fprint(os.Stderr, "None of the replicas are running")
 			//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
 			return nil
 		}
 
 		// Print replica details
-		fmt.Printf("Replica Details :\n----------------\n")
-		out := make([]string, len(cvrInfo.Items)+2)
-		out[0] = "Name|Pool Instance|Status"
-		out[1] = "----|-------------|------"
-		for i, cvr := range cvrInfo.Items {
-			out[i+2] = fmt.Sprintf("%s|%s|%s",
-				cvr.ObjectMeta.Name,
-				cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
-				cvr.Status.Phase)
+		if cvrInfo != nil && len(cvrInfo.Items) > 0 {
+			fmt.Printf("Replica Details :\n----------------\n")
+			out := make([]string, len(cvrInfo.Items)+2)
+			out[0] = "Name|Pool Instance|Status"
+			out[1] = "----|-------------|------"
+			for i, cvr := range cvrInfo.Items {
+				out[i+2] = fmt.Sprintf("%s|%s|%s",
+					cvr.ObjectMeta.Name,
+					cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
+					cvr.Status.Phase)
+			}
+			fmt.Println(util.FormatList(out))
 		}
-		fmt.Println(util.FormatList(out))
 		fmt.Println()
 	}
 	return nil

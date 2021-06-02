@@ -229,7 +229,7 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	}
 	if len(CStorVolumeReplicas.Items) == 0 {
 		// TODO: This came during rebase, this shouldn't be required
-		klog.Errorf("Error while getting cStor Volume Replica for  %s , no replicas found", name)
+		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found\n", name)
 	}
 	return CStorVolumeReplicas, nil
 }
