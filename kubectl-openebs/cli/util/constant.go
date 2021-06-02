@@ -39,8 +39,25 @@ const (
 	OpenEBSCasTypeKeySc = "cas-type"
 	// CstorCasType cas type name
 	CstorCasType = "cstor"
+	// CstorCasType cas type name
+	JivaCasType = "jiva"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
 	StorageKey = "storage"
+)
+
+var (
+	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
+	CasTypeAndComponentNameMap = map[string]string{
+		"cstor": "openebs-cstor-csi-controller",
+	}
+	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
+	ProvsionerAndCasTypeMap = map[string]string{
+		"cstor.csi.openebs.io":         "cstor",
+		"openebs.io/provisioner-iscsi": "jiva",
+		"openebs.io/local":             "local",
+		"local.csi.openebs.io ":        "localpv-lvm",
+		"zfs.csi.openebs.io":           "localpv-zfs",
+	}
 )

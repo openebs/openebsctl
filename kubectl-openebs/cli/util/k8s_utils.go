@@ -17,10 +17,11 @@ limitations under the License.
 package util
 
 import (
+	"strconv"
+
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
-	"strconv"
 )
 
 // GetUsedCapacityFromCVR as the healthy replicas would have the correct used capacity details
@@ -69,6 +70,9 @@ func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 		if _, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
 			return v1SC.Parameters[OpenEBSCasTypeKeySc]
 		}
+	}
+	if _, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
+		return ProvsionerAndCasTypeMap[v1SC.Provisioner]
 	}
 	return Unknown
 }
