@@ -88,7 +88,7 @@ func NewCmdDescribePVC() *cobra.Command {
 		Long:    pvcInfoCommandHelpText,
 		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var pvNs, openebsNamespace string // This namespace belongs to the PVC entered
+			var pvNs, openebsNamespace string
 			if pvNs, _ = cmd.Flags().GetString("namespace"); pvNs == "" {
 				pvNs = "default"
 			}

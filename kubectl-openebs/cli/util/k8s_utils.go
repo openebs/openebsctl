@@ -71,8 +71,8 @@ func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 			return v1SC.Parameters[OpenEBSCasTypeKeySc]
 		}
 	}
-	if _, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
-		return ProvsionerAndCasTypeMap[v1SC.Provisioner]
+	if v, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
+		return v
 	}
 	return Unknown
 }
