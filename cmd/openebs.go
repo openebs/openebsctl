@@ -56,5 +56,6 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	_ = flag.CommandLine.Parse([]string{})
 	_ = viper.BindPFlag("namespace", cmd.PersistentFlags().Lookup("namespace"))
+	_ = viper.BindPFlag("openebs-namespace", cmd.PersistentFlags().Lookup("openebs-namespace"))
 	return cmd
 }

@@ -60,16 +60,8 @@ To configure your zsh shell to load completions for each session add to your zsh
 	return cmd
 }
 
-//RunCompletion is used to run the completion of the cobra commad
+// RunCompletion is used to run the completion of the cobra commad
 func RunCompletion(out io.Writer, cmd *cobra.Command, args []string) {
-	if len(args) == 0 {
-		fmt.Println("error: Shell not specified.")
-		return
-	}
-	if len(args) > 1 {
-		fmt.Println("error: Too many arguments. Expected only the shell type.")
-		return
-	}
 	if args[0] == "bash" {
 		RunCompletionBash(out, cmd)
 		return
