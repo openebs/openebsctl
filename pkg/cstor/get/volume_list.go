@@ -19,43 +19,16 @@ package get
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
-	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/cli-runtime/pkg/printers"
 )
-
-var (
-	volumesListCommandHelpText = `
-This command displays status of available zfs Volumes.
-If no volume ID is given, a list of all known volumes will be displayed.
-
-Usage: kubectl openebs get volume [options]
-`
-)
-
-// NewCmdGetVolume displays status of OpenEBS Volume(s)
-func NewCmdGetVolume() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "volume",
-		Aliases: []string{"vol", "v", "volumes"},
-		Short:   "Displays status information about Volume(s)",
-		Long:    volumesListCommandHelpText,
-		Run: func(cmd *cobra.Command, args []string) {
-			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
-			casType, _ := cmd.Flags().GetString("cas-type")
-			casType = strings.ToLower(casType)
-			util.CheckErr(RunVolumesList(openebsNS, casType, args), util.Fatal)
-		},
-	}
-	return cmd
-}
 
 // RunVolumesList lists the volumes
 func RunVolumesList(openebsNS, casType string, vols []string) error {

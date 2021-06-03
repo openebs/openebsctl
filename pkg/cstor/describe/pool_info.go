@@ -30,15 +30,6 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-var (
-	poolInfoCommandHelpText = `
-This command fetches information and status of the various aspects 
-of the cStor Pool Instance and its underlying related resources in the provided namespace.
-If no namespace is provided it uses default namespace for execution.
-$ kubectl openebs describe pool [cspi-name] -n [namespace]
-`
-)
-
 const (
 	cStorPoolInstanceInfoTemplate = `
 {{.Name}} Details :
@@ -53,22 +44,6 @@ RAID TYPE        : {{.RaidType}}
 
 `
 )
-
-// NewCmdDescribePool displays OpenEBS cStor pool instance information.
-func NewCmdDescribePool() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "pool",
-		Aliases: []string{"pools", "p"},
-		Short:   "Displays cStorPoolInstance information",
-		Long:    poolInfoCommandHelpText,
-		Example: `kubectl openebs describe pool cspi-one -n openebs`,
-		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(RunPoolInfo(cmd, args, openebsNs), util.Fatal)
-		},
-	}
-	return cmd
-}
 
 // RunPoolInfo method runs info command and make call to DisplayPoolInfo to display the results
 func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {

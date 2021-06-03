@@ -32,17 +32,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	volumeInfoCommandHelpText = `
-This command fetches information and status of the various
-aspects of a cStor Volume such as ISCSI, Controller, and Replica.
-
-#
-$ kubectl openebs describe [volume] [names...]
-
-`
-)
-
 const (
 	volInfoTemplate = `
 {{.Name}} Details :
@@ -71,23 +60,6 @@ TARGET IP        :  {{.TargetIP}}
 
 `
 )
-
-// NewCmdDescribeVolume displays OpenEBS Volume information.
-func NewCmdDescribeVolume() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "volume",
-		Aliases: []string{"volumes", "vol", "v", "vols"},
-		Short:   "Displays Openebs volume information",
-		Long:    volumeInfoCommandHelpText,
-		Example: `kubectl openebs describe volume [vol]`,
-		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: Get this from flags, pflag, etc
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(RunVolumeInfo(cmd, args, openebsNs), util.Fatal)
-		},
-	}
-	return cmd
-}
 
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
 func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {

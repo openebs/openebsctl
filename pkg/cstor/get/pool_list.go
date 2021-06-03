@@ -30,31 +30,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	poolListCommandHelpText = `
-This command lists of all known pools in the Cluster.
-
-Usage:
-$ kubectl openebs get pools [options]
-`
-)
-
-// NewCmdGetPool displays status of OpenEBS Pool(s)
-func NewCmdGetPool() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "pool",
-		Aliases: []string{"pools", "p"},
-		Short:   "Displays status information about Pool(s)",
-		Long:    poolListCommandHelpText,
-		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(RunPoolsList(cmd, args, openebsNs), util.Fatal)
-		},
-	}
-	return cmd
-}
-
 //RunPoolsList fetchs & lists the pools
 func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 	k8sClient, err := client.NewK8sClient(openebsNs)
