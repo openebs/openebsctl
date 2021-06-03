@@ -40,9 +40,10 @@ $ kubectl openebs describe pool [cspi-name] -n [namespace]
 // NewCmdDescribe provides options for managing OpenEBS Volume
 func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe",
-		Short: "Provide detailed information about an OpenEBS resource",
-		Long:  volumeCommandHelpText,
+		Use:       "describe",
+		ValidArgs: []string{"pool", "volume", "pvc"},
+		Short:     "Provide detailed information about an OpenEBS resource",
+		Long:      volumeCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(volumeCommandHelpText)
 		},

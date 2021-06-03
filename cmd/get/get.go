@@ -39,9 +39,10 @@ $ kubectl openebs get pool
 func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	var casType string
 	cmd := &cobra.Command{
-		Use:   "get",
-		Short: "Provides operations related to a Volume",
-		Long:  getCmdHelp,
+		Use:       "get",
+		Short:     "Provides operations related to a Volume",
+		ValidArgs: []string{"pool", "volume"},
+		Long:      getCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(getCmdHelp)
 		},

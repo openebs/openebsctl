@@ -35,8 +35,9 @@ var Version = "dev"
 func NewOpenebsCommand() *cobra.Command {
 	var openebsNs string
 	cmd := &cobra.Command{
-		Use:   "openebs",
-		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
+		Use:       "openebs",
+		ValidArgs: []string{"get", "describe", "completion"},
+		Short:     "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
 Find out more about OpenEBS on https://docs.openebs.io/`,
 		Version: Version,
