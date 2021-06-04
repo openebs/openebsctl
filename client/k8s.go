@@ -251,8 +251,8 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "error while getting target Pod for volume %s", volName)
 	}
-	if len(podInfo.Items) != 1 {
-		klog.Errorf("Error invalid number of Pods %d for volume %s", len(podInfo.Items), volName)
+	if len(podInfo.Items) == 0 {
+		return "", errors.New(fmt.Sprintf("Error invalid number of Pods %d for volume %s", len(podInfo.Items), volName))
 	}
 	return podInfo.Items[0].Spec.NodeName, nil
 }
@@ -389,4 +389,32 @@ func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeLi
 	return &cstorv1.CStorVolumeList{
 		Items: list,
 	}, nil
+}
+
+// GetCstorVolumeBackups across all namespaces for the provied volume
+func (k K8sClient) GetCstorVolumeBackups(pvName string) (*cstorv1.CStorBackupList, error) {
+	cstorBackupList, err := k.OpenebsCS.CstorV1().CStorBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
+	if err != nil || len(cstorBackupList.Items) == 0 {
+		return nil, errors.New("no cstorbackups were found for the volume")
+	}
+	return cstorBackupList, nil
+}
+
+// GetCstorVolumeCompletedBackups across all namespaces for the provied volume
+func (k K8sClient) GetCstorVolumeCompletedBackups(pvName string) (*cstorv1.CStorCompletedBackupList, error) {
+	cstorCompletedBackupList, err := k.OpenebsCS.CstorV1().CStorCompletedBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
+	if err != nil || len(cstorCompletedBackupList.Items) == 0 {
+		return nil, errors.New("no cstorcompletedbackups were found for the volume")
+	}
+	return cstorCompletedBackupList, nil
+}
+
+// GetCstorVolumeRestores across all namespaces for the provied volume
+func (k K8sClient) GetCstorVolumeRestores(pvName string) (*cstorv1.CStorRestoreList, error) {
+	cStorRestoreList, err := k.OpenebsCS.CstorV1().CStorRestores("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
+	if err != nil || len(cStorRestoreList.Items) == 0 {
+		return nil, errors.New("no cstorrestores were found for the volume")
+	}
+	return cStorRestoreList, nil
+
 }

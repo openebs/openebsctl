@@ -196,9 +196,64 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 			fmt.Printf("\nReplica Details :\n-----------------\n")
 			var rows []metav1.TableRow
 			for _, cvr := range cvrInfo.Items {
-				rows = append(rows, metav1.TableRow{Cells: []interface{}{cvr.Name, util.ConvertToIBytes(cvr.Status.Capacity.Total), util.ConvertToIBytes(cvr.Status.Capacity.Used), cvr.Status.Phase, util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{
+					cvr.Name,
+					util.ConvertToIBytes(cvr.Status.Capacity.Total),
+					util.ConvertToIBytes(cvr.Status.Capacity.Used),
+					cvr.Status.Phase,
+					util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
 			}
 			util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
+		}
+
+		cStorBackupList, err := clientset.GetCstorVolumeBackups(volName)
+		if cStorBackupList != nil {
+			fmt.Printf("\nCstor Backup Details :\n" + "---------------------\n")
+			var rows []metav1.TableRow
+			for _, item := range cStorBackupList.Items {
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{
+					item.ObjectMeta.Name,
+					item.Spec.BackupName,
+					item.Spec.VolumeName,
+					item.Spec.BackupDest,
+					item.Spec.SnapName,
+					item.Status,
+				}})
+			}
+			util.TablePrinter(util.CstorBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
+		}
+
+		cstorCompletedBackupList, err := clientset.GetCstorVolumeCompletedBackups(volName)
+		if cstorCompletedBackupList != nil {
+			fmt.Printf("\nCstor Completed Backup Details :" + "\n-------------------------------\n")
+			var rows []metav1.TableRow
+			for _, item := range cstorCompletedBackupList.Items {
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{
+					item.Name,
+					item.Spec.BackupName,
+					item.Spec.VolumeName,
+					item.Spec.LastSnapName,
+				}})
+			}
+			util.TablePrinter(util.CstorCompletedBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
+		}
+
+		cStorRestoreList, err := clientset.GetCstorVolumeRestores(volName)
+		if cStorRestoreList != nil {
+			fmt.Printf("\nCstor Restores Details :" + "\n-----------------------\n")
+			var rows []metav1.TableRow
+			for _, item := range cStorRestoreList.Items {
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{
+					item.ObjectMeta.Name,
+					item.Spec.RestoreName,
+					item.Spec.VolumeName,
+					item.Spec.RestoreSrc,
+					item.Spec.StorageClass,
+					item.Spec.Size.String(),
+					item.Status,
+				}})
+			}
+			util.TablePrinter(util.CstorRestoreColumnDefinations, rows, printers.PrintOptions{Wide: true})
 		}
 		fmt.Println()
 	}
