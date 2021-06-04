@@ -39,12 +39,9 @@ func NewCmdGetPool() *cobra.Command {
 		Short:   "Displays status information about Pool(s)",
 		Long:    poolListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			ns, err := cmd.Flags().GetString("namespace")
-			if err != nil {
-				ns = "openebs"
-			}
+			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(get.RunPoolsList(cmd, args, ns), util.Fatal)
+			util.CheckErr(get.RunPoolsList(cmd, args, openebsNS), util.Fatal)
 		},
 	}
 	return cmd

@@ -40,7 +40,9 @@ func NewCmdGetVolume() *cobra.Command {
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(get.RunVolumesList(cmd, openebsNS, args), util.Fatal)
+			casType, _ := cmd.Flags().GetString("cas-type")
+			_ = openebsNS
+			util.CheckErr(get.RunVolumesList(openebsNS, casType, args), util.Fatal)
 		},
 	}
 	return cmd

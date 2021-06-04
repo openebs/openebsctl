@@ -50,6 +50,7 @@ func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 		// Get one or more
 		cpools, err = k8sClient.GetCSPIs(pools, "")
 	}
+
 	if err != nil {
 		return errors.Wrap(err, "error listing pools")
 	}

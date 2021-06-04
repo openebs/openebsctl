@@ -19,16 +19,17 @@ package cmd
 import (
 	"flag"
 
-	"github.com/openebs/openebsctl/cmd/completion"
-	"github.com/openebs/openebsctl/cmd/describe"
-	"github.com/openebs/openebsctl/cmd/get"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/openebs/openebsctl/cmd/completion"
+	"github.com/openebs/openebsctl/cmd/describe"
+	"github.com/openebs/openebsctl/cmd/get"
+	v "github.com/openebs/openebsctl/cmd/version"
 )
 
-// Version is the version of the openebsctl binary, info filled by goreleaser
+// Version is the version of the openebsctl binary, info filled by go-releaser
 var Version = "dev"
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
