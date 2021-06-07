@@ -1,0 +1,60 @@
+project_name: 'kubectl-openebs'
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  # TODO: Need to change according to the refactor
+  - main: './kubectl-openebs/main.go'
+    env:
+      - CGO_ENABLED=0
+    goos: ['linux', 'darwin', 'windows']
+    goarch: ['386', 'amd64', 'arm64']
+  # TODO: Add ldflags after version changes are added
+
+changelog:
+  sort: 'asc'
+  filters:
+    exclude: ['^docs:', '^test:', 'Merge pull request', 'Merge branch']
+
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+    format_overrides:
+      - goos: 'windows'
+        format: 'zip'
+
+    wrap_in_directory: true
+    files:
+      - README.md
+    replacements:
+      darwin: Darwin
+      linux: Linux
+      windows: Windows
+      386: x86_32
+      amd64: x86_64
+
+checksum:
+  name_template: 'checksums_{{ .Tag }}.txt'
+  algorithm: sha256
+
+release:
+  name_template: "{{.ProjectName}}-{{.Tag}}"
+  header: '# Welcome to this new release!'
+  footer: '<img src="https://avatars.githubusercontent.com/u/20769039?s=200&v=4" width="35" height="35"/>© 2020-2021 The OpenEBS Authors. All materials licensed under [Apache v2.0](https://www.apache.org/licenses/LICENSE-2.0.html)'
+
+nfpms:
+  - file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+    vendor: OpenEBS
+    homepage: https://openebs.io/
+    description: OpenebsCTL is a plugin for kubectl. It allows users to fetch details of their OpenEBS storage components for information and debuggability.
+    license: Apache 2.0
+    formats:
+      - deb
+    overrides:
+      deb:
+        replacements:
+          linux: Linux
+          386: x86_32
+          amd64: x86_64
