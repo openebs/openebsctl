@@ -18,7 +18,6 @@ package describe
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
@@ -27,7 +26,6 @@ import (
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
 )
 
 var (
@@ -36,7 +34,7 @@ This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
 #
-$ kubectl openebs describe [pool|volume] [name]
+$ kubectl openebs describe [volume] [names...]
 
 `
 )
@@ -74,8 +72,8 @@ TargetIP        :  {{.TargetIP}}
 func NewCmdDescribeVolume() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "volume",
-		Aliases: []string{"volumes", "vol", "v"},
-		Short:   "Displays Openebs information",
+		Aliases: []string{"volumes", "vol", "v", "vols"},
+		Short:   "Displays Openebs volume information",
 		Long:    volumeInfoCommandHelpText,
 		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -99,112 +97,108 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
 	// TODO: Print all volume info present in args or print all volume info if no args given
-	if len(vols) != 1 {
+	if len(vols) == 0 {
 		return errors.New("Please give at least one volume to describe")
 	}
-	volName := vols[0]
-	// Fetch all details of a volume is called to get the volume controller's
-	// info such as controller's IP, status, iqn, replica IPs etc.
-	//1. cStor volume info
-	volumeInfo, err := clientset.GetcStorVolume(volName)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command, getting cStor volumes")
-	}
-	//2. Persistent Volume info
-	pvInfo, err := clientset.GetPV(volName)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command, getting persistant volumes")
-	}
+	for _, volName := range vols {
+		// Fetch all details of a volume is called to get the volume controller's
+		// info such as controller's IP, status, iqn, replica IPs etc.
+		//1. cStor volume info
+		volumeInfo, err := clientset.GetcStorVolume(volName)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to get CStorVolume %s\n", volName)
+			continue
+		}
+		//2. Persistent Volume info
+		pvInfo, err := clientset.GetPV(volName)
+		if err != nil {
+			fmt.Printf("failed to get PV %s\n", volName)
+			continue
+		}
+		//3. cStor Volume Config
+		cvcInfo, err := clientset.GetCVC(volName)
+		if err != nil {
+			fmt.Printf("failed to get cStor Volume config for %s", volName)
+			continue
+		}
 
-	//3. cStor Volume Config
-	cvcInfo, err := clientset.GetCVC(volName)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume config")
-	}
+		//4. Get Node for Target Pod from the openebs-ns
+		node, err := clientset.GetCStorVolumeAttachment(volName)
+		var nodeName string
+		if err != nil {
+			nodeName = "N/A"
+			fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", volName)
+		} else {
+			nodeName = node.Spec.Volume.OwnerNodeID
+		}
 
-	//4. Get Node Name for Target Pod
-	NodeName, err := clientset.NodeForVolume(volName)
-	if err != nil {
-		klog.Errorf("error executeing volume info command, getting Node for Volume %s:{%s}", volName, err)
-	}
+		//5. cStor Volume Replicas
+		cvrInfo, err := clientset.GetCVR(volName)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", volName)
+		}
+		cSPCLabel := cstortypes.CStorPoolClusterLabelKey
+		volume := util.VolumeInfo{
+			AccessMode:              util.AccessModeToString(pvInfo.Spec.AccessModes),
+			Capacity:                volumeInfo.Status.Capacity.String(),
+			CSPC:                    cvcInfo.Labels[cSPCLabel],
+			CSIDriver:               pvInfo.Spec.CSI.Driver,
+			CSIVolumeAttachmentName: pvInfo.Spec.CSI.VolumeHandle,
+			Name:                    volumeInfo.Name,
+			Namespace:               volumeInfo.Namespace,
+			PVC:                     pvInfo.Spec.ClaimRef.Name,
+			ReplicaCount:            volumeInfo.Spec.ReplicationFactor,
+			VolumePhase:             pvInfo.Status.Phase,
+			StorageClass:            pvInfo.Spec.StorageClassName,
+			Version:                 util.CheckVersion(volumeInfo.VersionDetails),
+			Size:                    volumeInfo.Status.Capacity.String(),
+			Status:                  volumeInfo.Status.Phase,
+		}
 
-	//5. cStor Volume Replicas
-	cvrInfo, err := clientset.GetCVR(volName)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command, getting cStor Volume Replicas")
-	}
+		// Print the output for the portal status info
+		err = util.PrintByTemplate("volume", volInfoTemplate, volume)
+		if err != nil {
+			return err
+		}
 
-	cSPCLabel := cstortypes.CStorPoolClusterLabelKey
+		portalInfo := util.PortalInfo{
+			IQN:            volumeInfo.Spec.Iqn,
+			VolumeName:     volumeInfo.Name,
+			Portal:         volumeInfo.Spec.TargetPortal,
+			TargetIP:       volumeInfo.Spec.TargetIP,
+			TargetNodeName: nodeName,
+		}
 
-	volume := util.VolumeInfo{
-		AccessMode:              util.AccessModeToString(pvInfo.Spec.AccessModes),
-		Capacity:                volumeInfo.Status.Capacity.String(),
-		CSPC:                    cvcInfo.Labels[cSPCLabel],
-		CSIDriver:               pvInfo.Spec.CSI.Driver,
-		CSIVolumeAttachmentName: pvInfo.Spec.CSI.VolumeHandle,
-		Name:                    volumeInfo.Name,
-		Namespace:               volumeInfo.Namespace,
-		PVC:                     pvInfo.Spec.ClaimRef.Name,
-		ReplicaCount:            volumeInfo.Spec.ReplicationFactor,
-		VolumePhase:             pvInfo.Status.Phase,
-		StorageClass:            pvInfo.Spec.StorageClassName,
-		Version:                 util.CheckVersion(volumeInfo.VersionDetails),
-		Size:                    volumeInfo.Status.Capacity.String(),
-		Status:                  volumeInfo.Status.Phase,
-	}
+		// Print the output for the portal status info
+		err = util.PrintByTemplate("PortalInfo", portalTemplate, portalInfo)
+		if err != nil {
+			return err
+		}
 
-	// Print the output for the portal status info
-	tmpl, err := template.New("volume").Parse(volInfoTemplate)
-	if err != nil {
-		return errors.Wrap(err, "error displaying output for volume info")
-	}
-	err = tmpl.Execute(os.Stdout, volume)
-	if err != nil {
-		return errors.Wrap(err, "error displaying volume details")
+		replicaCount := volumeInfo.Spec.ReplicationFactor
+		// This case will occur only if user has manually specified zero replica.
+		// or if none of the replicas are healthy & running
+		if replicaCount == 0 || len(volumeInfo.Status.ReplicaStatuses) == 0 {
+			fmt.Fprint(os.Stderr, "None of the replicas are running")
+			//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
+			return nil
+		}
 
+		// Print replica details
+		if cvrInfo != nil && len(cvrInfo.Items) > 0 {
+			fmt.Printf("Replica Details :\n----------------\n")
+			out := make([]string, len(cvrInfo.Items)+2)
+			out[0] = "Name|Pool Instance|Status"
+			out[1] = "----|-------------|------"
+			for i, cvr := range cvrInfo.Items {
+				out[i+2] = fmt.Sprintf("%s|%s|%s",
+					cvr.ObjectMeta.Name,
+					cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
+					cvr.Status.Phase)
+			}
+			fmt.Println(util.FormatList(out))
+		}
+		fmt.Println()
 	}
-
-	portalInfo := util.PortalInfo{
-		IQN:            volumeInfo.Spec.Iqn,
-		VolumeName:     volumeInfo.Name,
-		Portal:         volumeInfo.Spec.TargetPortal,
-		TargetIP:       volumeInfo.Spec.TargetIP,
-		TargetNodeName: NodeName,
-	}
-
-	// Print the output for the portal status info
-	tmpl, err = template.New("PortalInfo").Parse(portalTemplate)
-	if err != nil {
-		return errors.Wrap(err, "error creating output for portal info")
-	}
-	err = tmpl.Execute(os.Stdout, portalInfo)
-	if err != nil {
-		fmt.Println(err, "error displaying target portal detail")
-		return nil
-	}
-
-	replicaCount := volumeInfo.Spec.ReplicationFactor
-	// This case will occur only if user has manually specified zero replica.
-	// or if none of the replicas are healthy & running
-	if replicaCount == 0 || len(volumeInfo.Status.ReplicaStatuses) == 0 {
-		fmt.Println("None of the replicas are running")
-		//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
-		return nil
-	}
-
-	// Print replica details
-	fmt.Printf("Replica Details :\n----------------\n")
-	out := make([]string, len(cvrInfo.Items)+2)
-	out[0] = "Name|Pool Instance|Status"
-	out[1] = "----|-------------|------"
-	for i, cvr := range cvrInfo.Items {
-		out[i+2] = fmt.Sprintf("%s|%s|%s",
-			cvr.ObjectMeta.Name,
-			cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
-			cvr.Status.Phase,
-		)
-	}
-
-	fmt.Println(util.FormatList(out))
 	return nil
 }

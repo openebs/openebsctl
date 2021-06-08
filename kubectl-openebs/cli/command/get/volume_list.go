@@ -19,6 +19,7 @@ package get
 import (
 	"fmt"
 
+	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
@@ -42,18 +43,22 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(RunVolumesList(cmd), util.Fatal)
+			util.CheckErr(RunVolumesList(cmd, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command) error {
-	// TODO: Why is this working?
+func RunVolumesList(cmd *cobra.Command, vols []string) error {
 	client, err := client.NewK8sClient("")
 	util.CheckErr(err, util.Fatal)
-	cvols, err := client.GetcStorVolumes()
+	var cvols *v1.CStorVolumeList
+	if len(vols) == 0 {
+		cvols, err = client.GetcStorVolumes()
+	} else {
+		cvols, err = client.GetcStorVolumesByNames(vols)
+	}
 	if err != nil {
 		return errors.Wrap(err, "error listing volumes")
 	}

@@ -149,13 +149,16 @@ func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 	return scs, nil
 }
 
-// GetCSIVolume using the K8sClient's storage class client
-func (k K8sClient) GetCSIVolume(volname string) (*cstorv1.CStorVolumeAttachment, error) {
-	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").Get(context.TODO(), volname, metav1.GetOptions{})
+// GetCStorVolumeAttachment using the K8sClient's storage class client
+func (k K8sClient) GetCStorVolumeAttachment(volname string) (*cstorv1.CStorVolumeAttachment, error) {
+	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(),
+		metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volname)})
 	if err != nil {
-		return nil, errors.Wrap(err, "error while while getting storage csi volume")
+		return nil, errors.Wrap(err, "Error from server (NotFound): CVA not found")
+	} else if vol == nil || len(vol.Items) == 0 {
+		return nil, fmt.Errorf("Error from server (NotFound): CVA not found for volume %s", volname)
 	}
-	return vol, nil
+	return &vol.Items[0], nil
 }
 
 // GetcStorVolumes using the K8sClient's storage class client
@@ -233,6 +236,10 @@ func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
 	}
+	if len(CStorVolumeReplicas.Items) == 0 {
+		// TODO: This came during rebase, this shouldn't be required
+		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found\n", name)
+	}
 	return CStorVolumeReplicas, nil
 }
 
@@ -249,11 +256,11 @@ func (k K8sClient) NodeForVolume(volName string) (string, error) {
 	return podInfo.Items[0].Spec.NodeName, nil
 }
 
-// GetcStorPools using the OpenEBS's Client
+// GetcStorPools returns a list CSPIs
 func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
 	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting cspc")
+		return nil, errors.Wrapf(err, "Error while getting cspi")
 	}
 	return cStorPools, nil
 }
@@ -334,6 +341,51 @@ func (k K8sClient) GetPVCNameByCVR(pvName string) string {
 		fmt.Println("error while getting pvc name")
 		return ""
 	}
-
 	return PV.Spec.ClaimRef.Name
+}
+
+// GetcStorPoolsByName returns a list of CSPI which have name in names
+func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstanceList, error) {
+	cspi, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting cspi")
+	}
+	poolMap := make(map[string]cstorv1.CStorPoolInstance)
+	for _, p := range cspi.Items {
+		poolMap[p.Name] = p
+	}
+	var list []cstorv1.CStorPoolInstance
+	for _, name := range names {
+		if pool, ok := poolMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			fmt.Printf("Error from server (NotFound): pool %s not found\n", name)
+		}
+	}
+	return &cstorv1.CStorPoolInstanceList{
+		Items: list,
+	}, nil
+}
+
+// GetcStorVolumesByNames gets the CStorVolume resource from all namespaces
+func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeList, error) {
+	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while while getting volumes")
+	}
+	csMap := make(map[string]cstorv1.CStorVolume)
+	for _, cv := range cVols.Items {
+		csMap[cv.Name] = cv
+	}
+	var list []cstorv1.CStorVolume
+	for _, name := range vols {
+		if pool, ok := csMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+		}
+	}
+	return &cstorv1.CStorVolumeList{
+		Items: list,
+	}, nil
 }
