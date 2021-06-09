@@ -17,8 +17,13 @@ limitations under the License.
 package util
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/dustin/go-humanize"
 	"html/template"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/printers"
 	"os"
 	"strconv"
 	"strings"
@@ -84,4 +89,37 @@ func PrintByTemplate(templateName string, resourceTemplate string, resource inte
 		return errors.Wrap(err, "error displaying by template for"+templateName)
 	}
 	return nil
+}
+
+// TablePrinter uses cli-runtime TablePrinter to create a similar UI for the ctl
+func TablePrinter(columns []metav1.TableColumnDefinition, rows []metav1.TableRow, options printers.PrintOptions) {
+	table := &metav1.Table{
+		ColumnDefinitions: columns,
+		Rows:              rows,
+	}
+	out := bytes.NewBuffer([]byte{})
+	printer := printers.NewTablePrinter(options)
+	printer.PrintObj(table, out)
+	fmt.Printf(out.String())
+}
+
+// TemplatePrinter uses cli-runtime TemplatePrinter to print by template without extra type
+func TemplatePrinter(template string, obj runtime.Object) {
+	p, _ := printers.NewGoTemplatePrinter([]byte(template))
+	p.AllowMissingKeys(true)
+	buffer := &bytes.Buffer{}
+	_ = p.PrintObj(obj, buffer)
+	fmt.Println(buffer)
+}
+
+// ConvertToIBytes humanizes all the passed units to IBytes format
+func ConvertToIBytes(value string) string{
+	if value == "" {
+		return value
+	}
+	iBytes, err := humanize.ParseBytes(value)
+	if err != nil {
+		return value
+	}
+	return humanize.IBytes(iBytes)
 }

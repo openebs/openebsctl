@@ -198,7 +198,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 		}
 		vol := &util.Volume{
 			StorageClass:            pv.Spec.StorageClassName,
-			Node:                    i.ObjectMeta.OwnerReferences[0].Name,
+			Node:                    i.Labels["nodeID"],
 			PVC:                     pv.Spec.ClaimRef.Name,
 			CSIVolumeAttachmentName: i.Name,
 			AttachementStatus:       string(pv.Status.Phase),

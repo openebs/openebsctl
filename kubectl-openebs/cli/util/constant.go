@@ -16,6 +16,8 @@ limitations under the License.
 
 package util
 
+import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 const (
 	// BytesToGB used to convert bytes to GB
 	BytesToGB = 1073741824
@@ -57,5 +59,60 @@ var (
 		"openebs.io/local":             "local",
 		"local.csi.openebs.io ":        "localpv-lvm",
 		"zfs.csi.openebs.io":           "localpv-zfs",
+	}
+	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
+	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Total", Type: "string"},
+		{Name: "Used", Type: "string"},
+		{Name: "Status", Type: "string"},
+		{Name: "Age", Type: "string"},
+	}
+	// CstorTargetDetailsColumnDefinations stores the Table headers for Cstor Target Details
+	CstorTargetDetailsColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Namespace", Type: "string"},
+		{Name: "Name", Type: "string"},
+		{Name: "Ready", Type: "string"},
+		{Name: "Status", Type: "string"},
+		{Name: "Age", Type: "string"},
+		{Name: "IP", Type: "string"},
+		{Name: "Node", Type: "string"},
+	}
+	// CstorVolumeListColumnDefinations stores the Table headers for Cstor Volume Details
+	CstorVolumeListColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Namespace", Type: "string"},
+		{Name: "Name", Type: "string"},
+		{Name: "Status", Type: "string"},
+		{Name: "Version", Type: "string"},
+		{Name: "Capacity", Type: "string"},
+		{Name: "Storage Class", Type: "string"},
+		{Name: "Attached", Type: "string"},
+		{Name: "Access Mode", Type: "string"},
+		{Name: "Attached Node", Type: "string"},
+	}
+	// CstorPoolListColumnDefinations stores the Table headers for Cstor Pool Details
+	CstorPoolListColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "HostName", Type: "string"},
+		{Name: "Free", Type: "string"},
+		{Name: "Capacity", Type: "string"},
+		{Name: "Read Only", Type: "bool"},
+		{Name: "Provisioned Replicas", Type: "int"},
+		{Name: "Healthy Replicas", Type: "int"},
+		{Name: "Status", Type: "string"},
+		{Name: "Age", Type: "string"},
+	}
+	// BDListColumnDefinations stores the Table headers for Block Device Details
+	BDListColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Capacity", Type: "string"},
+		{Name: "State", Type: "string"},
+	}
+	// PoolReplicaColumnDefinations stores the Table headers for Pool Replica Details
+	PoolReplicaColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "PVC Name", Type: "string"},
+		{Name: "Size", Type: "string"},
+		{Name: "State", Type: "string"},
 	}
 )

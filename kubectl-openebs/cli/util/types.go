@@ -125,16 +125,6 @@ type CstorPVCInfo struct {
 	PVStatus         v1.CStorVolumePhase
 }
 
-// CVCInfo struct will have all the details we want to give in the output for describe pvc
-// cvc section for cstor pvc
-type CVCInfo struct {
-	Name         string
-	ReplicaCount int
-	PoolInfo     []string
-	Version      string
-	Upgrading    bool
-}
-
 // PVCInfo struct will have all the details we want to give in the output for describe pvc
 // details section for non-cstor pvc
 type PVCInfo struct {
