@@ -44,7 +44,7 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs,_ := cmd.Flags().GetString("openebs-namespace")
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			util.CheckErr(RunVolumesList(cmd, openebsNs, args), util.Fatal)
 		},
 	}
@@ -52,7 +52,7 @@ func NewCmdGetVolume() *cobra.Command {
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command,openebsNs string, vols []string) error {
+func RunVolumesList(cmd *cobra.Command, openebsNs string, vols []string) error {
 	k8sClient, err := client.NewK8sClient("")
 	util.CheckErr(err, util.Fatal)
 	if openebsNs == "" {
@@ -79,7 +79,7 @@ func RunVolumesList(cmd *cobra.Command,openebsNs string, vols []string) error {
 	// give output according to volume status
 	var rows []metav1.TableRow
 	for _, item := range cvols.Items {
-		rows = append(rows,  metav1.TableRow{Cells: []interface{}{
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{
 			item.ObjectMeta.Namespace,
 			item.ObjectMeta.Name,
 			item.Status.Phase,

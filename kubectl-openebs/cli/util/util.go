@@ -19,15 +19,16 @@ package util
 import (
 	"bytes"
 	"fmt"
-	"github.com/dustin/go-humanize"
 	"html/template"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/cli-runtime/pkg/printers"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dustin/go-humanize"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	"github.com/pkg/errors"
 	"k8s.io/klog"
@@ -113,7 +114,7 @@ func TemplatePrinter(template string, obj runtime.Object) {
 }
 
 // ConvertToIBytes humanizes all the passed units to IBytes format
-func ConvertToIBytes(value string) string{
+func ConvertToIBytes(value string) string {
 	if value == "" {
 		return value
 	}

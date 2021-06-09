@@ -18,6 +18,7 @@ package describe
 
 import (
 	"fmt"
+
 	"github.com/dustin/go-humanize"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
@@ -49,7 +50,6 @@ STATUS	         : {{.Status}}
 RAID TYPE        : {{.RaidType}}
 
 `
-
 )
 
 // NewCmdDescribePool displays OpenEBS cStor pool instance information.
@@ -61,7 +61,7 @@ func NewCmdDescribePool() *cobra.Command {
 		Long:    poolInfoCommandHelpText,
 		Example: `kubectl openebs describe pool cspi-one -n openebs`,
 		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs,_ := cmd.Flags().GetString("openebs-namespace")
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			util.CheckErr(RunPoolInfo(cmd, args, openebsNs), util.Fatal)
 		},
 	}
@@ -123,32 +123,32 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 		bd, err := clientset.GetBlockDevice(item)
 		if err != nil {
 			fmt.Printf("Could not find the blockdevice : %s\n", item)
-		}else{
-			bdRows = append(bdRows,  metav1.TableRow{Cells: []interface{}{bd.Name, humanize.IBytes(bd.Spec.Capacity.Storage), bd.Status.State}})
+		} else {
+			bdRows = append(bdRows, metav1.TableRow{Cells: []interface{}{bd.Name, humanize.IBytes(bd.Spec.Capacity.Storage), bd.Status.State}})
 		}
 	}
-	 if len(bdRows) != 0 {
-	 	fmt.Printf("Blockdevice details :\n" + "---------------------\n")
-		 util.TablePrinter(util.BDListColumnDefinations, bdRows, printers.PrintOptions{Wide: true})
-	 }else{
-		 fmt.Printf("Could not find any blockdevice that belongs to the pool")
-	 }
+	if len(bdRows) != 0 {
+		fmt.Printf("Blockdevice details :\n" + "---------------------\n")
+		util.TablePrinter(util.BDListColumnDefinations, bdRows, printers.PrintOptions{Wide: true})
+	} else {
+		fmt.Printf("Could not find any blockdevice that belongs to the pool")
+	}
 
 	// Fetch info for provisional replica
 	var cvrRows []metav1.TableRow
 	CVRsInPool, err := clientset.GetCVRByPoolName(poolName)
 	if err != nil {
 		fmt.Printf("None of the replicas are running")
-	}else{
+	} else {
 		for _, cvr := range CVRsInPool.Items {
-			cvrRows = append(cvrRows,  metav1.TableRow{Cells: []interface{}{
+			cvrRows = append(cvrRows, metav1.TableRow{Cells: []interface{}{
 				cvr.Name,
 				clientset.GetPVCNameByCVR(cvr.Labels["openebs.io/persistent-volume"]),
 				util.ConvertToIBytes(cvr.Status.Capacity.Total),
 				cvr.Status.Phase}})
 		}
 	}
-	if len(cvrRows) !=0 {
+	if len(cvrRows) != 0 {
 		fmt.Printf("\nReplica Details :\n-----------------\n")
 		util.TablePrinter(util.PoolReplicaColumnDefinations, cvrRows, printers.PrintOptions{Wide: true})
 	}

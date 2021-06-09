@@ -131,6 +131,7 @@ func homeDir() string {
 	}
 	return os.Getenv("KUBECONFIG")
 }
+
 // GetOpenEBSNamespace from the specific engine component based on cas-type
 func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
@@ -144,7 +145,7 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 	scs, err := k.K8sCS.StorageV1().StorageClasses().Get(context.TODO(), driver, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "error while while getting storage class")
+		return nil, errors.Wrap(err, "error while getting storage class")
 	}
 	return scs, nil
 }
@@ -165,7 +166,7 @@ func (k K8sClient) GetCStorVolumeAttachment(volname string) (*cstorv1.CStorVolum
 func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
 	cStorVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting volumes")
+		return nil, errors.Wrapf(err, "Error while getting volumes")
 	}
 	return cStorVols, nil
 }
@@ -174,7 +175,7 @@ func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
 func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) {
 	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(k.Ns).Get(context.TODO(), volName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while while getting volume %s", volName)
+		return nil, errors.Wrapf(err, "error while getting volume %s", volName)
 	}
 	return volInfo, nil
 }
@@ -185,7 +186,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 	volumes := make(map[string]*util.Volume)
 	cstorVA, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return volumes, errors.Wrap(err, "error while while getting storage volume attachments")
+		return volumes, errors.Wrap(err, "error while getting storage volume attachments")
 	}
 	for _, i := range cstorVA.Items {
 		if i.Spec.Volume.Name == "" {
@@ -215,7 +216,7 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
 	vol, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "error while while getting persistant volume")
+		return nil, errors.Wrap(err, "error while getting persistant volume")
 	}
 	return vol, nil
 }
@@ -310,7 +311,7 @@ func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string
 func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, error) {
 	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting cspi")
+		return nil, errors.Wrapf(err, "Error while getting cspi")
 	}
 	return cStorPool, nil
 }
@@ -319,7 +320,7 @@ func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, er
 func (k K8sClient) GetBlockDevice(bd string) (*v1alpha1.BlockDevice, error) {
 	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).Get(context.TODO(), bd, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting block device")
+		return nil, errors.Wrapf(err, "Error while getting block device")
 	}
 	return blockDevice, nil
 }
@@ -371,7 +372,7 @@ func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstan
 func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeList, error) {
 	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while while getting volumes")
+		return nil, errors.Wrapf(err, "Error while getting volumes")
 	}
 	csMap := make(map[string]cstorv1.CStorVolume)
 	for _, cv := range cVols.Items {

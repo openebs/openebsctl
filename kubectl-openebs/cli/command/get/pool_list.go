@@ -18,9 +18,10 @@ package get
 
 import (
 	"fmt"
+	"time"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
-	"time"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/client"
@@ -46,7 +47,7 @@ func NewCmdGetPool() *cobra.Command {
 		Short:   "Displays status information about Pool(s)",
 		Long:    poolListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs,_ := cmd.Flags().GetString("openebs-namespace")
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			// TODO: De-couple CLI code, logic code, API code
 			util.CheckErr(RunPoolsList(cmd, args, openebsNs), util.Fatal)
 		},
@@ -91,7 +92,7 @@ func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 	}
 	if len(cpools.Items) == 0 {
 		fmt.Println("No Pools are found")
-	}else{
+	} else {
 		util.TablePrinter(util.CstorPoolListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 	return nil

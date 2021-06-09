@@ -69,3 +69,72 @@ func TestDuration(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertToIBytes(t *testing.T) {
+	type args struct {
+		value string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"Test with GB values",
+			args{value: "1.65GB"},
+			"1.5 GiB",
+		},
+		{
+			"Test with MB values",
+			args{value: "1.65MB"},
+			"1.6 MiB",
+		},
+		{
+			"Test with KB values",
+			args{value: "1.65KB"},
+			"1.6 KiB",
+		},
+		{
+			"Test with K values",
+			args{value: "1.65K"},
+			"1.6 KiB",
+		},
+		{
+			"Test with M values",
+			args{value: "1.65M"},
+			"1.6 MiB",
+		},
+		{
+			"Test with MiB values",
+			args{value: "1.65MiB"},
+			"1.6 MiB",
+		},
+		{
+			"Test with Mi values",
+			args{value: "1.65Mi"},
+			"1.6 MiB",
+		},
+		{
+			"Test with invalid",
+			args{value: ""},
+			"",
+		},
+		{
+			"Test with only numeric value",
+			args{value: "1766215"},
+			"1.7 MiB",
+		},
+		{
+			"Test with only invalid unit",
+			args{value: "1766215CiB"},
+			"1766215CiB",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ConvertToIBytes(tt.args.value); got != tt.want {
+				t.Errorf("Duration() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

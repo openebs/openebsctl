@@ -18,8 +18,9 @@ package describe
 
 import (
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	"github.com/openebs/openebsctl/client"
@@ -79,7 +80,6 @@ STORAGE CLASS    : {{.StorageClassName}}
 SIZE             : {{.Size}}
 PV STATUS    	 : {{.PVStatus}}
 `
-
 )
 
 // NewCmdDescribePVC Displays the pvc describe details
@@ -197,7 +197,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				if err == nil {
 					fmt.Printf("Target Details :\n----------------\n")
 					var rows []metav1.TableRow
-					rows = append(rows,  metav1.TableRow{Cells: []interface{}{targetPod.Namespace, targetPod.Name, util.GetReadyContainers(targetPod.Status.ContainerStatuses), targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)), targetPod.Status.PodIP, targetPod.Spec.NodeName}})
+					rows = append(rows, metav1.TableRow{Cells: []interface{}{targetPod.Namespace, targetPod.Name, util.GetReadyContainers(targetPod.Status.ContainerStatuses), targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)), targetPod.Status.PodIP, targetPod.Spec.NodeName}})
 					util.TablePrinter(util.CstorTargetDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {
 					fmt.Printf("Target Details :\n----------------\nNo target pod exists for the CstorVolume\n")

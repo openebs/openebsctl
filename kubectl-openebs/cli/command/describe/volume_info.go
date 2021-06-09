@@ -18,10 +18,11 @@ package describe
 
 import (
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 	"os"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 
@@ -81,7 +82,7 @@ func NewCmdDescribeVolume() *cobra.Command {
 		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Get this from flags, pflag, etc
-			openebsNs,_ := cmd.Flags().GetString("openebs-namespace")
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			util.CheckErr(RunVolumeInfo(cmd, args, openebsNs), util.Fatal)
 		},
 	}
