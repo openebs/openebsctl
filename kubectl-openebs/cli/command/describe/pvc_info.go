@@ -173,6 +173,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				// if the CStorVolumeAttachment is not found.
 				cva, err := clientset.GetCVA(item.Spec.VolumeName)
 				if err != nil {
+					pvcInfo.AttachedToNode = "N/A"
 					fmt.Println("Underlying CstorVolumeAttachment is not found for: ", item.Name)
 				} else {
 					pvcInfo.AttachedToNode = cva.Spec.Volume.OwnerNodeID
