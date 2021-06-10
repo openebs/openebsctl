@@ -117,4 +117,29 @@ var (
 		{Name: "Size", Type: "string"},
 		{Name: "State", Type: "string"},
 	}
+	// CstorBackupColumnDefinations stores the Table headers for Cstor Backup Details
+	CstorBackupColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Backup Name", Type: "string"},
+		{Name: "Volume Name", Type: "string"},
+		{Name: "Backup Destination", Type: "string"},
+		{Name: "Snap Name", Type: "string"},
+		{Name: "Status", Type: "string"},
+	}
+	// CstorCompletedBackupColumnDefinations stores the Table headers for Cstor Completed Backup Details
+	CstorCompletedBackupColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Backup Name", Type: "string"},
+		{Name: "Volume Name", Type: "string"},
+		{Name: "Last Snap Name", Type: "string"},
+	}
+	// CstorRestoreColumnDefinations stores the Table headers for Cstor Restore Details
+	CstorRestoreColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Restore Name", Type: "string"},
+		{Name: "Volume Name", Type: "string"},
+		{Name: "Restore Source", Type: "string"},
+		{Name: "Storage Class", Type: "string"},
+		{Name: "Status", Type: "string"},
+	}
 )

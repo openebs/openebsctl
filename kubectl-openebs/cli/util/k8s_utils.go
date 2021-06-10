@@ -49,16 +49,18 @@ func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
 // GetCasTypeFromPV from the passed PersistentVolume or the Stora
 func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 	if v1PV.ObjectMeta.Labels != nil {
-		if _, ok := v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]; ok {
-			return v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]
+		if val, ok := v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]; ok {
+			return val
 		}
-	} else if v1PV.ObjectMeta.Annotations != nil {
-		if _, ok := v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]; ok {
-			return v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]
+	}
+	if v1PV.ObjectMeta.Annotations != nil {
+		if val, ok := v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]; ok {
+			return val
 		}
-	} else if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
-		if _, ok := v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]; ok {
-			return v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]
+	}
+	if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
+		if val, ok := v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]; ok {
+			return val
 		}
 	}
 	return Unknown
@@ -67,12 +69,12 @@ func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 // GetCasTypeFromSC by passing the storage class
 func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 	if v1SC.Parameters != nil {
-		if _, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
-			return v1SC.Parameters[OpenEBSCasTypeKeySc]
+		if val, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
+			return val
 		}
 	}
-	if v, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
-		return v
+	if val, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
+		return val
 	}
 	return Unknown
 }
