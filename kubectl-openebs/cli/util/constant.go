@@ -45,6 +45,8 @@ const (
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
 	StorageKey = "storage"
+	//NotAttached to show when CVA is not present
+	NotAttached = "N/A"
 )
 
 var (
