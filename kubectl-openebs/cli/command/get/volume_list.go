@@ -79,16 +79,26 @@ func RunVolumesList(cmd *cobra.Command, openebsNs string, vols []string) error {
 	// give output according to volume status
 	var rows []metav1.TableRow
 	for _, item := range cvols.Items {
+		storageClass := util.NotAttached
+		attachementStatus := util.NotAttached
+		accessMode := util.NotAttached
+		node := util.NotAttached
+		if val, ok := pvols[item.ObjectMeta.Name]; ok {
+			storageClass = val.StorageClass
+			attachementStatus = val.AttachementStatus
+			accessMode = val.AccessMode
+			node = val.Node
+		}
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{
 			item.ObjectMeta.Namespace,
 			item.ObjectMeta.Name,
 			item.Status.Phase,
 			item.VersionDetails.Status.Current,
 			util.ConvertToIBytes(item.Status.Capacity.String()),
-			pvols[item.ObjectMeta.Name].StorageClass,
-			pvols[item.ObjectMeta.Name].AttachementStatus,
-			pvols[item.ObjectMeta.Name].AccessMode,
-			pvols[item.ObjectMeta.Name].Node}})
+			storageClass,
+			attachementStatus,
+			accessMode,
+			node}})
 		//TODO: find a fix
 		//pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName field removed for readability
 	}

@@ -133,7 +133,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 		node, err := clientset.GetCStorVolumeAttachment(volName)
 		var nodeName string
 		if err != nil {
-			nodeName = "N/A"
+			nodeName = util.NotAttached
 			fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", volName)
 		} else {
 			nodeName = node.Spec.Volume.OwnerNodeID
