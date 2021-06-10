@@ -117,7 +117,7 @@ var (
 		{Name: "Size", Type: "string"},
 		{Name: "State", Type: "string"},
 	}
-	// CstorVolumeBackupColumnDefinations stores the Table headers for Cstor Backup Details
+	// CstorBackupColumnDefinations stores the Table headers for Cstor Backup Details
 	CstorBackupColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
 		{Name: "Backup Name", Type: "string"},
