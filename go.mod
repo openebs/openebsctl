@@ -3,6 +3,7 @@ module github.com/openebs/openebsctl
 go 1.14
 
 require (
+	github.com/dustin/go-humanize v1.0.0
 	github.com/openebs/api/v2 v2.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/ryanuber/columnize v2.1.0+incompatible

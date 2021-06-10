@@ -17,7 +17,8 @@ limitations under the License.
 package get
 
 import (
-	"fmt"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/client"
@@ -31,7 +32,7 @@ var (
 This command displays status of available zfs Volumes.
 If no volume ID is given, a list of all known volumes will be displayed.
 
-Usage: kubectl openebs cStor volume list [options]
+Usage: kubectl openebs get volume [options]
 `
 )
 
@@ -43,53 +44,54 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(RunVolumesList(cmd, args), util.Fatal)
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
+			util.CheckErr(RunVolumesList(cmd, openebsNs, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command, vols []string) error {
-	client, err := client.NewK8sClient("")
+func RunVolumesList(cmd *cobra.Command, openebsNs string, vols []string) error {
+	k8sClient, err := client.NewK8sClient("")
 	util.CheckErr(err, util.Fatal)
+	if openebsNs == "" {
+		nsFromCli, err := k8sClient.GetOpenEBSNamespace(util.CstorCasType)
+		if err != nil {
+			return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+		}
+		k8sClient.Ns = nsFromCli
+	}
 	var cvols *v1.CStorVolumeList
 	if len(vols) == 0 {
-		cvols, err = client.GetcStorVolumes()
+		cvols, err = k8sClient.GetcStorVolumes()
 	} else {
-		cvols, err = client.GetcStorVolumesByNames(vols)
+		cvols, err = k8sClient.GetcStorVolumesByNames(vols)
 	}
 	if err != nil {
 		return errors.Wrap(err, "error listing volumes")
 	}
-	pvols, err := client.GetCStorVolumeInfoMap("")
+	pvols, err := k8sClient.GetCStorVolumeInfoMap("")
 	if err != nil {
 		return errors.Wrap(err, "failed to execute volume info command")
 	}
 	// tally status of cvols to pvols
 	// give output according to volume status
-	out := make([]string, len(cvols.Items)+2)
-	out[0] = "Namespace|Name|Status|Version|Capacity|StorageClass|Attached|Access Mode|Attached Node"
-	out[1] = "---------|----|------|-------|--------|------------|--------|-----------|-------------"
-	for i, item := range cvols.Items {
-		pvols[item.ObjectMeta.Name] = util.CheckForVol(item.ObjectMeta.Name, pvols)
-		out[i+2] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s",
+	var rows []metav1.TableRow
+	for _, item := range cvols.Items {
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{
 			item.ObjectMeta.Namespace,
 			item.ObjectMeta.Name,
 			item.Status.Phase,
 			item.VersionDetails.Status.Current,
-			item.Status.Capacity.String(),
+			util.ConvertToIBytes(item.Status.Capacity.String()),
 			pvols[item.ObjectMeta.Name].StorageClass,
 			pvols[item.ObjectMeta.Name].AttachementStatus,
 			pvols[item.ObjectMeta.Name].AccessMode,
-			pvols[item.ObjectMeta.Name].Node)
+			pvols[item.ObjectMeta.Name].Node}})
 		//TODO: find a fix
 		//pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName field removed for readability
 	}
-	if len(out) == 2 {
-		fmt.Println("No Volumes are running")
-		return nil
-	}
-	fmt.Println(util.FormatList(out))
+	util.TablePrinter(util.CstorVolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }

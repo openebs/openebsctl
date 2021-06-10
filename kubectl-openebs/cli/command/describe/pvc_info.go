@@ -20,11 +20,14 @@ import (
 	"fmt"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 var (
@@ -42,45 +45,45 @@ $ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
 const (
 	cstorPvcInfoTemplate = `
 {{.Name}} Details :
-Name             : {{.Name}}
-Namespace        : {{.Namespace}}
-Cas Type         : {{.CasType}}
-Bound Volume     : {{.BoundVolume}}
-Attached To Node : {{.AttachedToNode}}
-Pool             : {{.Pool}}
-Storage Class    : {{.StorageClassName}}
-Size             : {{.Size}}
-Used             : {{.Used}}
-PV Status	 : {{.PVStatus}}
+------------------
+NAME             : {{.Name}}
+NAMESPACE        : {{.Namespace}}
+CAS TYPE         : {{.CasType}}
+BOUND VOLUME     : {{.BoundVolume}}
+ATTACHED TO NODE : {{.AttachedToNode}}
+POOL             : {{.Pool}}
+STORAGE CLASS    : {{.StorageClassName}}
+SIZE             : {{.Size}}
+USED             : {{.Used}}
+PV STATUS	 : {{.PVStatus}}
 
 `
 
 	detailsFromCVC = `
 Additional Details from CVC :
-Name          : {{.Name}}
-Replica Count : {{.ReplicaCount}}
-Pool Info     : {{.PoolInfo}}
-Version       : {{.Version}}
-Upgrading     : {{.Upgrading}}
-
+-----------------------------
+NAME          : {{ .metadata.name }}
+REPLICA COUNT : {{ .spec.provision.replicaCount }}
+POOL INFO     : {{ .status.poolInfo}}
+VERSION       : {{ .versionDetails.status.current}}
+UPGRADING     : {{if eq .versionDetails.status.current .versionDetails.desired}}false{{else}}true{{end}}
 `
 
 	genericPvcInfoTemplate = `
 {{.Name}} Details :
-Name             : {{.Name}}
-Namespace        : {{.Namespace}}
-Cas Type         : {{.CasType}}
-Bound Volume     : {{.BoundVolume}}
-Storage Class    : {{.StorageClassName}}
-Size             : {{.Size}}
-PV Status	 : {{.PVStatus}}
-
+------------------
+NAME             : {{.Name}}
+NAMESPACE        : {{.Namespace}}
+CAS TYPE         : {{.CasType}}
+BOUND VOLUME     : {{.BoundVolume}}
+STORAGE CLASS    : {{.StorageClassName}}
+SIZE             : {{.Size}}
+PV STATUS    	 : {{.PVStatus}}
 `
 )
 
 // NewCmdDescribePVC Displays the pvc describe details
 func NewCmdDescribePVC() *cobra.Command {
-	var openebsNs string
 	cmd := &cobra.Command{
 		Use:     "pvc",
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
@@ -96,7 +99,6 @@ func NewCmdDescribePVC() *cobra.Command {
 			util.CheckErr(RunPVCInfo(cmd, args, pvNs, openebsNamespace), util.Fatal)
 		},
 	}
-	cmd.Flags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	return cmd
 }
 
@@ -110,9 +112,8 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 	// because the -n flag is used to take the pvc namespace and same cannot be used to
 	// take the openebs namespace
 	clientset, err := client.NewK8sClient(openebsNs)
-	if err != nil {
-		return errors.Wrap(err, "Failed to execute describe pvc command")
-	}
+	util.CheckErr(err, util.Fatal)
+
 	// Fetch the list of v1PVC objects by passing the name of PVCs taken through CLI in ns namespace
 	pvcList, err := clientset.GetPVCs(ns, pvcs)
 	// Incase the PVCs are not found no further operation to be performed
@@ -142,7 +143,6 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				}
 				// Create Empty template objects and fill gradually when underlying sub CRs are identified.
 				pvcInfo := util.CstorPVCInfo{}
-				cvcInfo := util.CVCInfo{}
 
 				pvcInfo.Name = item.Name
 				pvcInfo.Namespace = item.Namespace
@@ -156,7 +156,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				if err != nil {
 					fmt.Println("Underlying CstorVolume is not found for: ", item.Name)
 				} else {
-					pvcInfo.Size = cv.Spec.Capacity.String()
+					pvcInfo.Size = util.ConvertToIBytes(cv.Spec.Capacity.String())
 					pvcInfo.PVStatus = cv.Status.Phase
 				}
 
@@ -167,11 +167,6 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 					fmt.Println("Underlying CstorVolumeConfig is not found for: ", item.Name)
 				} else {
 					pvcInfo.Pool = cvc.Labels[cstortypes.CStorPoolClusterLabelKey]
-					cvcInfo.Name = cvc.Name
-					cvcInfo.ReplicaCount = len(cvc.Status.PoolInfo)
-					cvcInfo.PoolInfo = cvc.Status.PoolInfo
-					cvcInfo.Version = cvc.VersionDetails.Status.Current
-					cvcInfo.Upgrading = !(cvc.VersionDetails.Status.Current == cvc.VersionDetails.Desired)
 				}
 
 				// fetching the underlying CStorVolumeAttachment for the PV, to get the attached to node and notify the user
@@ -187,7 +182,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				// none of the replicas are running if the CStorVolumeReplicas are not found.
 				cvrs, err := clientset.GetCVR(item.Spec.VolumeName)
 				if err == nil && len(cvrs.Items) > 0 {
-					pvcInfo.Used = util.GetUsedCapacityFromCVR(cvrs)
+					pvcInfo.Used = util.ConvertToIBytes(util.GetUsedCapacityFromCVR(cvrs))
 				}
 
 				// Printing the Filled Details of the Cstor PVC
@@ -200,49 +195,29 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 				// if the TargetPod is not found.
 				targetPod, err := clientset.GetCstorVolumeTargetPod(item.Name, item.Spec.VolumeName)
 				if err == nil {
-					targetPodOutput := make([]string, 2)
-					fmt.Printf("Target Details :\n")
-					targetPodOutput[0] = "Namespace|Name|Ready|Status|Age|IP|Node"
-					targetPodOutput[1] = fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s",
-						targetPod.Namespace,
-						targetPod.Name,
-						util.GetReadyContainers(targetPod.Status.ContainerStatuses),
-						targetPod.Status.Phase,
-						util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)),
-						targetPod.Status.PodIP,
-						targetPod.Spec.NodeName,
-					)
-					fmt.Println(util.FormatList(targetPodOutput))
+					fmt.Printf("Target Details :\n----------------\n")
+					var rows []metav1.TableRow
+					rows = append(rows, metav1.TableRow{Cells: []interface{}{targetPod.Namespace, targetPod.Name, util.GetReadyContainers(targetPod.Status.ContainerStatuses), targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)), targetPod.Status.PodIP, targetPod.Spec.NodeName}})
+					util.TablePrinter(util.CstorTargetDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {
-					fmt.Println("Target Details :\nNo target pod exists for the CstorVolume")
+					fmt.Printf("Target Details :\n----------------\nNo target pod exists for the CstorVolume\n")
 				}
 
 				// If CVRs are found list them and show relevant details else notify the user none of the replicas are
 				// running if not found
 				if cvrs != nil && len(cvrs.Items) > 0 {
-					fmt.Printf("\nReplica Details :\n")
-					cvrOutput := make([]string, len(cvrs.Items)+1)
-					cvrOutput[0] = "Name|Total|Used|Status|Age"
-					for i, cvr := range cvrs.Items {
-						cvrOutput[i+1] = fmt.Sprintf("%s|%s|%s|%s|%s",
-							cvr.Name,
-							cvr.Status.Capacity.Total,
-							cvr.Status.Capacity.Used,
-							cvr.Status.Phase,
-							util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time)),
-						)
+					fmt.Printf("\nReplica Details :\n-----------------\n")
+					var rows []metav1.TableRow
+					for _, cvr := range cvrs.Items {
+						rows = append(rows, metav1.TableRow{Cells: []interface{}{cvr.Name, util.ConvertToIBytes(cvr.Status.Capacity.Total), util.ConvertToIBytes(cvr.Status.Capacity.Used), cvr.Status.Phase, util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
 					}
-					fmt.Println(util.FormatList(cvrOutput))
+					util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {
-					fmt.Println("\nReplica Details :\nNo running replicas found")
+					fmt.Printf("\nReplica Details :\n-----------------\nNo running replicas found\n")
 				}
 
 				if cvc != nil {
-					// Printing the Filled Details of the CstorVolumeConfig
-					err = util.PrintByTemplate("cvc", detailsFromCVC, cvcInfo)
-					if err != nil {
-						return err
-					}
+					util.TemplatePrinter(detailsFromCVC, cvc)
 				}
 
 			} else {

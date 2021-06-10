@@ -29,6 +29,7 @@ import (
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
+	var openebsNs string
 	cmd := &cobra.Command{
 		Use:   "openebs",
 		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
@@ -46,6 +47,7 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 	)
+	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	_ = flag.CommandLine.Parse([]string{})
 	_ = viper.BindPFlag("namespace", cmd.PersistentFlags().Lookup("namespace"))

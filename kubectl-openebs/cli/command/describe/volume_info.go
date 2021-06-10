@@ -19,6 +19,10 @@ package describe
 import (
 	"fmt"
 	"os"
+	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 
@@ -41,29 +45,29 @@ $ kubectl openebs describe [volume] [names...]
 
 const (
 	volInfoTemplate = `
-Volume Details :
-----------------
-Name            : {{.Name}}
-Access Mode     : {{.AccessMode}}
-CSI Driver      : {{.CSIDriver}}
-Storage Class   : {{.StorageClass}}
-Volume Phase    : {{.VolumePhase }}
-Version         : {{.Version}}
+{{.Name}} Details :
+-----------------
+NAME            : {{.Name}}
+ACCESS MODE     : {{.AccessMode}}
+CSI DRIVER      : {{.CSIDriver}}
+STORAGE CLASS   : {{.StorageClass}}
+VOLUME PHASE    : {{.VolumePhase }}
+VERSION         : {{.Version}}
 CSPC            : {{.CSPC}}
-Size            : {{.Size}}
-Status          : {{.Status}}
-ReplicaCount	: {{.ReplicaCount}}
+SIZE            : {{.Size}}
+STATUS          : {{.Status}}
+REPLICA COUNT	: {{.ReplicaCount}}
 
 `
 
 	portalTemplate = `
 Portal Details :
-----------------
-IQN             :  {{.IQN}}
-Volume          :  {{.VolumeName}}
-TargetNodeName  :  {{.TargetNodeName}}
-Portal          :  {{.Portal}}
-TargetIP        :  {{.TargetIP}}
+------------------
+IQN              :  {{.IQN}}
+VOLUME NAME      :  {{.VolumeName}}
+TARGET NODE NAME :  {{.TargetNodeName}}
+PORTAL           :  {{.Portal}}
+TARGET IP        :  {{.TargetIP}}
 
 `
 )
@@ -78,24 +82,27 @@ func NewCmdDescribeVolume() *cobra.Command {
 		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Get this from flags, pflag, etc
-			var ns string
-			if ns, _ = cmd.Flags().GetString("namespace"); ns == "" {
-				// NOTE: The error comes as nil even when the ns flag is not specified
-				ns = "openebs"
-			}
-			util.CheckErr(RunVolumeInfo(cmd, args, ns), util.Fatal)
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
+			util.CheckErr(RunVolumeInfo(cmd, args, openebsNs), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
-func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
+func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 	// the stuff automatically coming from kubectl command execution
-	clientset, err := client.NewK8sClient(ns)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command")
+	clientset, err := client.NewK8sClient(openebsNs)
+	util.CheckErr(err, util.Fatal)
+
+	if openebsNs == "" {
+		nsFromCli, err := clientset.GetOpenEBSNamespace(util.CstorCasType)
+		if err != nil {
+			return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+		}
+		clientset.Ns = nsFromCli
 	}
+
 	// TODO: Print all volume info present in args or print all volume info if no args given
 	if len(vols) == 0 {
 		return errors.New("Please give at least one volume to describe")
@@ -151,7 +158,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 			VolumePhase:             pvInfo.Status.Phase,
 			StorageClass:            pvInfo.Spec.StorageClassName,
 			Version:                 util.CheckVersion(volumeInfo.VersionDetails),
-			Size:                    volumeInfo.Status.Capacity.String(),
+			Size:                    util.ConvertToIBytes(volumeInfo.Status.Capacity.String()),
 			Status:                  volumeInfo.Status.Phase,
 		}
 
@@ -179,24 +186,19 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, ns string) error {
 		// This case will occur only if user has manually specified zero replica.
 		// or if none of the replicas are healthy & running
 		if replicaCount == 0 || len(volumeInfo.Status.ReplicaStatuses) == 0 {
-			fmt.Fprint(os.Stderr, "None of the replicas are running")
+			fmt.Printf("None of the replicas are running\n")
 			//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
 			return nil
 		}
 
 		// Print replica details
 		if cvrInfo != nil && len(cvrInfo.Items) > 0 {
-			fmt.Printf("Replica Details :\n----------------\n")
-			out := make([]string, len(cvrInfo.Items)+2)
-			out[0] = "Name|Pool Instance|Status"
-			out[1] = "----|-------------|------"
-			for i, cvr := range cvrInfo.Items {
-				out[i+2] = fmt.Sprintf("%s|%s|%s",
-					cvr.ObjectMeta.Name,
-					cvr.Labels[cstortypes.CStorPoolInstanceNameLabelKey],
-					cvr.Status.Phase)
+			fmt.Printf("\nReplica Details :\n-----------------\n")
+			var rows []metav1.TableRow
+			for _, cvr := range cvrInfo.Items {
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{cvr.Name, util.ConvertToIBytes(cvr.Status.Capacity.Total), util.ConvertToIBytes(cvr.Status.Capacity.Used), cvr.Status.Phase, util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
 			}
-			fmt.Println(util.FormatList(out))
+			util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 		}
 		fmt.Println()
 	}

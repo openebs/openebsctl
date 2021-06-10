@@ -17,10 +17,15 @@ limitations under the License.
 package describe
 
 import (
+	"fmt"
+
+	"github.com/dustin/go-humanize"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 var (
@@ -36,32 +41,13 @@ const (
 	cStorPoolInstanceInfoTemplate = `
 {{.Name}} Details :
 ----------------
-Name             : {{.Name}}
-Hostname         : {{.HostName}}
-Size             : {{.Size}}
-Free Capacity    : {{.FreeCapacity}}
-Read Only Status : {{.ReadOnlyStatus}}
-Status	         : {{.Status}}
-RAID Type        : {{.RaidType}}
-
-`
-
-	blockDevicesInfoFromCSPI = `
-Block Device Details :
-----------------
-Name     : {{.Name}}
-Capacity : {{.Capacity}}
-State   : {{.State}}
-
-`
-
-	provisionedReplicasInfoFromCSPI = `
-Provisioned Replicas Details :
-----------------
-Name     : {{.Name}}
-PVC Name : {{.PvcName}}
-Size     : {{.Size}}
-Status	 : {{.Status}}
+NAME             : {{.Name}}
+HOSTNAME         : {{.HostName}}
+SIZE             : {{.Size}}
+FREE CAPACITY    : {{.FreeCapacity}}
+READ ONLY STATUS : {{.ReadOnlyStatus}}
+STATUS	         : {{.Status}}
+RAID TYPE        : {{.RaidType}}
 
 `
 )
@@ -75,26 +61,29 @@ func NewCmdDescribePool() *cobra.Command {
 		Long:    poolInfoCommandHelpText,
 		Example: `kubectl openebs describe pool cspi-one -n openebs`,
 		Run: func(cmd *cobra.Command, args []string) {
-			var namespace string // This namespace belongs to the CSPI entered
-			if namespace, _ = cmd.Flags().GetString("namespace"); namespace == "" {
-				// NOTE: The error comes as nil even when the ns flag is not specified
-				namespace = "openebs"
-			}
-			util.CheckErr(RunPoolInfo(cmd, args, namespace), util.Fatal)
+			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
+			util.CheckErr(RunPoolInfo(cmd, args, openebsNs), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunPoolInfo method runs info command and make call to DisplayPoolInfo to display the results
-func RunPoolInfo(cmd *cobra.Command, pools []string, ns string) error {
+func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 	if len(pools) != 1 {
 		return errors.New("Please give one cspi name to describe")
 	}
-
-	clientset, err := client.NewK8sClient(ns)
+	clientset, err := client.NewK8sClient(openebsNs)
 	if err != nil {
 		return errors.Wrap(err, "Failed to execute pool info command")
+	}
+
+	if openebsNs == "" {
+		nsFromCli, err := clientset.GetOpenEBSNamespace(util.CstorCasType)
+		if err != nil {
+			return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+		}
+		clientset.Ns = nsFromCli
 	}
 
 	// Fetch the CSPI object by passing the name of CSPI taken through CLI in ns namespace
@@ -107,8 +96,8 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, ns string) error {
 	poolDetails := util.PoolInfo{
 		Name:           poolInfo.Name,
 		HostName:       poolInfo.Spec.HostName,
-		Size:           poolInfo.Status.Capacity.Total.String(),
-		FreeCapacity:   poolInfo.Status.Capacity.Free.String(),
+		Size:           util.ConvertToIBytes(poolInfo.Status.Capacity.Total.String()),
+		FreeCapacity:   util.ConvertToIBytes(poolInfo.Status.Capacity.Free.String()),
 		ReadOnlyStatus: poolInfo.Status.ReadOnly,
 		Status:         poolInfo.Status.Phase,
 		RaidType:       poolInfo.Spec.PoolConfig.DataRaidGroupType,
@@ -122,56 +111,46 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, ns string) error {
 		BlockDevicesInPool = append(BlockDevicesInPool, item.GetBlockDevices()...)
 	}
 
-	// Fetch info for every block device
-	var BdInfo []util.BlockDevicesInfoInPool
-	for _, item := range BlockDevicesInPool {
-		bd, err := clientset.GetBlockDevice(item)
-		if err != nil {
-			return errors.Wrap(err, "Error getting block device info")
-		}
-
-		BdInfo = append(BdInfo, util.BlockDevicesInfoInPool{
-			Name:     bd.Name,
-			Capacity: bd.Spec.Capacity.Storage,
-			State:    bd.Status.State,
-		})
-	}
-
-	// Fetch info for provisional replica
-	CVRsInPool, err := clientset.GetCVRByPoolName(poolName)
-	if err != nil {
-		return errors.Wrap(err, "Error getting block device info")
-	}
-
-	var CVRInfoInPool []util.CVRInfo
-	for _, cvr := range CVRsInPool.Items {
-		CVRInfoInPool = append(CVRInfoInPool, util.CVRInfo{
-			Name:    cvr.Name,
-			PvcName: clientset.GetPVCNameByCVR(cvr.Labels["openebs.io/persistent-volume"]),
-			Size:    cvr.Status.Capacity.Total,
-			Status:  cvr.Status.Phase,
-		})
-	}
-
 	// Printing the filled details of the Pool
 	err = util.PrintByTemplate("pool", cStorPoolInstanceInfoTemplate, poolDetails)
 	if err != nil {
 		return err
 	}
 
-	for _, bd := range BdInfo {
-		err = util.PrintByTemplate("bd", blockDevicesInfoFromCSPI, bd)
+	// Fetch info for every block device
+	var bdRows []metav1.TableRow
+	for _, item := range BlockDevicesInPool {
+		bd, err := clientset.GetBlockDevice(item)
 		if err != nil {
-			return err
+			fmt.Printf("Could not find the blockdevice : %s\n", item)
+		} else {
+			bdRows = append(bdRows, metav1.TableRow{Cells: []interface{}{bd.Name, humanize.IBytes(bd.Spec.Capacity.Storage), bd.Status.State}})
 		}
 	}
-
-	for _, cvr := range CVRInfoInPool {
-		err = util.PrintByTemplate("cvr", provisionedReplicasInfoFromCSPI, cvr)
-		if err != nil {
-			return err
-		}
+	if len(bdRows) != 0 {
+		fmt.Printf("Blockdevice details :\n" + "---------------------\n")
+		util.TablePrinter(util.BDListColumnDefinations, bdRows, printers.PrintOptions{Wide: true})
+	} else {
+		fmt.Printf("Could not find any blockdevice that belongs to the pool")
 	}
 
+	// Fetch info for provisional replica
+	var cvrRows []metav1.TableRow
+	CVRsInPool, err := clientset.GetCVRByPoolName(poolName)
+	if err != nil {
+		fmt.Printf("None of the replicas are running")
+	} else {
+		for _, cvr := range CVRsInPool.Items {
+			cvrRows = append(cvrRows, metav1.TableRow{Cells: []interface{}{
+				cvr.Name,
+				clientset.GetPVCNameByCVR(cvr.Labels["openebs.io/persistent-volume"]),
+				util.ConvertToIBytes(cvr.Status.Capacity.Total),
+				cvr.Status.Phase}})
+		}
+	}
+	if len(cvrRows) != 0 {
+		fmt.Printf("\nReplica Details :\n-----------------\n")
+		util.TablePrinter(util.PoolReplicaColumnDefinations, cvrRows, printers.PrintOptions{Wide: true})
+	}
 	return nil
 }
