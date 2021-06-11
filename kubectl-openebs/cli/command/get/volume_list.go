@@ -17,10 +17,13 @@ limitations under the License.
 package get
 
 import (
+	"fmt"
+	"strings"
+
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 
-	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
@@ -38,6 +41,7 @@ Usage: kubectl openebs get volume [options]
 
 // NewCmdGetVolume displays status of OpenEBS Volume(s)
 func NewCmdGetVolume() *cobra.Command {
+
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"vol", "v", "volumes"},
@@ -45,64 +49,91 @@ func NewCmdGetVolume() *cobra.Command {
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(RunVolumesList(cmd, openebsNs, args), util.Fatal)
+			casType, _ := cmd.Flags().GetString("cas-type")
+			casType = strings.ToLower(casType)
+			util.CheckErr(RunVolumesList(cmd, openebsNs, casType, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command, openebsNs string, vols []string) error {
+func RunVolumesList(cmd *cobra.Command, openebsNs, casType string, vols []string) error {
 	k8sClient, err := client.NewK8sClient("")
-	util.CheckErr(err, util.Fatal)
-	if openebsNs == "" {
-		nsFromCli, err := k8sClient.GetOpenEBSNamespace(util.CstorCasType)
+	if err != nil {
+		return err
+	}
+	if casType == util.CstorCasType || casType == util.JivaCasType {
+		inferredOpenEBSNS, err := k8sClient.GetOpenEBSNamespace(casType)
 		if err != nil {
-			//return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
 			return errors.New("no cstor volumes found in the cluster")
 		}
-		k8sClient.Ns = nsFromCli
-	}
-	var cvols *v1.CStorVolumeList
-	if len(vols) == 0 {
-		cvols, err = k8sClient.GetcStorVolumes()
-	} else {
-		cvols, err = k8sClient.GetcStorVolumesByNames(vols)
-	}
-	if err != nil {
-		return errors.Wrap(err, "error listing volumes")
-	}
-	pvols, err := k8sClient.GetCStorVolumeInfoMap("")
-	if err != nil {
-		return errors.Wrap(err, "failed to execute volume info command")
-	}
-	// tally status of cvols to pvols
-	// give output according to volume status
-	var rows []metav1.TableRow
-	for _, item := range cvols.Items {
-		storageClass := util.NotAttached
-		attachementStatus := util.NotAttached
-		accessMode := util.NotAttached
-		node := util.NotAttached
-		if val, ok := pvols[item.ObjectMeta.Name]; ok {
-			storageClass = val.StorageClass
-			attachementStatus = val.AttachementStatus
-			accessMode = val.AccessMode
-			node = val.Node
+		// Fill the namespace as estimated
+		if openebsNs == "" {
+			k8sClient.Ns = inferredOpenEBSNS
+		} else {
+			k8sClient.Ns = openebsNs
 		}
-		rows = append(rows, metav1.TableRow{Cells: []interface{}{
-			item.ObjectMeta.Namespace,
-			item.ObjectMeta.Name,
-			item.Status.Phase,
-			item.VersionDetails.Status.Current,
-			util.ConvertToIBytes(item.Status.Capacity.String()),
-			storageClass,
-			attachementStatus,
-			accessMode,
-			node}})
-		//TODO: find a fix
-		//pvols[item.ObjectMeta.Name].CSIVolumeAttachmentName field removed for readability
+	} else if casType != "" {
+		return fmt.Errorf("not implemented for this cas-type")
 	}
-	util.TablePrinter(util.CstorVolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+	// 1. Fetch all or required PVs
+	var pvList *corev1.PersistentVolumeList
+	if len(vols) == 0 {
+		pvList, err = k8sClient.GetPVs()
+	} else {
+		pvList, err = k8sClient.GetPVbyName(vols)
+	}
+	if err != nil {
+		return err
+	}
+	var rows []metav1.TableRow
+	for _, pv := range pvList.Items {
+		name := pv.Name
+		capacity := pv.Spec.Capacity.Storage()
+		sc := pv.Spec.StorageClassName
+		// If a volume is not attached to a pod, should it be considered in attached state?
+		attached := pv.Status.Phase
+		attachedNode := "N/A"
+		storageVersion := "N/A"
+		customStatus := "N/A"
+		ns := "N/A"
+		// TODO: Estimate the cas-type and decide to print it out
+		// Should all AccessModes be shown in a csv format, or the highest be displayed ROO < RWO < RWX?
+		if pv.Spec.CSI != nil {
+			if pv.Spec.CSI.Driver == util.CStorCSIDriver {
+				cv, err := k8sClient.GetcStorVolume(pv.Name)
+				if err == nil {
+					ns = cv.Namespace
+					customStatus = string(cv.Status.Phase)
+					storageVersion = cv.VersionDetails.Status.Current
+					cva, err := k8sClient.GetCVA(pv.Name)
+					if err == nil {
+						attachedNode = cva.Labels["nodeID"]
+					}
+
+				}
+			} else if pv.Spec.CSI.Driver == util.JivaCasType {
+				jv, err := k8sClient.GetJivaVolume(pv.Name)
+				if err == nil {
+					ns = jv.Namespace
+					customStatus = jv.Status.Status // RW, RO, etc
+					attachedNode = jv.Labels["nodeID"]
+				}
+			} else {
+				// Skip non-CStor & non-Jiva options
+				continue
+			}
+		} else {
+			continue
+		}
+		accessMode := pv.Spec.AccessModes[0]
+		rows = append(rows, metav1.TableRow{
+			Cells: []interface{}{
+				ns, name, customStatus, storageVersion, capacity, sc, attached,
+				accessMode, attachedNode},
+		})
+	}
+	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }

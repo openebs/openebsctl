@@ -37,6 +37,7 @@ $ kubectl openebs get pool
 
 // NewCmdGet provides options for managing OpenEBS Volume
 func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
+	var casType string
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "Provides operations related to a Volume",
@@ -45,6 +46,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 			fmt.Println(getCmdHelp)
 		},
 	}
+	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "cstor", "the name of the storage engine")
 	cmd.AddCommand(
 		NewCmdGetVolume(),
 		NewCmdGetPool(),
