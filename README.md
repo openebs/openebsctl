@@ -1,14 +1,22 @@
-# openebsctl
+## Overview
 
-This repository is a WIP for the creation of a command line tool plugin for kubectl
+`openebsctl` is  a `kubectl` plugin to manage OpenEBS storage. 
 
-# Instructions to build
 
-- clone/download this repo to you system
-- run `make openebsctl`
-- run `kubectl openebs [get|describe] [resource]` to use the plugin
+## Project Status
 
-# Usage
+Alpha. Under active development and seeking [contributions from the community](#contributing).
+
+The CLI currently supports managing cStor Pools and Volumes. 
+
+## Build
+
+- Clone this repo to your system. `git clone https://github.com/openebs/openebsctl`
+- `cd openebsctl`
+- Run `make openebsctl`
+- Run `kubectl openebs [get|describe] [resource]` to use the plugin
+
+## Usage
 
 
 ```bash
@@ -55,3 +63,24 @@ Name              Namespace  HostName                       Free    Capacity   R
 ----              ---------  --------                       ----    --------   --------  -------------------  ---------------  ------  ---
 fastssd-cstor     test       director-dev-cluster-1-node-1  48200M  48202370k  false     1                    1                ONLINE  2d5h
 ```
+
+
+## Contributing
+
+OpenEBS welcomes your feedback and contributions in any form possible.
+
+- [Join OpenEBS community on Kubernetes Slack](https://kubernetes.slack.com)
+  - Already signed up? Head to our discussions at [#openebs](https://kubernetes.slack.com/messages/openebs/)
+- Want to raise an issue or help with fixes and features?
+  - See [open issues](https://github.com/openebs/openebs/issues)
+  - See [contributing guide](./CONTRIBUTING.md)
+  - See [Project Roadmap](https://github.com/openebs/openebsctl/projects/1)
+  - Checkout our existing [adopters](https://github.com/openebs/openebs/tree/master/adopters) and their [feedbacks](https://github.com/openebs/openebs/issues/2719).
+  - Want to join our contributor community meetings, [check this out](https://hackmd.io/mfG78r7MS86oMx8oyaV8Iw?view).
+- Join our OpenEBS CNCF Mailing lists
+  - For OpenEBS project updates, subscribe to [OpenEBS Announcements](https://lists.cncf.io/g/cncf-openebs-announcements)
+  - For interacting with other OpenEBS users, subscribe to [OpenEBS Users](https://lists.cncf.io/g/cncf-openebs-users)
+
+
+For more details checkout [CONTRIBUTING.md](./CONTRIBUTING.md).
+
