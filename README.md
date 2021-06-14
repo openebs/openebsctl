@@ -25,17 +25,17 @@ The CLI currently supports managing `cStor` Pools and Volumes. **Thank you!**
 
 ---
 ## Table of Contents
-  * [Installation](#installation)
-  * [Build](#build)
-  * [Flags](#flags)
-  * [Usage](#usage)
+* [Installation](#installation)
+* [Build](#build)
+* [Flags](#flags)
+* [Usage](#usage)
     * [Get cStor volumes](#get-cstor-volumes)
     * [Get cStor pools](#get-cstor-pools)
     * [Describe cStor volumes](#describe-cstor-volumes)
     * [Describe cStor pool](#describe-cstor-pool)
     * [Describe pvcs](#describe-pvcs)
-  * [Contributing](#contributing)
-  
+* [Contributing](#contributing)
+
 ---
 ## Installation
 OpenEBS-CTL is available on Linux, macOS and Windows platforms.
@@ -55,8 +55,8 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
    sudo mv kubectl-openebs /usr/local/bin/
    ```
 * For Windows, download the respective zip from [release](https://github.com/openebs/openebsctl/releases) page and :-
-  - Extract the zip, copy the `path` of the folder the contents are in.
-  - Add the `path` to the `PATH` environment variable.
+    - Extract the zip, copy the `path` of the folder the contents are in.
+    - Add the `path` to the `PATH` environment variable.
 ## Build
 
 - Clone this repo to your system. `git clone https://github.com/openebs/openebsctl`
@@ -69,7 +69,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
 * `--namespace, -n` :- to pass the namespace, if the resource is namespaced, like `pvc` etc.
 
 ## Usage
-#### Get `cStor` volumes
+* #### Get `cStor` volumes
   ```bash
   $ kubectl openebs get volumes
   NAMESPACE   NAME                                       STATUS    VERSION    CAPACITY   STORAGE CLASS         ATTACHED   ACCESS MODE      ATTACHED NODE
@@ -78,7 +78,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   ```
   Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
 
-#### Get `cStor` pools
+* #### Get `cStor` pools
   ```bash
   $ kubectl openebs get volumes
   NAME                      HOSTNAME                FREE     CAPACITY   READ ONLY   PROVISIONED REPLICAS   HEALTHY REPLICAS   STATUS    AGE
@@ -87,7 +87,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   default-cstor-disk-fp6v   node2-virtual-machine   73 GiB   90 GiB     false       7                      7                  ONLINE    27d2h
   default-cstor-disk-rhwj   node1-virtual-machine   73 GiB   90 GiB     false       7                      4                  OFFLINE   27d2h
   ```
-#### Describe `cStor` volumes
+* #### Describe `cStor` volumes
   ```bash
   $ kubectl openebs describe volume pvc-193844d7-3bef-45a3-8b7d-ed3991391b45
 
@@ -129,7 +129,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   NAME                                           RESTORE NAME   VOLUME NAME                                RESTORE SOURCE       STORAGE CLASS   STATUS
   backup4-3cc0839b-8428-4361-8b12-eb8509208871   backup4        pvc-193844d7-3bef-45a3-8b7d-ed3991391b45   192.168.1.165:9000   cstor-csi       0
   ```
-#### Describe `cStor` pool
+* #### Describe `cStor` pool
   ```bash
   $ kubectl openebs describe pool default-cstor-disk-fp6v --openebs-namespace=openebs
   
@@ -153,7 +153,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   NAME                                                               PVC NAME   SIZE      STATE
   pvc-b84f60ae-3f26-4110-a85d-bce7ec00dacc-default-cstor-disk-fp6v   mongo      992 MiB   Healthy
   ```
-#### Describe pvcs
+* #### Describe pvcs
   ```bash
   $ kubectl openebs describe pvc mongo
 
@@ -195,16 +195,16 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
 OpenEBS welcomes your feedback and contributions in any form possible.
 
 - [Join OpenEBS community on Kubernetes Slack](https://kubernetes.slack.com)
-  - Already signed up? Head to our discussions at [#openebs](https://kubernetes.slack.com/messages/openebs/)
+    - Already signed up? Head to our discussions at [#openebs](https://kubernetes.slack.com/messages/openebs/)
 - Want to raise an issue or help with fixes and features?
-  - See [open issues](https://github.com/openebs/openebs/issues)
-  - See [contributing guide](./CONTRIBUTING.md)
-  - See [Project Roadmap](https://github.com/openebs/openebsctl/projects/1)
-  - Checkout our existing [adopters](https://github.com/openebs/openebs/tree/master/adopters) and their [feedbacks](https://github.com/openebs/openebs/issues/2719).
-  - Want to join our contributor community meetings, [check this out](https://hackmd.io/mfG78r7MS86oMx8oyaV8Iw?view).
+    - See [open issues](https://github.com/openebs/openebs/issues)
+    - See [contributing guide](./CONTRIBUTING.md)
+    - See [Project Roadmap](https://github.com/openebs/openebsctl/projects/1)
+    - Checkout our existing [adopters](https://github.com/openebs/openebs/tree/master/adopters) and their [feedbacks](https://github.com/openebs/openebs/issues/2719).
+    - Want to join our contributor community meetings, [check this out](https://hackmd.io/mfG78r7MS86oMx8oyaV8Iw?view).
 - Join our OpenEBS CNCF Mailing lists
-  - For OpenEBS project updates, subscribe to [OpenEBS Announcements](https://lists.cncf.io/g/cncf-openebs-announcements)
-  - For interacting with other OpenEBS users, subscribe to [OpenEBS Users](https://lists.cncf.io/g/cncf-openebs-users)
+    - For OpenEBS project updates, subscribe to [OpenEBS Announcements](https://lists.cncf.io/g/cncf-openebs-announcements)
+    - For interacting with other OpenEBS users, subscribe to [OpenEBS Users](https://lists.cncf.io/g/cncf-openebs-users)
 
 
 For more details checkout [CONTRIBUTING.md](./CONTRIBUTING.md).
