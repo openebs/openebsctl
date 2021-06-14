@@ -18,7 +18,6 @@ package get
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/openebs/openebsctl/client"
@@ -69,21 +68,11 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 			// TODO: Verbose log for this estimated namespace
 			k8sClient.Ns = openebsNs
 		} else {
-			_, _ = fmt.Fprintf(os.Stderr, "couldn't figure out openebs-namespace for cas-type=%s\n", casType)
-			return err
+			return fmt.Errorf("couldn't figure out openebs-namespace for cas-type=%s\n", casType)
 		}
-	} else if openebsNs == "" && casType == "" {
+	} else if casType == "" {
 		// show all volumes
 		nsMap, _ = k8sClient.GetOpenEBSNamespaceMap()
-	} else if openebsNs != "" && casType == "" {
-		// only show stuff which have CRs in openebsNs, if it matches with a cas-type
-		nsMap, _ = k8sClient.GetOpenEBSNamespaceMap()
-		// figure out the cas-type from openebsNs
-		for k, v := range nsMap {
-			if v == openebsNs {
-				casType = k
-			}
-		}
 	}
 	// 1. Fetch all or required PVs
 	var pvList *corev1.PersistentVolumeList
@@ -139,6 +128,7 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 				continue
 			}
 		} else {
+			// Skip non CSI provisoned volumes
 			continue
 		}
 		accessMode := pv.Spec.AccessModes[0]
@@ -147,6 +137,13 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 				ns, name, customStatus, storageVersion, capacity, sc, attached,
 				accessMode, attachedNode},
 		})
+	}
+	if len(rows) == 0 {
+		if casType == "" {
+			return fmt.Errorf("no cstor and jiva volumes found\n")
+		} else {
+			return fmt.Errorf("no %s volumes found\n", casType)
+		}
 	}
 	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
