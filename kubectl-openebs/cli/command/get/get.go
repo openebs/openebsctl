@@ -46,7 +46,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 			fmt.Println(getCmdHelp)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "cstor", "the name of the storage engine")
+	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.AddCommand(
 		NewCmdGetVolume(),
 		NewCmdGetPool(),

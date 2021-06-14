@@ -18,16 +18,15 @@ package get
 
 import (
 	"fmt"
+	"os"
 	"strings"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 var (
@@ -41,7 +40,6 @@ Usage: kubectl openebs get volume [options]
 
 // NewCmdGetVolume displays status of OpenEBS Volume(s)
 func NewCmdGetVolume() *cobra.Command {
-
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"vol", "v", "volumes"},
@@ -51,31 +49,41 @@ func NewCmdGetVolume() *cobra.Command {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
 			casType = strings.ToLower(casType)
-			util.CheckErr(RunVolumesList(cmd, openebsNs, casType, args), util.Fatal)
+			util.CheckErr(RunVolumesList(openebsNs, casType, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(cmd *cobra.Command, openebsNs, casType string, vols []string) error {
-	k8sClient, err := client.NewK8sClient("")
+func RunVolumesList(openebsNs, casType string, vols []string) error {
+	k8sClient, err := client.NewK8sClient(openebsNs)
 	if err != nil {
 		return err
 	}
-	if casType == util.CstorCasType || casType == util.JivaCasType {
-		inferredOpenEBSNS, err := k8sClient.GetOpenEBSNamespace(casType)
-		if err != nil {
-			return errors.New("no cstor volumes found in the cluster")
-		}
-		// Fill the namespace as estimated
-		if openebsNs == "" {
-			k8sClient.Ns = inferredOpenEBSNS
-		} else {
+	var nsMap map[string]string
+	// 0. Figure out the openebsNs & casType mess!!
+	if openebsNs == "" && casType != "" {
+		openebsNs, err := k8sClient.GetOpenEBSNamespace(casType)
+		if err == nil {
+			// TODO: Verbose log for this estimated namespace
 			k8sClient.Ns = openebsNs
+		} else {
+			_, _ = fmt.Fprintf(os.Stderr, "couldn't figure out openebs-namespace for cas-type=%s\n", casType)
+			return err
 		}
-	} else if casType != "" {
-		return fmt.Errorf("not implemented for this cas-type")
+	} else if openebsNs == "" && casType == "" {
+		// show all volumes
+		nsMap, _ = k8sClient.GetOpenEBSNamespaceMap()
+	} else if openebsNs != "" && casType == "" {
+		// only show stuff which have CRs in openebsNs, if it matches with a cas-type
+		nsMap, _ = k8sClient.GetOpenEBSNamespaceMap()
+		// figure out the cas-type from openebsNs
+		for k, v := range nsMap {
+			if v == openebsNs {
+				casType = k
+			}
+		}
 	}
 	// 1. Fetch all or required PVs
 	var pvList *corev1.PersistentVolumeList
@@ -92,7 +100,6 @@ func RunVolumesList(cmd *cobra.Command, openebsNs, casType string, vols []string
 		name := pv.Name
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
-		// If a volume is not attached to a pod, should it be considered in attached state?
 		attached := pv.Status.Phase
 		attachedNode := "N/A"
 		storageVersion := "N/A"
@@ -101,7 +108,11 @@ func RunVolumesList(cmd *cobra.Command, openebsNs, casType string, vols []string
 		// TODO: Estimate the cas-type and decide to print it out
 		// Should all AccessModes be shown in a csv format, or the highest be displayed ROO < RWO < RWX?
 		if pv.Spec.CSI != nil {
-			if pv.Spec.CSI.Driver == util.CStorCSIDriver {
+			// 2. For eligible PVs fetch the custom-resource to add more info
+			if pv.Spec.CSI.Driver == util.CStorCSIDriver && (casType == util.CstorCasType || casType == "") {
+				if openebsNs == "" && nsMap != nil {
+					k8sClient.Ns = nsMap[util.CstorCasType]
+				}
 				cv, err := k8sClient.GetcStorVolume(pv.Name)
 				if err == nil {
 					ns = cv.Namespace
@@ -111,14 +122,17 @@ func RunVolumesList(cmd *cobra.Command, openebsNs, casType string, vols []string
 					if err == nil {
 						attachedNode = cva.Labels["nodeID"]
 					}
-
 				}
-			} else if pv.Spec.CSI.Driver == util.JivaCasType {
+			} else if pv.Spec.CSI.Driver == util.JivaCSIDriver && (casType == util.JivaCasType || casType == "") {
+				if openebsNs == "" && nsMap != nil {
+					k8sClient.Ns = nsMap[util.JivaCasType]
+				}
 				jv, err := k8sClient.GetJivaVolume(pv.Name)
 				if err == nil {
 					ns = jv.Namespace
 					customStatus = jv.Status.Status // RW, RO, etc
 					attachedNode = jv.Labels["nodeID"]
+					storageVersion = jv.VersionDetails.Status.Current
 				}
 			} else {
 				// Skip non-CStor & non-Jiva options

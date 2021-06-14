@@ -142,6 +142,28 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	return pods.Items[0].Namespace, nil
 }
 
+// GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[cstor] = cstor-ns
+func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
+	label := "openebs.io/component-name in ("
+	for _, v := range util.CasTypeAndComponentNameMap {
+		label = label + v + ","
+	}
+	label += ")"
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+	if err != nil || pods == nil || len(pods.Items) == 0 {
+		return nil, errors.New("unable to determine openebs namespace")
+	}
+	NSmap := make(map[string]string)
+	for _, pod := range pods.Items {
+		ns := pod.Namespace
+		cas, ok := util.ComponentNameToCasTypeMap[pod.Labels["openebs.io/component-name"]]
+		if ok {
+			NSmap[cas] = ns
+		}
+	}
+	return NSmap, nil
+}
+
 // GetStorageClass using the K8sClient's storage class client
 func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
 	scs, err := k.K8sCS.StorageV1().StorageClasses().Get(context.TODO(), driver, metav1.GetOptions{})
@@ -429,44 +451,16 @@ func (k K8sClient) GetPVs() (*corev1.PersistentVolumeList, error) {
 	return pvs, nil
 }
 
+// GetJivaVolumes returns a list of jivavolumes
 func (k K8sClient) GetJivaVolumes() (*jiva.JivaVolumeList, error) {
 	jv := jiva.JivaVolumeList{}
+	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
 	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/openebs.io/v1alpha1").
 		Resource("jivavolumes").Do(context.TODO()).Into(&jv)
 	if err != nil {
 		return nil, err
 	}
 	return &jv, nil
-}
-
-func (k K8sClient) GetJivaVolumesByName(vols []string) (*jiva.JivaVolumeList, error) {
-	jvs, err := k.GetJivaVolumes()
-	if err != nil {
-		return nil, err
-	}
-	jvMap := make(map[string]jiva.JivaVolume)
-	for _, cv := range jvs.Items {
-		jvMap[cv.Name] = cv
-	}
-	var list []jiva.JivaVolume
-	for _, name := range vols {
-		if jv, ok := jvMap[name]; ok {
-			list = append(list, jv)
-		} else {
-			fmt.Printf("Error from server (NotFound): JivaVolume %s not found\n", name)
-		}
-	}
-	return &jiva.JivaVolumeList{
-		Items: list,
-	}, nil
-}
-
-func (k K8sClient) GetJivaVolumePolicy() (*jiva.JivaVolumePolicyList, error) {
-	return nil, nil
-}
-
-func (k K8sClient) GetJivaVolumePolicyByName(vols []string) (*jiva.JivaVolumePolicyList, error) {
-	return nil, nil
 }
 
 // GetPVbyName gets a list of PVs by the with name in vols in order
@@ -496,7 +490,7 @@ func (k K8sClient) GetPVbyName(vols []string) (*corev1.PersistentVolumeList, err
 func (k K8sClient) GetJivaVolume(jv string) (*jiva.JivaVolume, error) {
 	var j jiva.JivaVolume
 	err := k.K8sCS.Discovery().RESTClient().Get().Namespace(k.Ns).Name(jv).AbsPath("/apis/openebs.io/v1alpha1").
-		Resource("jivavolume").Do(context.TODO()).Into(&j)
+		Resource("jivavolumes").Do(context.TODO()).Into(&j)
 	if err != nil {
 		return nil, err
 	}

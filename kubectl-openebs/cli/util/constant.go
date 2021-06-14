@@ -54,6 +54,8 @@ const (
 const (
 	// CStorCSIDriver is the name of CStor CSI driver
 	CStorCSIDriver = "cstor.csi.openebs.io"
+	// JivaCSIDriver is the name of the Jiva CSI driver
+	JivaCSIDriver = "jiva.csi.openebs.io"
 )
 
 var (
@@ -61,6 +63,11 @@ var (
 	CasTypeAndComponentNameMap = map[string]string{
 		CstorCasType: "openebs-cstor-csi-controller",
 		JivaCasType:  "openebs-jiva-csi-controller",
+	}
+	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
+	ComponentNameToCasTypeMap = map[string]string{
+		"openebs-cstor-csi-controller": CstorCasType,
+		"openebs-jiva-csi-controller":  JivaCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
