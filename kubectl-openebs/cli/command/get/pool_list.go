@@ -63,7 +63,7 @@ func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 		nsFromCli, err := k8sClient.GetOpenEBSNamespace(util.CstorCasType)
 		if err != nil {
 			//return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
-			return errors.New("No cstor pools found in the cluster.")
+			return errors.New("no cstor pools found in the cluster")
 		}
 		k8sClient.Ns = nsFromCli
 	}
