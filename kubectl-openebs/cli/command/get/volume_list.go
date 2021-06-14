@@ -58,7 +58,8 @@ func RunVolumesList(cmd *cobra.Command, openebsNs string, vols []string) error {
 	if openebsNs == "" {
 		nsFromCli, err := k8sClient.GetOpenEBSNamespace(util.CstorCasType)
 		if err != nil {
-			return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+			//return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
+			return errors.New("no cstor volumes found in the cluster")
 		}
 		k8sClient.Ns = nsFromCli
 	}
