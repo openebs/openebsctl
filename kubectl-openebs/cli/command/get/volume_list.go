@@ -68,11 +68,14 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 			// TODO: Verbose log for this estimated namespace
 			k8sClient.Ns = openebsNs
 		} else {
-			return fmt.Errorf("couldn't figure out openebs-namespace for cas-type=%s\n", casType)
+			return fmt.Errorf("couldn't figure out openebs-namespace for cas-type=%s\nuse \"--openebs-namespace\" flag to provide the namespace", casType)
 		}
 	} else if casType == "" {
 		// show all volumes
-		nsMap, _ = k8sClient.GetOpenEBSNamespaceMap()
+		nsMap, err = k8sClient.GetOpenEBSNamespaceMap()
+		if err != nil {
+			return fmt.Errorf("couldn't figure out the namespace for jiva & cstor")
+		}
 	}
 	// 1. Fetch all or required PVs
 	var pvList *corev1.PersistentVolumeList
@@ -100,7 +103,12 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 			// 2. For eligible PVs fetch the custom-resource to add more info
 			if pv.Spec.CSI.Driver == util.CStorCSIDriver && (casType == util.CstorCasType || casType == "") {
 				if openebsNs == "" && nsMap != nil {
-					k8sClient.Ns = nsMap[util.CstorCasType]
+					if val, ok := nsMap[util.CstorCasType]; ok {
+						k8sClient.Ns = val
+					} else {
+						// cstor CSI pod doesn't exist
+						continue
+					}
 				}
 				cv, err := k8sClient.GetcStorVolume(pv.Name)
 				if err == nil {
@@ -114,7 +122,12 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 				}
 			} else if pv.Spec.CSI.Driver == util.JivaCSIDriver && (casType == util.JivaCasType || casType == "") {
 				if openebsNs == "" && nsMap != nil {
-					k8sClient.Ns = nsMap[util.JivaCasType]
+					if val, ok := nsMap[util.JivaCasType]; ok {
+						k8sClient.Ns = val
+					} else {
+						// jiva CSI pod doesn't exist
+						continue
+					}
 				}
 				jv, err := k8sClient.GetJivaVolume(pv.Name)
 				if err == nil {
@@ -140,9 +153,9 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 	}
 	if len(rows) == 0 {
 		if casType == "" {
-			return fmt.Errorf("no cstor and jiva volumes found\n")
+			return fmt.Errorf("no cstor and jiva volumes found")
 		} else {
-			return fmt.Errorf("no %s volumes found\n", casType)
+			return fmt.Errorf("no %s volumes found", casType)
 		}
 	}
 	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
