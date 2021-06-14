@@ -153,9 +153,7 @@ func RunVolumesList(openebsNs, casType string, vols []string) error {
 	}
 	if len(rows) == 0 {
 		if casType == "" {
-			return fmt.Errorf("no cstor and jiva volumes found")
-		} else {
-			return fmt.Errorf("no %s volumes found", casType)
+			return fmt.Errorf("no cstor and/or jiva volumes found")
 		}
 	}
 	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
