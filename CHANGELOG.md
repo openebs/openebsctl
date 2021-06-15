@@ -10,7 +10,7 @@ You can checkout the [documentation](https://github.com/openebs/openebsctl#readm
 
 ---
 ## Notable Changes
-We have added supoort for `cStor` storage engine.<br/>
+We have added support for `cStor` storage engine.<br/>
 * cStor `volume` and `pools` listing commands
 * cStor `volume` and `pools` describing commands
 * `PersistentVolumeClaim` describe command

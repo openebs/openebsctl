@@ -13,7 +13,7 @@ for the engines.
 ## Project Status
 
 <b>Alpha</b>. Under active development and seeking [contributions from the community](#contributing).
-The CLI currently supports managing `cStor` Pools and Volumes. **Thank you!**
+The CLI currently supports managing `cStor` Pools and Volumes.<br/>**Thank you!**
 
 ---
 
@@ -67,11 +67,12 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
 ## Flags
 * `--openebs-namespace` :- to override the determination of `namespace` where storage engine is installed with the provided value.
 * `--namespace, -n` :- to pass the namespace, if the resource is namespaced, like `pvc` etc.
+* `--cas-type` :- to pass the cas-type, like cstor, jiva.
 
 ## Usage
 * #### Get `cStor` volumes
   ```bash
-  $ kubectl openebs get volumes
+  $ kubectl openebs get volumes --cas-type=cstor
   NAMESPACE   NAME                                       STATUS    VERSION    CAPACITY   STORAGE CLASS         ATTACHED   ACCESS MODE      ATTACHED NODE
   cstor       pvc-193844d7-3bef-45a3-8b7d-ed3991391b45   Healthy   2.9.0      5.0 GiB    cstor-csi-sc          Bound      ReadWriteOnce    N/A
   cstor       pvc-b84f60ae-3f26-4110-a85d-bce7ec00dacc   Healthy   2.0.0      20 GiB     common-storageclass   Bound      ReadWriteOnce    node1-virtual-machine
