@@ -18,6 +18,7 @@ package get
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
@@ -47,16 +48,17 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
+			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
 			casType = strings.ToLower(casType)
-			util.CheckErr(RunVolumesList(casType, args), util.Fatal)
+			util.CheckErr(RunVolumesList(openebsNS, casType, args), util.Fatal)
 		},
 	}
 	return cmd
 }
 
 // RunVolumesList lists the volumes
-func RunVolumesList(casType string, vols []string) error {
+func RunVolumesList(openebsNS, casType string, vols []string) error {
 	k8sClient, err := client.NewK8sClient("")
 	if err != nil {
 		return err
@@ -105,9 +107,12 @@ func RunVolumesList(casType string, vols []string) error {
 				cv, ok := cvMap[pv.Name]
 				if !ok {
 					// condition not possible
-					return fmt.Errorf("couldn't find cv %s", pv.Name)
+					_, _ = fmt.Fprintf(os.Stderr, "couldn't find cv "+pv.Name)
 				}
 				ns = cv.Namespace
+				if openebsNS != "" && openebsNS != ns {
+					continue
+				}
 				customStatus = string(cv.Status.Phase)
 				storageVersion = cv.VersionDetails.Status.Current
 				cva, cvaOk := cvaMap[pv.Name]
@@ -117,9 +122,12 @@ func RunVolumesList(casType string, vols []string) error {
 			} else if pv.Spec.CSI.Driver == util.JivaCSIDriver && (casType == util.JivaCasType || casType == "") {
 				jv, ok := jvMap[pv.Name]
 				if !ok {
-					return fmt.Errorf("couldn't find jv %s", pv.Name)
+					_, _ = fmt.Fprintln(os.Stderr, "couldn't find jv "+pv.Name)
 				}
 				ns = jv.Namespace
+				if openebsNS != "" && openebsNS != ns {
+					continue
+				}
 				customStatus = jv.Status.Status // RW, RO, etc
 				attachedNode = jv.Labels["nodeID"]
 				storageVersion = jv.VersionDetails.Status.Current
