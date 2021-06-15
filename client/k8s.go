@@ -496,3 +496,43 @@ func (k K8sClient) GetJivaVolume(jv string) (*jiva.JivaVolume, error) {
 	}
 	return &j, nil
 }
+
+// GetJivaVolumeMap returns a map[jvName] -> jv from all namespaces
+func (k K8sClient) GetJivaVolumeMap() (map[string]jiva.JivaVolume, error) {
+	jvs, err := k.GetJivaVolumes()
+	if err != nil {
+		return nil, err
+	}
+	jvMap := make(map[string]jiva.JivaVolume)
+	for _, jv := range jvs.Items {
+		jvMap[jv.Name] = jv
+	}
+	return jvMap, nil
+}
+
+// GetCStorVolumeMap returns a map[cvName] -> cv from all namespaces
+func (k K8sClient) GetCStorVolumeMap() (map[string]cstorv1.CStorVolume, error) {
+	cvs, err := k.GetcStorVolumes()
+	if err != nil {
+		return nil, err
+	}
+	cvMap := make(map[string]cstorv1.CStorVolume)
+	for _, cv := range cvs.Items {
+		cvMap[cv.Name] = cv
+	}
+	return cvMap, nil
+}
+
+// GetCStorVolumeAttachmentMap returns a map[volName] -> cva from all namespaces
+func (k K8sClient) GetCStorVolumeAttachmentMap() (map[string]cstorv1.CStorVolumeAttachment, error) {
+	cvs, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	cvMap := make(map[string]cstorv1.CStorVolumeAttachment)
+	for _, cv := range cvs.Items {
+		vol := cv.Labels["Volname"]
+		cvMap[vol] = cv
+	}
+	return cvMap, nil
+}
