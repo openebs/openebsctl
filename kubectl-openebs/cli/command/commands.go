@@ -21,11 +21,15 @@ import (
 
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/describe"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/get"
+	v "github.com/openebs/openebsctl/kubectl-openebs/cli/command/version"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
+
+// version is the version of the openebsctl binary, info filled by goreleaser
+var version = "dev"
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
@@ -35,6 +39,7 @@ func NewOpenebsCommand() *cobra.Command {
 		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
 Find out more about OpenEBS on https://docs.openebs.io/`,
+		Version: version,
 		// Version: show the version of this plugin
 	}
 	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
@@ -46,6 +51,7 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 		util.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
+		v.NewCmdVersion(cmd),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
