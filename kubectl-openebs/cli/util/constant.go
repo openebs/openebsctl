@@ -41,6 +41,8 @@ const (
 	OpenEBSCasTypeKeySc = "cas-type"
 	// CstorCasType cas type name
 	CstorCasType = "cstor"
+	// JivaCasType is the cas type name for Jiva
+	JivaCasType = "jiva"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -49,17 +51,31 @@ const (
 	NotAttached = "N/A"
 )
 
+const (
+	// CStorCSIDriver is the name of CStor CSI driver
+	CStorCSIDriver = "cstor.csi.openebs.io"
+	// JivaCSIDriver is the name of the Jiva CSI driver
+	JivaCSIDriver = "jiva.csi.openebs.io"
+)
+
 var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
 	CasTypeAndComponentNameMap = map[string]string{
-		"cstor": "openebs-cstor-csi-controller",
+		CstorCasType: "openebs-cstor-csi-controller",
+		JivaCasType:  "openebs-jiva-csi-controller",
+	}
+	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
+	ComponentNameToCasTypeMap = map[string]string{
+		"openebs-cstor-csi-controller": CstorCasType,
+		"openebs-jiva-csi-controller":  JivaCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
-		"cstor.csi.openebs.io":         "cstor",
-		"openebs.io/provisioner-iscsi": "jiva",
+		CStorCSIDriver: CstorCasType,
+		// This isn't supported by CLI
+		"openebs.io/provisioner-iscsi": JivaCasType,
 		"openebs.io/local":             "local",
-		"local.csi.openebs.io ":        "localpv-lvm",
+		"local.csi.openebs.io":         "localpv-lvm",
 		"zfs.csi.openebs.io":           "localpv-zfs",
 	}
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
@@ -80,8 +96,8 @@ var (
 		{Name: "IP", Type: "string"},
 		{Name: "Node", Type: "string"},
 	}
-	// CstorVolumeListColumnDefinations stores the Table headers for Cstor Volume Details
-	CstorVolumeListColumnDefinations = []metav1.TableColumnDefinition{
+	// VolumeListColumnDefinations stores the Table headers for Volume Details
+	VolumeListColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Namespace", Type: "string"},
 		{Name: "Name", Type: "string"},
 		{Name: "Status", Type: "string"},

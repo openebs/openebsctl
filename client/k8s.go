@@ -28,6 +28,7 @@ import (
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
+	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -139,6 +140,28 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 		return "", errors.New("unable to determine openebs namespace")
 	}
 	return pods.Items[0].Namespace, nil
+}
+
+// GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[cstor] = cstor-ns
+func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
+	label := "openebs.io/component-name in ("
+	for _, v := range util.CasTypeAndComponentNameMap {
+		label = label + v + ","
+	}
+	label += ")"
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+	if err != nil || pods == nil || len(pods.Items) == 0 {
+		return nil, errors.New("unable to determine openebs namespace")
+	}
+	NSmap := make(map[string]string)
+	for _, pod := range pods.Items {
+		ns := pod.Namespace
+		cas, ok := util.ComponentNameToCasTypeMap[pod.Labels["openebs.io/component-name"]]
+		if ok {
+			NSmap[cas] = ns
+		}
+	}
+	return NSmap, nil
 }
 
 // GetStorageClass using the K8sClient's storage class client
@@ -417,4 +440,99 @@ func (k K8sClient) GetCstorVolumeRestores(pvName string) (*cstorv1.CStorRestoreL
 	}
 	return cStorRestoreList, nil
 
+}
+
+// GetPVs returns a list of PersistentVolumes
+func (k K8sClient) GetPVs() (*corev1.PersistentVolumeList, error) {
+	pvs, err := k.K8sCS.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return pvs, nil
+}
+
+// GetJivaVolumes returns a list of jivavolumes
+func (k K8sClient) GetJivaVolumes() (*jiva.JivaVolumeList, error) {
+	jv := jiva.JivaVolumeList{}
+	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
+	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/openebs.io/v1alpha1").
+		Resource("jivavolumes").Do(context.TODO()).Into(&jv)
+	if err != nil {
+		return nil, err
+	}
+	return &jv, nil
+}
+
+// GetPVbyName gets a list of PVs by the with name in vols in order
+func (k K8sClient) GetPVbyName(vols []string) (*corev1.PersistentVolumeList, error) {
+	pv, err := k.GetPVs()
+	if err != nil {
+		return nil, err
+	}
+	volMap := make(map[string]corev1.PersistentVolume)
+	for _, vol := range pv.Items {
+		volMap[vol.Name] = vol
+	}
+	var list []corev1.PersistentVolume
+	for _, name := range vols {
+		if pool, ok := volMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			fmt.Printf("Error from server (NotFound): PV %s not found\n", name)
+		}
+	}
+	return &corev1.PersistentVolumeList{
+		Items: list,
+	}, nil
+}
+
+// GetJivaVolume gets a single JivaVolume jv
+func (k K8sClient) GetJivaVolume(jv string) (*jiva.JivaVolume, error) {
+	var j jiva.JivaVolume
+	err := k.K8sCS.Discovery().RESTClient().Get().Namespace(k.Ns).Name(jv).AbsPath("/apis/openebs.io/v1alpha1").
+		Resource("jivavolumes").Do(context.TODO()).Into(&j)
+	if err != nil {
+		return nil, err
+	}
+	return &j, nil
+}
+
+// GetJivaVolumeMap returns a map[jvName] -> jv from all namespaces
+func (k K8sClient) GetJivaVolumeMap() (map[string]jiva.JivaVolume, error) {
+	jvs, err := k.GetJivaVolumes()
+	if err != nil {
+		return nil, err
+	}
+	jvMap := make(map[string]jiva.JivaVolume)
+	for _, jv := range jvs.Items {
+		jvMap[jv.Name] = jv
+	}
+	return jvMap, nil
+}
+
+// GetCStorVolumeMap returns a map[cvName] -> cv from all namespaces
+func (k K8sClient) GetCStorVolumeMap() (map[string]cstorv1.CStorVolume, error) {
+	cvs, err := k.GetcStorVolumes()
+	if err != nil {
+		return nil, err
+	}
+	cvMap := make(map[string]cstorv1.CStorVolume)
+	for _, cv := range cvs.Items {
+		cvMap[cv.Name] = cv
+	}
+	return cvMap, nil
+}
+
+// GetCStorVolumeAttachmentMap returns a map[volName] -> cva from all namespaces
+func (k K8sClient) GetCStorVolumeAttachmentMap() (map[string]cstorv1.CStorVolumeAttachment, error) {
+	cvs, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+	cvMap := make(map[string]cstorv1.CStorVolumeAttachment)
+	for _, cv := range cvs.Items {
+		vol := cv.Labels["Volname"]
+		cvMap[vol] = cv
+	}
+	return cvMap, nil
 }
