@@ -94,7 +94,8 @@ func RunVolumesList(casType string, vols []string) error {
 		name := pv.Name
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
-		var attached, attachedNode, storageVersion, customStatus, ns string
+		attached := pv.Status.Phase
+		var attachedNode, storageVersion, customStatus, ns string
 		// TODO: Estimate the cas-type and decide to print it out
 		// Should all AccessModes be shown in a csv format, or the highest be displayed ROO < RWO < RWX?
 		if pv.Spec.CSI != nil {
