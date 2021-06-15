@@ -18,6 +18,12 @@ We have added supoort for `cStor` storage engine.<br/>
 ## What's Next
 * Restructuring of code, to add supoort for other Storage Engines
 * Adding support for Jiva
+* Adding support for Local PV
+* Adding support for Mayastor
+* Adding support for managing Storage Devices
+* Adding support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilized pools.
+* Adding support for getting overall status (like kubectl openebs cluster-info)
+* Ability to generate raise GitHub issues with required troubleshooting information.
 
 ---
 ## Resolved Bugs

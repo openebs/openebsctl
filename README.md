@@ -80,7 +80,7 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
 
 * #### Get `cStor` pools
   ```bash
-  $ kubectl openebs get volumes
+  $ kubectl openebs get pools
   NAME                      HOSTNAME                FREE     CAPACITY   READ ONLY   PROVISIONED REPLICAS   HEALTHY REPLICAS   STATUS    AGE
   cstor-storage-k5c2        node1-virtual-machine   45 GiB   45 GiB     false       1                      0                  ONLINE    10d2h
   default-cstor-disk-dcrm   node1-virtual-machine   73 GiB   90 GiB     false       7                      7                  ONLINE    27d2h
