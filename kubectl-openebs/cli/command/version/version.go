@@ -22,7 +22,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmdVersion shows OpenEBS version
+// NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",

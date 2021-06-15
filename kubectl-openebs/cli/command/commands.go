@@ -28,8 +28,8 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-// version is the version of the openebsctl binary, info filled by goreleaser
-var version = "dev"
+// Version is the version of the openebsctl binary, info filled by goreleaser
+var Version = "dev"
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
@@ -39,8 +39,7 @@ func NewOpenebsCommand() *cobra.Command {
 		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
 Find out more about OpenEBS on https://docs.openebs.io/`,
-		Version: version,
-		// Version: show the version of this plugin
+		Version: Version,
 	}
 	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
