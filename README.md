@@ -1,21 +1,8 @@
 
-
-## OpenEBS-CTL - Kubectl plugin to manage OpenEBS storage components !
-
-OpenEBS-CTL provides a cli tool to show OpenEBS storage components elegantly, adding to easier
-readability and debuggability.<br/>The plugin `lists` and `describes` all the underlying components that are significant
-for the engines.
-
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
----
+## OpenEBSCTL
 
-## Project Status
-
-<b>Alpha</b>. Under active development and seeking [contributions from the community](#contributing).
-The CLI currently supports managing `cStor` Pools and Volumes.<br/>**Thank you!**
-
----
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/openebs/openebsctl?)](https://goreportcard.com/report/github.com/openebs/openebsctl)
 [![Contributors](https://img.shields.io/github/contributors/openebs/openebsctl)](https://github.com/openebs/openebsctl/graphs/contributors)
@@ -23,8 +10,21 @@ The CLI currently supports managing `cStor` Pools and Volumes.<br/>**Thank you!*
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mum4k/termdash/blob/master/LICENSE)
 [![Releases](https://img.shields.io/github/downloads/openebs/openebsctl/total.svg)](https://github.com//openebs/openebsctl/releases)
 
----
-## Table of Contents
+
+
+OpenEBSCTL is a kubectl plugin to manage OpenEBS storage components.
+
+
+### Project Status
+
+**Alpha**. Under active development and seeking [contributions from the community](#contributing).
+
+The CLI currently supports managing:
+- `cStor` Pools and Volumes
+- `Jiva` Volumes
+
+
+### Table of Contents
 * [Installation](#installation)
 * [Build](#build)
 * [Flags](#flags)
@@ -36,9 +36,10 @@ The CLI currently supports managing `cStor` Pools and Volumes.<br/>**Thank you!*
     * [Describe pvcs](#describe-pvcs)
 * [Contributing](#contributing)
 
----
-## Installation
-OpenEBS-CTL is available on Linux, macOS and Windows platforms.
+
+### Installation
+
+OpenEBSCTL is available on Linux, macOS and Windows platforms.
 
 * Binaries for Linux, Mac and Windows are available as tarballs and zip in the [release](https://github.com/openebs/openebsctl/releases) page.
 * For Linux, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
@@ -57,19 +58,22 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
 * For Windows, download the respective zip from [release](https://github.com/openebs/openebsctl/releases) page and :-
     - Extract the zip, copy the `path` of the folder the contents are in.
     - Add the `path` to the `PATH` environment variable.
-## Build
+
+### Build
 
 - Clone this repo to your system. `git clone https://github.com/openebs/openebsctl`
 - `cd openebsctl`
 - Run `make openebsctl`
 - Run `kubectl openebs [get|describe] [resource]` to use the plugin
 
-## Flags
+### Flags
+
 * `--openebs-namespace` :- to override the determination of `namespace` where storage engine is installed with the provided value.
 * `--namespace, -n` :- to pass the namespace, if the resource is namespaced, like `pvc` etc.
 * `--cas-type` :- to pass the cas-type, like cstor, jiva.
 
-## Usage
+### Usage
+
 * #### Get `cStor` volumes
   ```bash
   $ kubectl openebs get volumes --cas-type=cstor
@@ -78,7 +82,6 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   cstor       pvc-b84f60ae-3f26-4110-a85d-bce7ec00dacc   Healthy   2.0.0      20 GiB     common-storageclass   Bound      ReadWriteOnce    node1-virtual-machine
   ```
   Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
-
 * #### Get `cStor` pools
   ```bash
   $ kubectl openebs get pools
@@ -191,7 +194,8 @@ OpenEBS-CTL is available on Linux, macOS and Windows platforms.
   VERSION       : 2.1.0
   UPGRADING     : true
   ```
-## Contributing
+
+### Contributing
 
 OpenEBS welcomes your feedback and contributions in any form possible.
 
