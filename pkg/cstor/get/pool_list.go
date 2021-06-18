@@ -27,11 +27,10 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 //RunPoolsList fetchs & lists the pools
-func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
+func RunPoolsList(pools []string, openebsNs string) error {
 	k8sClient, err := client.NewK8sClient(openebsNs)
 	util.CheckErr(err, util.Fatal)
 	if openebsNs == "" {

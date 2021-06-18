@@ -49,7 +49,7 @@ func NewCmdDescribePVC() *cobra.Command {
 				pvNs = "default"
 			}
 			openebsNamespace, _ = cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(describe.RunPVCInfo(cmd, args, pvNs, openebsNamespace), util.Fatal)
+			util.CheckErr(describe.RunPVCInfo(args, pvNs, openebsNamespace), util.Fatal)
 		},
 	}
 	cmd.Flags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")

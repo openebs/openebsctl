@@ -48,7 +48,7 @@ func NewCmdDescribeVolume() *cobra.Command {
 				// NOTE: The error comes as nil even when the ns flag is not specified
 				ns = "openebs"
 			}
-			util.CheckErr(describe.RunVolumeInfo(cmd, args, ns), util.Fatal)
+			util.CheckErr(describe.RunVolumeInfo(args, ns), util.Fatal)
 		},
 	}
 	return cmd

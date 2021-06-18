@@ -26,7 +26,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
@@ -71,7 +70,7 @@ PV STATUS    	 : {{.PVStatus}}
 )
 
 // RunPVCInfo runs info command and make call to display the results
-func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) error {
+func RunPVCInfo(pvcs []string, ns string, openebsNs string) error {
 	if len(pvcs) == 0 {
 		return errors.New("Please give at least one pvc name to describe")
 	}

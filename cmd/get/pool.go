@@ -41,7 +41,7 @@ func NewCmdGetPool() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(get.RunPoolsList(cmd, args, openebsNS), util.Fatal)
+			util.CheckErr(get.RunPoolsList(args, openebsNS), util.Fatal)
 		},
 	}
 	return cmd

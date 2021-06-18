@@ -29,7 +29,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/util"
 
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -62,7 +61,7 @@ TARGET IP        :  {{.TargetIP}}
 )
 
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
-func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
+func RunVolumeInfo(vols []string, openebsNs string) error {
 	// the stuff automatically coming from kubectl command execution
 	clientset, err := client.NewK8sClient(openebsNs)
 	util.CheckErr(err, util.Fatal)
