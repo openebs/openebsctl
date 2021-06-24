@@ -17,8 +17,8 @@ limitations under the License.
 package get
 
 import (
-	"github.com/openebs/openebsctl/pkg/cstor/get"
 	"github.com/openebs/openebsctl/pkg/util"
+	"github.com/openebs/openebsctl/pkg/volume"
 	"github.com/spf13/cobra"
 )
 
@@ -39,10 +39,10 @@ func NewCmdGetVolume() *cobra.Command {
 		Short:   "Displays status information about Volume(s)",
 		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
+			// TODO: Should this method create the k8sClient object
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
-			_ = openebsNS
-			util.CheckErr(get.RunVolumesList(openebsNS, casType, args), util.Fatal)
+			util.CheckErr(volume.GetVolumes(args, openebsNS, casType), util.Fatal)
 		},
 	}
 	return cmd
