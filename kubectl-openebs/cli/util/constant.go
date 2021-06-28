@@ -49,6 +49,8 @@ const (
 	StorageKey = "storage"
 	//NotAttached to show when CVA is not present
 	NotAttached = "N/A"
+	// CVAVolnameKey present in label of CVA
+	CVAVolnameKey = "Volname"
 )
 
 const (

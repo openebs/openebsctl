@@ -115,7 +115,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 	util.CheckErr(err, util.Fatal)
 
 	// Fetch the list of v1PVC objects by passing the name of PVCs taken through CLI in ns namespace
-	pvcList, err := clientset.GetPVCs(ns, pvcs)
+	pvcList, err := clientset.GetPVCs(ns, pvcs, "")
 	// Incase the PVCs are not found no further operation to be performed
 	if err != nil {
 		return errors.Wrap(err, "Failed to execute describe pvc command")
@@ -125,7 +125,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 		// show their details.
 		for ind, item := range pvcList.Items {
 			// Get the storageClass object and skip the rest of the loop if not found.
-			sc, err := clientset.GetStorageClass(*item.Spec.StorageClassName)
+			sc, err := clientset.GetSC(*item.Spec.StorageClassName)
 			if err != nil {
 				fmt.Println("Error Fetching StorageClass details for", item.Name)
 				continue
@@ -152,7 +152,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 
 				// fetching the underlying CStorVolume for the PV, to get the phase and size and notify the user
 				// if the CStorVolume is not found.
-				cv, err := clientset.GetcStorVolume(item.Spec.VolumeName)
+				cv, err := clientset.GetCV(item.Spec.VolumeName)
 				if err != nil {
 					fmt.Println("Underlying CstorVolume is not found for: ", item.Name)
 				} else {
@@ -171,7 +171,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 
 				// fetching the underlying CStorVolumeAttachment for the PV, to get the attached to node and notify the user
 				// if the CStorVolumeAttachment is not found.
-				cva, err := clientset.GetCVA(item.Spec.VolumeName)
+				cva, err := clientset.GetCVA(util.CVAVolnameKey + "=" + item.Spec.VolumeName)
 				if err != nil {
 					pvcInfo.AttachedToNode = util.NotAttached
 					fmt.Println("Underlying CstorVolumeAttachment is not found for: ", item.Name)
@@ -181,7 +181,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 
 				// fetching the underlying CStorVolumeReplicas for the PV, to list their details and notify the user
 				// none of the replicas are running if the CStorVolumeReplicas are not found.
-				cvrs, err := clientset.GetCVR(item.Spec.VolumeName)
+				cvrs, err := clientset.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + item.Spec.VolumeName)
 				if err == nil && len(cvrs.Items) > 0 {
 					pvcInfo.Used = util.ConvertToIBytes(util.GetUsedCapacityFromCVR(cvrs))
 				}
@@ -194,11 +194,15 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 
 				// fetching the underlying TargetPod for the PV, to display its relevant details and notify the user
 				// if the TargetPod is not found.
-				targetPod, err := clientset.GetCstorVolumeTargetPod(item.Name, item.Spec.VolumeName)
+				targetPod, err := clientset.GetCVTargetPod(item.Name, item.Spec.VolumeName)
 				if err == nil {
 					fmt.Printf("Target Details :\n----------------\n")
 					var rows []metav1.TableRow
-					rows = append(rows, metav1.TableRow{Cells: []interface{}{targetPod.Namespace, targetPod.Name, util.GetReadyContainers(targetPod.Status.ContainerStatuses), targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)), targetPod.Status.PodIP, targetPod.Spec.NodeName}})
+					rows = append(rows, metav1.TableRow{Cells: []interface{}{
+						targetPod.Namespace, targetPod.Name,
+						util.GetReadyContainers(targetPod.Status.ContainerStatuses),
+						targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)),
+						targetPod.Status.PodIP, targetPod.Spec.NodeName}})
 					util.TablePrinter(util.CstorTargetDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {
 					fmt.Printf("Target Details :\n----------------\nNo target pod exists for the CstorVolume\n")
@@ -210,7 +214,11 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 					fmt.Printf("\nReplica Details :\n-----------------\n")
 					var rows []metav1.TableRow
 					for _, cvr := range cvrs.Items {
-						rows = append(rows, metav1.TableRow{Cells: []interface{}{cvr.Name, util.ConvertToIBytes(cvr.Status.Capacity.Total), util.ConvertToIBytes(cvr.Status.Capacity.Used), cvr.Status.Phase, util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
+						rows = append(rows, metav1.TableRow{Cells: []interface{}{cvr.Name,
+							util.ConvertToIBytes(cvr.Status.Capacity.Total),
+							util.ConvertToIBytes(cvr.Status.Capacity.Used),
+							cvr.Status.Phase,
+							util.Duration(time.Since(cvr.ObjectMeta.CreationTimestamp.Time))}})
 					}
 					util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {

@@ -165,3 +165,28 @@ type CVRInfo struct {
 	Size    string
 	Status  v1.CStorVolumeReplicaPhase
 }
+
+// MapOptions struct to get the resources as Map with the provided options
+// Key defines what to use as a key, ex:- name, label, currently these two are supported, add more according to need.
+// LabelKey defines which Label to use as key.
+type MapOptions struct {
+	Key      Key
+	LabelKey string
+}
+
+// ReturnType defines in which format the object needs to be returned i.e. List or Map
+type ReturnType string
+
+// Key defines what should be the key if we create a map, i.e. Label or Name
+type Key string
+
+const (
+	// List If we want the return type as a list
+	List ReturnType = "list"
+	// Map If we want the return type as a map
+	Map ReturnType = "map"
+	// Name key if we want the keys to be made on name
+	Name Key = "name"
+	// Label key if want to make the keys on labels
+	Label Key = "label"
+)

@@ -70,10 +70,10 @@ func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 	var cpools *v1.CStorPoolInstanceList
 	if len(pools) == 0 {
 		// List all
-		cpools, err = k8sClient.GetcStorPools()
+		cpools, err = k8sClient.GetCSPIs(nil, "")
 	} else {
 		// Get one or more
-		cpools, err = k8sClient.GetcStorPoolsByName(pools)
+		cpools, err = k8sClient.GetCSPIs(pools, "")
 	}
 	if err != nil {
 		return errors.Wrap(err, "error listing pools")

@@ -112,7 +112,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 		// Fetch all details of a volume is called to get the volume controller's
 		// info such as controller's IP, status, iqn, replica IPs etc.
 		//1. cStor volume info
-		volumeInfo, err := clientset.GetcStorVolume(volName)
+		volumeInfo, err := clientset.GetCV(volName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to get CStorVolume %s\n", volName)
 			continue
@@ -131,7 +131,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 		}
 
 		//4. Get Node for Target Pod from the openebs-ns
-		node, err := clientset.GetCStorVolumeAttachment(volName)
+		node, err := clientset.GetCVA(util.CVAVolnameKey + "=" + volName)
 		var nodeName string
 		if err != nil {
 			nodeName = util.NotAttached
@@ -141,7 +141,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 		}
 
 		//5. cStor Volume Replicas
-		cvrInfo, err := clientset.GetCVR(volName)
+		cvrInfo, err := clientset.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + volName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", volName)
 		}
@@ -207,7 +207,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 			util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 		}
 
-		cStorBackupList, err := clientset.GetCstorVolumeBackups(volName)
+		cStorBackupList, err := clientset.GetCVBackups(volName)
 		if cStorBackupList != nil {
 			fmt.Printf("\nCstor Backup Details :\n" + "---------------------\n")
 			var rows []metav1.TableRow
@@ -224,7 +224,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 			util.TablePrinter(util.CstorBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 		}
 
-		cstorCompletedBackupList, err := clientset.GetCstorVolumeCompletedBackups(volName)
+		cstorCompletedBackupList, err := clientset.GetCVCompletedBackups(volName)
 		if cstorCompletedBackupList != nil {
 			fmt.Printf("\nCstor Completed Backup Details :" + "\n-------------------------------\n")
 			var rows []metav1.TableRow
@@ -239,7 +239,7 @@ func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
 			util.TablePrinter(util.CstorCompletedBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 		}
 
-		cStorRestoreList, err := clientset.GetCstorVolumeRestores(volName)
+		cStorRestoreList, err := clientset.GetCVRestores(volName)
 		if cStorRestoreList != nil {
 			fmt.Printf("\nCstor Restores Details :" + "\n-----------------------\n")
 			var rows []metav1.TableRow

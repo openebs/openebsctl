@@ -19,6 +19,8 @@ package describe
 import (
 	"fmt"
 
+	"github.com/openebs/api/v2/pkg/apis/types"
+
 	"github.com/dustin/go-humanize"
 	"github.com/openebs/openebsctl/client"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
@@ -89,7 +91,7 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 
 	// Fetch the CSPI object by passing the name of CSPI taken through CLI in ns namespace
 	poolName := pools[0]
-	poolInfo, err := clientset.GetcStorPool(poolName)
+	poolInfo, err := clientset.GetCSPI(poolName)
 	if err != nil {
 		return errors.Wrap(err, "Error getting pool info")
 	}
@@ -121,7 +123,7 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 	// Fetch info for every block device
 	var bdRows []metav1.TableRow
 	for _, item := range BlockDevicesInPool {
-		bd, err := clientset.GetBlockDevice(item)
+		bd, err := clientset.GetBD(item)
 		if err != nil {
 			fmt.Printf("Could not find the blockdevice : %s\n", item)
 		} else {
@@ -132,19 +134,24 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 		fmt.Printf("Blockdevice details :\n" + "---------------------\n")
 		util.TablePrinter(util.BDListColumnDefinations, bdRows, printers.PrintOptions{Wide: true})
 	} else {
-		fmt.Printf("Could not find any blockdevice that belongs to the pool")
+		fmt.Printf("Could not find any blockdevice that belongs to the pool\n")
 	}
 
 	// Fetch info for provisional replica
 	var cvrRows []metav1.TableRow
-	CVRsInPool, err := clientset.GetCVRByPoolName(poolName)
+	CVRsInPool, err := clientset.GetCVRs(types.CStorPoolInstanceNameLabelKey + "=" + poolName)
 	if err != nil {
 		fmt.Printf("None of the replicas are running")
 	} else {
 		for _, cvr := range CVRsInPool.Items {
+			pvcName := ""
+			pv, err := clientset.GetPV(cvr.Labels["openebs.io/persistent-volume"])
+			if err == nil {
+				pvcName = pv.Spec.ClaimRef.Name
+			}
 			cvrRows = append(cvrRows, metav1.TableRow{Cells: []interface{}{
 				cvr.Name,
-				clientset.GetPVCNameByCVR(cvr.Labels["openebs.io/persistent-volume"]),
+				pvcName,
 				util.ConvertToIBytes(cvr.Status.Capacity.Total),
 				cvr.Status.Phase}})
 		}
