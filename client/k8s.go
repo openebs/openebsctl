@@ -20,7 +20,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/openebs/api/v2/pkg/apis/types"
 	"os"
 	"path/filepath"
 	"strings"
@@ -189,7 +188,7 @@ func (k K8sClient) GetSC(scName string) (*v1.StorageClass, error) {
 	return sc, nil
 }
 
-// GetPV returns a PersistentVolume object using the name passed
+// GetPV returns a PersistentVolume object using the pv name passed.
 func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
 	pv, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -198,10 +197,10 @@ func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
 	return pv, nil
 }
 
-// GetPVs returns a list of PersistentVolumes based on the values of volNames slice
-// volNames slice if is nil or empty, it returns all the PVs in the cluster
-// volNames slice if is not nil or not empty, it return the PVs whose names are present in the slice
-// labelselector takes the label(key+value) and makes a call with this filter applied. Can be empty string is label filtering is not needed.
+// GetPVs returns a list of PersistentVolumes based on the values of volNames slice.
+// volNames slice if is nil or empty, it returns all the PVs in the cluster.
+// volNames slice if is not nil or not empty, it return the PVs whose names are present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
 func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.PersistentVolumeList, error) {
 	pvs, err := k.K8sCS.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
@@ -227,7 +226,7 @@ func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.Pers
 	}, nil
 }
 
-// GetPVC returns a PersistentVolumeClaim object using the name passed
+// GetPVC returns a PersistentVolumeClaim object using the pvc name passed.
 func (k K8sClient) GetPVC(name string, namespace string) (*corev1.PersistentVolumeClaim, error) {
 	pvc, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -236,11 +235,11 @@ func (k K8sClient) GetPVC(name string, namespace string) (*corev1.PersistentVolu
 	return pvc, nil
 }
 
-// GetPVCs returns a list of PersistentVolumes based on the values of volNames slice
-// namespace takes the namespace in which PVCs are present
+// GetPVCs returns a list of PersistentVolumeClaims based on the values of pvcNames slice.
+// namespace takes the namespace in which PVCs are present.
 // pvcNames slice if is nil or empty, it returns all the PVCs in the cluster, in the namespace.
 // pvcNames slice if is not nil or not empty, it return the PVCs whose names are present in the slice, in the namespace.
-// labelselector takes the label(key+value) and makes a call with this filter applied. Can be empty string is label filtering is not needed.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
 func (k K8sClient) GetPVCs(namespace string, pvcNames []string, labelselector string) (*corev1.PersistentVolumeClaimList, error) {
 	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
@@ -277,10 +276,10 @@ func (k K8sClient) GetBD(bd string) (*v1alpha1.BlockDevice, error) {
 	return blockDevice, nil
 }
 
-// GetBDs returns a list of BlockDevices based on the values of bdNames slice
-// bdNames slice if is nil or empty, it returns all the BDs in the cluster
-// bdNames slice if is not nil or not empty, it return the BDs whose names are present in the slice
-// labelselector takes the label(key+value) and makes a call with this filter applied. Can be empty string is label filtering is not needed.
+// GetBDs returns a list of BlockDevices based on the values of bdNames slice.
+// bdNames slice if is nil or empty, it returns all the BDs in the cluster.
+// bdNames slice if is not nil or not empty, it return the BDs whose names are present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
 func (k K8sClient) GetBDs(bdNames []string, labelselector string) (*v1alpha1.BlockDeviceList, error) {
 	bds, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
@@ -320,11 +319,10 @@ func (k K8sClient) GetCV(volName string) (*cstorv1.CStorVolume, error) {
 // GetCVs returns a list or map of CStorVolumes based on the values of volNames slice, and options.
 // volNames slice if is nil or empty, it returns all the CVs in the cluster.
 // volNames slice if is not nil or not empty, it return the CVs whose names are present in the slice.
-// rType takes the return type of the method, can either List or Map.
-// labelselector takes the label(key+value) and makes a call with this filter applied, can be empty string is label filtering is not needed.
-// options takes a MapOptions object which defines how to create a map, has fields Key:- which can be Name or Label, LabelKey:- label with which
-// we want to create the map using it as key. Can be empty in case of rType is List.
-// Only one type can be returned at a time, thus please replace the other was '_' while calling.
+// rType takes the return type of the method, can be either List or Map.
+// labelselector takes the label(key+value) and makes an api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
 func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeList, map[string]cstorv1.CStorVolume, error) {
 	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
@@ -377,7 +375,7 @@ func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelecto
 func (k K8sClient) GetCVA(labelSelector string) (*cstorv1.CStorVolumeAttachment, error) {
 	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
-		return nil, errors.Wrap(err, "Error from server (NotFound): CVA not found")
+		return nil, errors.Wrap(err, "error from server (NotFound): CVA not found")
 	} else if vol == nil || len(vol.Items) == 0 {
 		return nil, fmt.Errorf("error from server (NotFound): CVA not found for %s", labelSelector)
 	}
@@ -385,11 +383,10 @@ func (k K8sClient) GetCVA(labelSelector string) (*cstorv1.CStorVolumeAttachment,
 }
 
 // GetCVAs returns a list or map of CStorVolumeAttachments based on the values of options.
-// rType takes the return type of the method, can either List or Map.
-// labelselector takes the label(key+value) and makes a call with this filter applied, can be empty string is label filtering is not needed.
-// options takes a MapOptions object which defines how to create a map, has fields Key:- which can be Name or Label, LabelKey:- label with which
-// we want to create the map using it as key. Can be empty in case of rType is List.
-// Only one type can be returned at a time, thus please replace the other was '_' while calling.
+// rType takes the return type of the method, can either be List or Map.
+// labelselector takes the label(key+value) and makes a api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
 func (k K8sClient) GetCVAs(rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeAttachmentList, map[string]cstorv1.CStorVolumeAttachment, error) {
 	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
@@ -490,7 +487,7 @@ func (k K8sClient) GetCVRestores(labelselector string) (*cstorv1.CStorRestoreLis
 	return cStorRestoreList, nil
 }
 
-// GetCVC returns the CStorVolumeConfig for cStor volume using the CV/CVC name.
+// GetCVC returns the CStorVolumeConfig for cStor volume using the PV/CV/CVC name.
 func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
 	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(k.Ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -504,10 +501,10 @@ func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
 func (k K8sClient) GetCVRs(labelselector string) (*cstorv1.CStorVolumeReplicaList, error) {
 	cvrs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", cvrs.Items[0].Labels[types.PersistentVolumeLabelKey])
+		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for %s", labelselector)
 	}
 	if cvrs == nil || len(cvrs.Items) == 0 {
-		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found\n", cvrs.Items[0].Labels[types.PersistentVolumeLabelKey])
+		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found for \n", labelselector)
 	}
 	return cvrs, nil
 }
@@ -524,7 +521,7 @@ func (k K8sClient) GetCSPI(poolName string) (*cstorv1.CStorPoolInstance, error) 
 // GetCSPIs returns a list of CStorPoolInstances based on the values of cspiNames slice
 // cspiNames slice if is nil or empty, it returns all the CSPIs in the cluster
 // cspiNames slice if is not nil or not empty, it return the CSPIs whose names are present in the slice
-// labelselector takes the label(key+value) and makes a call with this filter applied. Can be empty string is label filtering is not needed.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
 func (k K8sClient) GetCSPIs(cspiNames []string, labelselector string) (*cstorv1.CStorPoolInstanceList, error) {
 	cspi, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
@@ -569,10 +566,9 @@ func (k K8sClient) GetJV(jv string) (*jiva.JivaVolume, error) {
 // volNames slice if is nil or empty, it returns all the JVs in the cluster.
 // volNames slice if is not nil or not empty, it return the JVs whose names are present in the slice.
 // rType takes the return type of the method, can either List or Map.
-// labelselector takes the label(key+value) and makes a call with this filter applied, can be empty string is label filtering is not needed.
-// options takes a MapOptions object which defines how to create a map, has fields Key:- which can be Name or Label, LabelKey:- label with which
-// we want to create the map using it as key. Can be empty in case of rType is List.
-// Only one type can be returned at a time, thus please replace the other was '_' while calling.
+// labelselector takes the label(key+value) and makes an api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
 func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*jiva.JivaVolumeList, map[string]jiva.JivaVolume, error) {
 	jvs := jiva.JivaVolumeList{}
 	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
