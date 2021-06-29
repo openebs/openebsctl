@@ -194,7 +194,7 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 
 				// fetching the underlying TargetPod for the PV, to display its relevant details and notify the user
 				// if the TargetPod is not found.
-				targetPod, err := clientset.GetCVTargetPod(item.Name, item.Spec.VolumeName)
+				tgtPod, err := clientset.GetCVTargetPod(item.Name, item.Spec.VolumeName)
 				if err == nil {
 					fmt.Printf("Target Details :\n----------------\n")
 					var rows []metav1.TableRow
