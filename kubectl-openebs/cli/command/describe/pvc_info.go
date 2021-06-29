@@ -199,10 +199,10 @@ func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) 
 					fmt.Printf("Target Details :\n----------------\n")
 					var rows []metav1.TableRow
 					rows = append(rows, metav1.TableRow{Cells: []interface{}{
-						targetPod.Namespace, targetPod.Name,
-						util.GetReadyContainers(targetPod.Status.ContainerStatuses),
-						targetPod.Status.Phase, util.Duration(time.Since(targetPod.ObjectMeta.CreationTimestamp.Time)),
-						targetPod.Status.PodIP, targetPod.Spec.NodeName}})
+						tgtPod.Namespace, tgtPod.Name,
+						util.GetReadyContainers(tgtPod.Status.ContainerStatuses),
+						tgtPod.Status.Phase, util.Duration(time.Since(tgtPod.ObjectMeta.CreationTimestamp.Time)),
+						tgtPod.Status.PodIP, tgtPod.Spec.NodeName}})
 					util.TablePrinter(util.CstorTargetDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
 				} else {
 					fmt.Printf("Target Details :\n----------------\nNo target pod exists for the CstorVolume\n")

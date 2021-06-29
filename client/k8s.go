@@ -331,16 +331,17 @@ func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelecto
 	var list []cstorv1.CStorVolume
 	if volNames == nil || len(volNames) == 0 {
 		list = cVols.Items
-	}
-	csMap := make(map[string]cstorv1.CStorVolume)
-	for _, cv := range cVols.Items {
-		csMap[cv.Name] = cv
-	}
-	for _, name := range volNames {
-		if pool, ok := csMap[name]; ok {
-			list = append(list, pool)
-		} else {
-			fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+	} else {
+		csMap := make(map[string]cstorv1.CStorVolume)
+		for _, cv := range cVols.Items {
+			csMap[cv.Name] = cv
+		}
+		for _, name := range volNames {
+			if pool, ok := csMap[name]; ok {
+				list = append(list, pool)
+			} else {
+				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+			}
 		}
 	}
 	if rType == util.List {
@@ -580,16 +581,17 @@ func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelecto
 	var list []jiva.JivaVolume
 	if volNames == nil || len(volNames) == 0 {
 		list = jvs.Items
-	}
-	jvsMap := make(map[string]jiva.JivaVolume)
-	for _, jv := range jvs.Items {
-		jvsMap[jv.Name] = jv
-	}
-	for _, name := range volNames {
-		if pool, ok := jvsMap[name]; ok {
-			list = append(list, pool)
-		} else {
-			fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+	} else {
+		jvsMap := make(map[string]jiva.JivaVolume)
+		for _, jv := range jvs.Items {
+			jvsMap[jv.Name] = jv
+		}
+		for _, name := range volNames {
+			if pool, ok := jvsMap[name]; ok {
+				list = append(list, pool)
+			} else {
+				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+			}
 		}
 	}
 	if rType == util.List {
