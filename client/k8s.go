@@ -230,7 +230,7 @@ func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.Pers
 func (k K8sClient) GetPVC(name string, namespace string) (*corev1.PersistentVolumeClaim, error) {
 	pvc, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "error while getting persistent volume")
+		return nil, errors.Wrap(err, "error while getting persistent volume claim")
 	}
 	return pvc, nil
 }
