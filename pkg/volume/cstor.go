@@ -31,8 +31,11 @@ func (c *CStor) Get() ([]metav1.TableRow, error) {
 		cvaMap map[string]v1.CStorVolumeAttachment
 	)
 	// TODO: What to do if these throw some errors?, errors need to be of two kinds: warnings/errors
-	cvMap, _ = c.k8sClient.GetCStorVolumeMap()
-	cvaMap, _ = c.k8sClient.GetCStorVolumeAttachmentMap()
+	_, cvMap, _ = c.k8sClient.GetCVs(nil, util.Map, "", util.MapOptions{
+		Key: util.Name})
+	_, cvaMap, _ = c.k8sClient.GetCVAs(util.Map, "", util.MapOptions{
+		Key:      util.Label,
+		LabelKey: "Volname"})
 	var rows []metav1.TableRow
 	// 3. Show the required ones
 	for _, pv := range pvList.Items {
@@ -57,13 +60,14 @@ func (c *CStor) Get() ([]metav1.TableRow, error) {
 			if cvaOk {
 				attachedNode = cva.Labels["nodeID"]
 			}
+
+			// TODO: What should be done for multiple AccessModes
+			accessMode := pv.Spec.AccessModes[0]
+			rows = append(rows, metav1.TableRow{
+				Cells: []interface{}{
+					ns, pv.Name, customStatus, storageVersion, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
+					accessMode, attachedNode}})
 		}
-		// TODO: What should be done for multiple AccessModes
-		accessMode := pv.Spec.AccessModes[0]
-		rows = append(rows, metav1.TableRow{
-			Cells: []interface{}{
-				ns, pv.Name, customStatus, storageVersion, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
-				accessMode, attachedNode}})
 	}
 	return rows, nil
 }

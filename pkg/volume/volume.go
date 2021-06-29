@@ -24,9 +24,9 @@ func GetVolumes(vols []string, casType, openebsNS string) error {
 	k, _ := client.NewK8sClient("")
 	var pvList *corev1.PersistentVolumeList
 	if vols == nil {
-		pvList, _ = k.GetPVs()
+		pvList, _ = k.GetPVs(nil, "")
 	} else {
-		pvList, _ = k.GetPVbyName(vols)
+		pvList, _ = k.GetPVs(vols, "")
 	}
 	prop := map[string]string{
 		"casType":    casType,
@@ -41,9 +41,11 @@ func GetVolumes(vols []string, casType, openebsNS string) error {
 		Volumes:    pvList,
 		properties: prop,
 	}}
+	var rows []metav1.TableRow
 	for _, t := range types {
-		rows, _ := t.Get()
-		util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+		jr, _ := t.Get()
+		rows = append(rows, jr...)
 	}
+	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }

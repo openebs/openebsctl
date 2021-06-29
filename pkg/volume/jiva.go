@@ -24,7 +24,7 @@ type Jiva struct {
 func (j *Jiva) Get() ([]metav1.TableRow, error) {
 	pvList := j.Volumes
 	// 2. Fetch all relevant volume CRs without worrying about openebsNS
-	jvMap, _ := j.k8sClient.GetJivaVolumeMap()
+	_, jvMap, _ := j.k8sClient.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	openebsNS := j.properties["openebs-ns"]
 	var rows []metav1.TableRow
 	// 3. Show the required ones
