@@ -66,9 +66,9 @@ func RunVolumesList(openebsNS, casType string, vols []string) error {
 	// 1. Fetch all or required PVs
 	var pvList *corev1.PersistentVolumeList
 	if len(vols) == 0 {
-		pvList, err = k8sClient.GetPVs()
+		pvList, err = k8sClient.GetPVs(nil, "")
 	} else {
-		pvList, err = k8sClient.GetPVbyName(vols)
+		pvList, err = k8sClient.GetPVs(vols, "")
 	}
 	if err != nil {
 		return err
@@ -81,14 +81,14 @@ func RunVolumesList(openebsNS, casType string, vols []string) error {
 	)
 	if casType == "" {
 		// fetch all
-		jvMap, _ = k8sClient.GetJivaVolumeMap()
-		cvMap, _ = k8sClient.GetCStorVolumeMap()
-		cvaMap, _ = k8sClient.GetCStorVolumeAttachmentMap()
+		_, jvMap, _ = k8sClient.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
+		_, cvMap, _ = k8sClient.GetCVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
+		_, cvaMap, _ = k8sClient.GetCVAs(util.Map, "", util.MapOptions{Key: util.Label, LabelKey: "Volname"})
 	} else if casType == util.JivaCasType {
-		jvMap, _ = k8sClient.GetJivaVolumeMap()
+		_, jvMap, _ = k8sClient.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	} else if casType == util.CstorCasType {
-		cvMap, _ = k8sClient.GetCStorVolumeMap()
-		cvaMap, _ = k8sClient.GetCStorVolumeAttachmentMap()
+		_, cvMap, _ = k8sClient.GetCVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
+		_, cvaMap, _ = k8sClient.GetCVAs(util.Map, "", util.MapOptions{Key: util.Label, LabelKey: "Volname"})
 	}
 	var rows []metav1.TableRow
 	// 3. Show the required ones

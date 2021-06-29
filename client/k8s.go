@@ -24,9 +24,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
-	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+
+	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
 	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
@@ -59,6 +59,10 @@ type K8sClient struct {
 	// components
 	OpenebsCS openebsclientset.Interface
 }
+
+/*
+	CLIENT CREATION METHODS AND RELATED OPERATIONS
+*/
 
 // NewK8sClient creates a new K8sClient
 // TODO: improve K8sClientset instantiation. for example remove the Ns from
@@ -94,7 +98,10 @@ func GetOutofClusterKubeConfig() {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig")
 	}
 	flag.Parse()
-	os.Setenv("KUBECONFIG", *kubeconfig)
+	err := os.Setenv("KUBECONFIG", *kubeconfig)
+	if err != nil {
+		return
+	}
 }
 
 // getK8sClient returns K8s clientset by taking kubeconfig as an argument
@@ -133,6 +140,10 @@ func homeDir() string {
 	return os.Getenv("KUBECONFIG")
 }
 
+/*
+	NAMESPACE DETERMINATION METHODS
+*/
+
 // GetOpenEBSNamespace from the specific engine component based on cas-type
 func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
@@ -164,38 +175,140 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
-// GetStorageClass using the K8sClient's storage class client
-func (k K8sClient) GetStorageClass(driver string) (*v1.StorageClass, error) {
-	scs, err := k.K8sCS.StorageV1().StorageClasses().Get(context.TODO(), driver, metav1.GetOptions{})
+/*
+	NATIVE RESOURCE FETCHING METHODS
+*/
+
+// GetSC returns a StorageClass object using the scName passed.
+func (k K8sClient) GetSC(scName string) (*v1.StorageClass, error) {
+	sc, err := k.K8sCS.StorageV1().StorageClasses().Get(context.TODO(), scName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrap(err, "error while getting storage class")
 	}
-	return scs, nil
+	return sc, nil
 }
 
-// GetCStorVolumeAttachment using the K8sClient's storage class client
-func (k K8sClient) GetCStorVolumeAttachment(volname string) (*cstorv1.CStorVolumeAttachment, error) {
-	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(),
-		metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volname)})
+// GetPV returns a PersistentVolume object using the pv name passed.
+func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
+	pv, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
-		return nil, errors.Wrap(err, "Error from server (NotFound): CVA not found")
-	} else if vol == nil || len(vol.Items) == 0 {
-		return nil, fmt.Errorf("Error from server (NotFound): CVA not found for volume %s", volname)
+		return nil, errors.Wrap(err, "error while getting persistent volume")
 	}
-	return &vol.Items[0], nil
+	return pv, nil
 }
 
-// GetcStorVolumes using the K8sClient's storage class client
-func (k K8sClient) GetcStorVolumes() (*cstorv1.CStorVolumeList, error) {
-	cStorVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
+// GetPVs returns a list of PersistentVolumes based on the values of volNames slice.
+// volNames slice if is nil or empty, it returns all the PVs in the cluster.
+// volNames slice if is not nil or not empty, it return the PVs whose names are present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.PersistentVolumeList, error) {
+	pvs, err := k.K8sCS.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
-		return nil, errors.Wrapf(err, "Error while getting volumes")
+		return nil, err
 	}
-	return cStorVols, nil
+	volMap := make(map[string]corev1.PersistentVolume)
+	for _, vol := range pvs.Items {
+		volMap[vol.Name] = vol
+	}
+	var list []corev1.PersistentVolume
+	if volNames == nil || len(volNames) == 0 {
+		return pvs, nil
+	}
+	for _, name := range volNames {
+		if pool, ok := volMap[name]; ok {
+			list = append(list, pool)
+		} else {
+			fmt.Printf("Error from server (NotFound): PV %s not found\n", name)
+		}
+	}
+	return &corev1.PersistentVolumeList{
+		Items: list,
+	}, nil
 }
 
-// GetcStorVolume fetches the volume object of the given name in the given namespace
-func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) {
+// GetPVC returns a PersistentVolumeClaim object using the pvc name passed.
+func (k K8sClient) GetPVC(name string, namespace string) (*corev1.PersistentVolumeClaim, error) {
+	pvc, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrap(err, "error while getting persistent volume claim")
+	}
+	return pvc, nil
+}
+
+// GetPVCs returns a list of PersistentVolumeClaims based on the values of pvcNames slice.
+// namespace takes the namespace in which PVCs are present.
+// pvcNames slice if is nil or empty, it returns all the PVCs in the cluster, in the namespace.
+// pvcNames slice if is not nil or not empty, it return the PVCs whose names are present in the slice, in the namespace.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetPVCs(namespace string, pvcNames []string, labelselector string) (*corev1.PersistentVolumeClaimList, error) {
+	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil {
+		return nil, err
+	}
+	if pvcNames == nil || len(pvcNames) == 0 {
+		return pvcs, nil
+	}
+	pvcNamePVCmap := make(map[string]corev1.PersistentVolumeClaim)
+	for _, item := range pvcs.Items {
+		pvcNamePVCmap[item.Name] = item
+	}
+	var items = make([]corev1.PersistentVolumeClaim, 0)
+	for _, name := range pvcNames {
+		if _, ok := pvcNamePVCmap[name]; ok {
+			items = append(items, pvcNamePVCmap[name])
+		}
+	}
+	return &corev1.PersistentVolumeClaimList{
+		Items: items,
+	}, nil
+}
+
+/*
+	OPENEBS RESOURCE FETCHING METHODS
+*/
+
+// GetBD returns the BlockDevice passed as name with OpenEBS's Client
+func (k K8sClient) GetBD(bd string) (*v1alpha1.BlockDevice, error) {
+	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).Get(context.TODO(), bd, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting block device")
+	}
+	return blockDevice, nil
+}
+
+// GetBDs returns a list of BlockDevices based on the values of bdNames slice.
+// bdNames slice if is nil or empty, it returns all the BDs in the cluster.
+// bdNames slice if is not nil or not empty, it return the BDs whose names are present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetBDs(bdNames []string, labelselector string) (*v1alpha1.BlockDeviceList, error) {
+	bds, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting block device")
+	}
+	if bdNames == nil || len(bdNames) == 0 {
+		return bds, nil
+	}
+	bdNameBDmap := make(map[string]v1alpha1.BlockDevice)
+	for _, item := range bds.Items {
+		bdNameBDmap[item.Name] = item
+	}
+	var items = make([]v1alpha1.BlockDevice, 0)
+	for _, name := range bdNames {
+		if _, ok := bdNameBDmap[name]; ok {
+			items = append(items, bdNameBDmap[name])
+		}
+	}
+	return &v1alpha1.BlockDeviceList{
+		Items: items,
+	}, nil
+}
+
+/*
+	CSTOR STORAGE ENGINE SPECIFIC METHODS
+*/
+
+// GetCV returns the CStorVolume passed as name with OpenEBS's Client
+func (k K8sClient) GetCV(volName string) (*cstorv1.CStorVolume, error) {
 	volInfo, err := k.OpenebsCS.CstorV1().CStorVolumes(k.Ns).Get(context.TODO(), volName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "error while getting volume %s", volName)
@@ -203,11 +316,121 @@ func (k K8sClient) GetcStorVolume(volName string) (*cstorv1.CStorVolume, error) 
 	return volInfo, nil
 }
 
-// GetCStorVolumeInfoMap used to get the info for for the underlying
-// PVC
-func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, error) {
+// GetCVs returns a list or map of CStorVolumes based on the values of volNames slice, and options.
+// volNames slice if is nil or empty, it returns all the CVs in the cluster.
+// volNames slice if is not nil or not empty, it return the CVs whose names are present in the slice.
+// rType takes the return type of the method, can be either List or Map.
+// labelselector takes the label(key+value) and makes an api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
+func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeList, map[string]cstorv1.CStorVolume, error) {
+	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "Error while getting volumes")
+	}
+	var list []cstorv1.CStorVolume
+	if volNames == nil || len(volNames) == 0 {
+		list = cVols.Items
+	} else {
+		csMap := make(map[string]cstorv1.CStorVolume)
+		for _, cv := range cVols.Items {
+			csMap[cv.Name] = cv
+		}
+		for _, name := range volNames {
+			if pool, ok := csMap[name]; ok {
+				list = append(list, pool)
+			} else {
+				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &cstorv1.CStorVolumeList{
+			Items: list,
+		}, nil, nil
+	}
+	if rType == util.Map {
+		cvMap := make(map[string]cstorv1.CStorVolume)
+		switch options.Key {
+		case util.Label:
+			for _, cv := range list {
+				if vol, ok := cv.Labels[options.LabelKey]; ok {
+					cvMap[vol] = cv
+				}
+			}
+			return nil, cvMap, nil
+		case util.Name:
+			for _, cv := range list {
+				cvMap[cv.Name] = cv
+			}
+			return nil, cvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
+}
+
+// GetCVA returns the CStorVolumeAttachment, corresponding to the label passed.
+// Ex:- labelSelector: {cstortypes.PersistentVolumeLabelKey + "=" + pvName}
+func (k K8sClient) GetCVA(labelSelector string) (*cstorv1.CStorVolumeAttachment, error) {
+	vol, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		return nil, errors.Wrap(err, "error from server (NotFound): CVA not found")
+	} else if vol == nil || len(vol.Items) == 0 {
+		return nil, fmt.Errorf("error from server (NotFound): CVA not found for %s", labelSelector)
+	}
+	return &vol.Items[0], nil
+}
+
+// GetCVAs returns a list or map of CStorVolumeAttachments based on the values of options.
+// rType takes the return type of the method, can either be List or Map.
+// labelselector takes the label(key+value) and makes a api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
+func (k K8sClient) GetCVAs(rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeAttachmentList, map[string]cstorv1.CStorVolumeAttachment, error) {
+	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		return nil, nil, err
+	}
+	if rType == util.List {
+		return cvaList, nil, nil
+	}
+	if rType == util.Map {
+		cvaMap := make(map[string]cstorv1.CStorVolumeAttachment)
+		switch options.Key {
+		case util.Label:
+			for _, cva := range cvaList.Items {
+				if vol, ok := cva.Labels[options.LabelKey]; ok {
+					cvaMap[vol] = cva
+				}
+			}
+			return nil, cvaMap, nil
+		case util.Name:
+			for _, cva := range cvaList.Items {
+				cvaMap[cva.Name] = cva
+			}
+			return nil, cvaMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
+}
+
+// GetCVTargetPod returns the Cstor Volume Target Pod, corresponding to the volumeClaim and volumeName.
+func (k K8sClient) GetCVTargetPod(volumeClaim string, volumeName string) (*corev1.Pod, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
+	if err != nil || len(pods.Items) == 0 {
+		return nil, errors.New("The target pod for the volume was not found")
+	}
+	return &pods.Items[0], nil
+}
+
+// GetCVInfoMap returns a Volume object, filled using corresponding CVA and PV.
+func (k K8sClient) GetCVInfoMap() (map[string]*util.Volume, error) {
 	volumes := make(map[string]*util.Volume)
-	cstorVA, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
+	cstorVA, _, err := k.GetCVAs(util.List, "", util.MapOptions{})
 	if err != nil {
 		return volumes, errors.Wrap(err, "error while getting storage volume attachments")
 	}
@@ -235,16 +458,37 @@ func (k K8sClient) GetCStorVolumeInfoMap(node string) (map[string]*util.Volume, 
 	return volumes, nil
 }
 
-// GetPV returns a PV object after querying Kubernetes API
-func (k K8sClient) GetPV(name string) (*corev1.PersistentVolume, error) {
-	vol, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), name, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "error while getting persistant volume")
+// GetCVBackups returns the CStorVolumeBackup, corresponding to the label passed.
+// Ex:- labelSelector: {cstortypes.PersistentVolumeLabelKey + "=" + pvName}
+func (k K8sClient) GetCVBackups(labelselector string) (*cstorv1.CStorBackupList, error) {
+	cstorBackupList, err := k.OpenebsCS.CstorV1().CStorBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil || len(cstorBackupList.Items) == 0 {
+		return nil, errors.New("no cstorbackups were found for the volume")
 	}
-	return vol, nil
+	return cstorBackupList, nil
 }
 
-// GetCVC used to get cStor Volume Config information for cStor a given volume using a cStorClient
+// GetCVCompletedBackups returns the CStorCompletedBackups, corresponding to the label passed.
+// Ex:- labelSelector: {cstortypes.PersistentVolumeLabelKey + "=" + pvName}
+func (k K8sClient) GetCVCompletedBackups(labelselector string) (*cstorv1.CStorCompletedBackupList, error) {
+	cstorCompletedBackupList, err := k.OpenebsCS.CstorV1().CStorCompletedBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil || len(cstorCompletedBackupList.Items) == 0 {
+		return nil, errors.New("no cstorcompletedbackups were found for the volume")
+	}
+	return cstorCompletedBackupList, nil
+}
+
+// GetCVRestores returns the CStorRestores, corresponding to the label passed.
+// Ex:- labelSelector: {cstortypes.PersistentVolumeLabelKey + "=" + pvName}
+func (k K8sClient) GetCVRestores(labelselector string) (*cstorv1.CStorRestoreList, error) {
+	cStorRestoreList, err := k.OpenebsCS.CstorV1().CStorRestores("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil || len(cStorRestoreList.Items) == 0 {
+		return nil, errors.New("no cstorrestores were found for the volume")
+	}
+	return cStorRestoreList, nil
+}
+
+// GetCVC returns the CStorVolumeConfig for cStor volume using the PV/CV/CVC name.
 func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
 	cStorVolumeConfig, err := k.OpenebsCS.CstorV1().CStorVolumeConfigs(k.Ns).Get(context.TODO(), name, metav1.GetOptions{})
 	if err != nil {
@@ -253,85 +497,21 @@ func (k K8sClient) GetCVC(name string) (*cstorv1.CStorVolumeConfig, error) {
 	return cStorVolumeConfig, nil
 }
 
-// GetCVR used to get cStor Volume Replicas for a given cStor volumes using cStor Client
-func (k K8sClient) GetCVR(name string) (*cstorv1.CStorVolumeReplicaList, error) {
-	label := "cstorvolume.openebs.io/name" + "=" + name
-	CStorVolumeReplicas, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+// GetCVRs returns the list CStorVolumeReplica, corresponding to the label passed.
+// For ex:- labelselector : {"cstorvolume.openebs.io/name" + "=" + name} , {"cstorpoolinstance.openebs.io/name" + "=" + poolName}
+func (k K8sClient) GetCVRs(labelselector string) (*cstorv1.CStorVolumeReplicaList, error) {
+	cvrs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
-		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for volume %s", name)
+		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for %s", labelselector)
 	}
-	if len(CStorVolumeReplicas.Items) == 0 {
-		// TODO: This came during rebase, this shouldn't be required
-		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found\n", name)
+	if cvrs == nil || len(cvrs.Items) == 0 {
+		fmt.Printf("Error while getting cStor Volume Replica for %s, no replicas found for \n", labelselector)
 	}
-	return CStorVolumeReplicas, nil
+	return cvrs, nil
 }
 
-// NodeForVolume used to get NodeName for the volume from the Kubernetes API
-func (k K8sClient) NodeForVolume(volName string) (string, error) {
-	label := cstortypes.PersistentVolumeLabelKey + "=" + volName
-	podInfo, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
-	if err != nil {
-		return "", errors.Wrapf(err, "error while getting target Pod for volume %s", volName)
-	}
-	if len(podInfo.Items) == 0 {
-		return "", errors.New(fmt.Sprintf("Error invalid number of Pods %d for volume %s", len(podInfo.Items), volName))
-	}
-	return podInfo.Items[0].Spec.NodeName, nil
-}
-
-// GetcStorPools returns a list CSPIs
-func (k K8sClient) GetcStorPools() (*cstorv1.CStorPoolInstanceList, error) {
-	cStorPools, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error while getting cspi")
-	}
-	return cStorPools, nil
-}
-
-// GetPVCs list from the passed list of PVC names and the namespace
-func (k K8sClient) GetPVCs(namespace string, pvcNames []string) (*corev1.PersistentVolumeClaimList, error) {
-	pvcs, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	pvcNamePVCmap := make(map[string]corev1.PersistentVolumeClaim)
-	for _, item := range pvcs.Items {
-		pvcNamePVCmap[item.Name] = item
-	}
-	var items = make([]corev1.PersistentVolumeClaim, 0)
-	for _, name := range pvcNames {
-		if _, ok := pvcNamePVCmap[name]; ok {
-			items = append(items, pvcNamePVCmap[name])
-		}
-	}
-	return &corev1.PersistentVolumeClaimList{
-		TypeMeta: metav1.TypeMeta{},
-		ListMeta: metav1.ListMeta{},
-		Items:    items,
-	}, nil
-}
-
-// GetCVA from the passed cstorvolume name
-func (k K8sClient) GetCVA(volumeName string) (*cstorv1.CStorVolumeAttachment, error) {
-	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("Volname=%s", volumeName)})
-	if err != nil || len(cvaList.Items) == 0 {
-		return nil, errors.New("Couldn't find the CVA for the passed volume")
-	}
-	return &cvaList.Items[0], nil
-}
-
-// GetCstorVolumeTargetPod for the passed volume to show details
-func (k K8sClient) GetCstorVolumeTargetPod(volumeClaim string, volumeName string) (*corev1.Pod, error) {
-	pods, err := k.K8sCS.CoreV1().Pods(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/persistent-volume-claim=%s,openebs.io/persistent-volume=%s,openebs.io/target=cstor-target", volumeClaim, volumeName)})
-	if err != nil || len(pods.Items) == 0 {
-		return nil, errors.New("The target pod for the volume was not found")
-	}
-	return &pods.Items[0], nil
-}
-
-// GetcStorPool using the OpenEBS's Client
-func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, error) {
+// GetCSPI returns the CStorPoolInstance for cStor volume using the poolName passed.
+func (k K8sClient) GetCSPI(poolName string) (*cstorv1.CStorPoolInstance, error) {
 	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while getting cspi")
@@ -339,47 +519,24 @@ func (k K8sClient) GetcStorPool(poolName string) (*cstorv1.CStorPoolInstance, er
 	return cStorPool, nil
 }
 
-// GetBlockDevice using the OpenEBS's Client
-func (k K8sClient) GetBlockDevice(bd string) (*v1alpha1.BlockDevice, error) {
-	blockDevice, err := k.OpenebsCS.OpenebsV1alpha1().BlockDevices(k.Ns).Get(context.TODO(), bd, metav1.GetOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error while getting block device")
-	}
-	return blockDevice, nil
-}
-
-// GetCVRByPoolName using the OpenEBS's Client
-func (k K8sClient) GetCVRByPoolName(poolName string) (*cstorv1.CStorVolumeReplicaList, error) {
-	label := "cstorpoolinstance.openebs.io/name" + "=" + poolName
-	CVRs, err := k.OpenebsCS.CstorV1().CStorVolumeReplicas(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: label})
-	if err != nil {
-		return nil, errors.Wrapf(err, "error while getting cStor Volume Replica for pool %s", poolName)
-	}
-	return CVRs, nil
-}
-
-// GetPVCNameByCVR using the OpenEBS's Client
-func (k K8sClient) GetPVCNameByCVR(pvName string) string {
-	PV, err := k.K8sCS.CoreV1().PersistentVolumes().Get(context.TODO(), pvName, metav1.GetOptions{})
-	if err != nil {
-		fmt.Println("error while getting pvc name")
-		return ""
-	}
-	return PV.Spec.ClaimRef.Name
-}
-
-// GetcStorPoolsByName returns a list of CSPI which have name in names
-func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstanceList, error) {
-	cspi, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{})
+// GetCSPIs returns a list of CStorPoolInstances based on the values of cspiNames slice
+// cspiNames slice if is nil or empty, it returns all the CSPIs in the cluster
+// cspiNames slice if is not nil or not empty, it return the CSPIs whose names are present in the slice
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetCSPIs(cspiNames []string, labelselector string) (*cstorv1.CStorPoolInstanceList, error) {
+	cspi, err := k.OpenebsCS.CstorV1().CStorPoolInstances("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while getting cspi")
+	}
+	if cspiNames == nil || len(cspiNames) == 0 {
+		return cspi, nil
 	}
 	poolMap := make(map[string]cstorv1.CStorPoolInstance)
 	for _, p := range cspi.Items {
 		poolMap[p.Name] = p
 	}
 	var list []cstorv1.CStorPoolInstance
-	for _, name := range names {
+	for _, name := range cspiNames {
 		if pool, ok := poolMap[name]; ok {
 			list = append(list, pool)
 		} else {
@@ -391,103 +548,12 @@ func (k K8sClient) GetcStorPoolsByName(names []string) (*cstorv1.CStorPoolInstan
 	}, nil
 }
 
-// GetcStorVolumesByNames gets the CStorVolume resource from all namespaces
-func (k K8sClient) GetcStorVolumesByNames(vols []string) (*cstorv1.CStorVolumeList, error) {
-	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, errors.Wrapf(err, "Error while getting volumes")
-	}
-	csMap := make(map[string]cstorv1.CStorVolume)
-	for _, cv := range cVols.Items {
-		csMap[cv.Name] = cv
-	}
-	var list []cstorv1.CStorVolume
-	for _, name := range vols {
-		if pool, ok := csMap[name]; ok {
-			list = append(list, pool)
-		} else {
-			fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
-		}
-	}
-	return &cstorv1.CStorVolumeList{
-		Items: list,
-	}, nil
-}
+/*
+	JIVA STORAGE ENGINE SPECIFIC METHODS
+*/
 
-// GetCstorVolumeBackups across all namespaces for the provied volume
-func (k K8sClient) GetCstorVolumeBackups(pvName string) (*cstorv1.CStorBackupList, error) {
-	cstorBackupList, err := k.OpenebsCS.CstorV1().CStorBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
-	if err != nil || len(cstorBackupList.Items) == 0 {
-		return nil, errors.New("no cstorbackups were found for the volume")
-	}
-	return cstorBackupList, nil
-}
-
-// GetCstorVolumeCompletedBackups across all namespaces for the provied volume
-func (k K8sClient) GetCstorVolumeCompletedBackups(pvName string) (*cstorv1.CStorCompletedBackupList, error) {
-	cstorCompletedBackupList, err := k.OpenebsCS.CstorV1().CStorCompletedBackups("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
-	if err != nil || len(cstorCompletedBackupList.Items) == 0 {
-		return nil, errors.New("no cstorcompletedbackups were found for the volume")
-	}
-	return cstorCompletedBackupList, nil
-}
-
-// GetCstorVolumeRestores across all namespaces for the provied volume
-func (k K8sClient) GetCstorVolumeRestores(pvName string) (*cstorv1.CStorRestoreList, error) {
-	cStorRestoreList, err := k.OpenebsCS.CstorV1().CStorRestores("").List(context.TODO(), metav1.ListOptions{LabelSelector: cstortypes.PersistentVolumeLabelKey + "=" + pvName})
-	if err != nil || len(cStorRestoreList.Items) == 0 {
-		return nil, errors.New("no cstorrestores were found for the volume")
-	}
-	return cStorRestoreList, nil
-
-}
-
-// GetPVs returns a list of PersistentVolumes
-func (k K8sClient) GetPVs() (*corev1.PersistentVolumeList, error) {
-	pvs, err := k.K8sCS.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return pvs, nil
-}
-
-// GetJivaVolumes returns a list of jivavolumes
-func (k K8sClient) GetJivaVolumes() (*jiva.JivaVolumeList, error) {
-	jv := jiva.JivaVolumeList{}
-	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
-	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/openebs.io/v1alpha1").
-		Resource("jivavolumes").Do(context.TODO()).Into(&jv)
-	if err != nil {
-		return nil, err
-	}
-	return &jv, nil
-}
-
-// GetPVbyName gets a list of PVs by the with name in vols in order
-func (k K8sClient) GetPVbyName(vols []string) (*corev1.PersistentVolumeList, error) {
-	pv, err := k.GetPVs()
-	if err != nil {
-		return nil, err
-	}
-	volMap := make(map[string]corev1.PersistentVolume)
-	for _, vol := range pv.Items {
-		volMap[vol.Name] = vol
-	}
-	var list []corev1.PersistentVolume
-	for _, name := range vols {
-		if pool, ok := volMap[name]; ok {
-			list = append(list, pool)
-		} else {
-			fmt.Printf("Error from server (NotFound): PV %s not found\n", name)
-		}
-	}
-	return &corev1.PersistentVolumeList{
-		Items: list,
-	}, nil
-}
-
-// GetJivaVolume gets a single JivaVolume jv
-func (k K8sClient) GetJivaVolume(jv string) (*jiva.JivaVolume, error) {
+// GetJV returns the JivaVolume passed as name with REST Client
+func (k K8sClient) GetJV(jv string) (*jiva.JivaVolume, error) {
 	var j jiva.JivaVolume
 	err := k.K8sCS.Discovery().RESTClient().Get().Namespace(k.Ns).Name(jv).AbsPath("/apis/openebs.io/v1alpha1").
 		Resource("jivavolumes").Do(context.TODO()).Into(&j)
@@ -497,42 +563,60 @@ func (k K8sClient) GetJivaVolume(jv string) (*jiva.JivaVolume, error) {
 	return &j, nil
 }
 
-// GetJivaVolumeMap returns a map[jvName] -> jv from all namespaces
-func (k K8sClient) GetJivaVolumeMap() (map[string]jiva.JivaVolume, error) {
-	jvs, err := k.GetJivaVolumes()
+// GetJVs returns a list or map of JivaVolumes based on the values of volNames slice, and options.
+// volNames slice if is nil or empty, it returns all the JVs in the cluster.
+// volNames slice if is not nil or not empty, it return the JVs whose names are present in the slice.
+// rType takes the return type of the method, can either List or Map.
+// labelselector takes the label(key+value) and makes an api call with this filter applied, can be empty string if label filtering is not needed.
+// options takes a MapOptions object which defines how to create a map, refer to types for more info. Can be empty in case of rType is List.
+// Only one type can be returned at a time, please define the other type as '_' while calling.
+func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*jiva.JivaVolumeList, map[string]jiva.JivaVolume, error) {
+	jvs := jiva.JivaVolumeList{}
+	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
+	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/openebs.io/v1alpha1").
+		Resource("jivavolumes").Do(context.TODO()).Into(&jvs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	jvMap := make(map[string]jiva.JivaVolume)
-	for _, jv := range jvs.Items {
-		jvMap[jv.Name] = jv
+	var list []jiva.JivaVolume
+	if volNames == nil || len(volNames) == 0 {
+		list = jvs.Items
+	} else {
+		jvsMap := make(map[string]jiva.JivaVolume)
+		for _, jv := range jvs.Items {
+			jvsMap[jv.Name] = jv
+		}
+		for _, name := range volNames {
+			if pool, ok := jvsMap[name]; ok {
+				list = append(list, pool)
+			} else {
+				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+			}
+		}
 	}
-	return jvMap, nil
-}
-
-// GetCStorVolumeMap returns a map[cvName] -> cv from all namespaces
-func (k K8sClient) GetCStorVolumeMap() (map[string]cstorv1.CStorVolume, error) {
-	cvs, err := k.GetcStorVolumes()
-	if err != nil {
-		return nil, err
+	if rType == util.List {
+		return &jiva.JivaVolumeList{
+			Items: list,
+		}, nil, nil
 	}
-	cvMap := make(map[string]cstorv1.CStorVolume)
-	for _, cv := range cvs.Items {
-		cvMap[cv.Name] = cv
+	if rType == util.Map {
+		jvMap := make(map[string]jiva.JivaVolume)
+		switch options.Key {
+		case util.Label:
+			for _, jv := range list {
+				if vol, ok := jv.Labels[options.LabelKey]; ok {
+					jvMap[vol] = jv
+				}
+			}
+			return nil, jvMap, nil
+		case util.Name:
+			for _, jv := range list {
+				jvMap[jv.Name] = jv
+			}
+			return nil, jvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
 	}
-	return cvMap, nil
-}
-
-// GetCStorVolumeAttachmentMap returns a map[volName] -> cva from all namespaces
-func (k K8sClient) GetCStorVolumeAttachmentMap() (map[string]cstorv1.CStorVolumeAttachment, error) {
-	cvs, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	cvMap := make(map[string]cstorv1.CStorVolumeAttachment)
-	for _, cv := range cvs.Items {
-		vol := cv.Labels["Volname"]
-		cvMap[vol] = cv
-	}
-	return cvMap, nil
+	return nil, nil, errors.New("invalid return type")
 }
