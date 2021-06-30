@@ -8,19 +8,9 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-type Volume interface {
-	// PV -> CV,CVC,CVA/JV/
-	// Implicit arguments=PVList
-	Get() ([]metav1.TableRow, error)
-	// THINKING_POINT: Do I need to implement a single cas-by-cas filter or a
-	// SingleTon filter function which can give me all or one as a map
-	// Filter(volumes []string, properties map[string]string) (*corev1.PersistentVolumeList, error)
-	// Describe(volumes []string, properties map[string]string) ()
-}
-
 // Impl -> Headers
-
-func GetVolumes(vols []string, casType, openebsNS string) error {
+// Get manages various implementations of Volume listing
+func Get(vols []string, casType, openebsNS string) error {
 	k, _ := client.NewK8sClient("")
 	var pvList *corev1.PersistentVolumeList
 	if vols == nil {
@@ -28,23 +18,16 @@ func GetVolumes(vols []string, casType, openebsNS string) error {
 	} else {
 		pvList, _ = k.GetPVs(vols, "")
 	}
-	prop := map[string]string{
-		"casType":    casType,
-		"openebs-ns": openebsNS,
-	}
-	types := []Volume{&Jiva{
-		k8sClient:  k,
-		Volumes:    pvList,
-		properties: prop,
-	}, &CStor{
-		k8sClient:  k,
-		Volumes:    pvList,
-		properties: prop,
-	}}
+	impl := []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){GetJiva, GetCStor}
+
 	var rows []metav1.TableRow
-	for _, t := range types {
-		jr, _ := t.Get()
-		rows = append(rows, jr...)
+	// TODO: Decide if running each 7 cas-type implementations in
+	// go-routine will be wise & will still maintain the ordering
+	for _, t := range impl {
+		jr, err := t(k, pvList, openebsNS)
+		if err != nil {
+			rows = append(rows, jr...)
+		}
 	}
 	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil

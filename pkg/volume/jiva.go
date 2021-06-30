@@ -21,11 +21,9 @@ type Jiva struct {
 }
 
 // Get returns a list of JivaVolumes
-func (j *Jiva) Get() ([]metav1.TableRow, error) {
-	pvList := j.Volumes
-	// 2. Fetch all relevant volume CRs without worrying about openebsNS
-	_, jvMap, _ := j.k8sClient.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
-	openebsNS := j.properties["openebs-ns"]
+func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
+	// 1. Fetch all relevant volume CRs without worrying about openebsNS
+	_, jvMap, _ := c.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	var rows []metav1.TableRow
 	// 3. Show the required ones
 	for _, pv := range pvList.Items {

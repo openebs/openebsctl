@@ -42,7 +42,7 @@ func NewCmdGetVolume() *cobra.Command {
 			// TODO: Should this method create the k8sClient object
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
-			util.CheckErr(volume.GetVolumes(args, openebsNS, casType), util.Fatal)
+			util.CheckErr(volume.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
 	return cmd

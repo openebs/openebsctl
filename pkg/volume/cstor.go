@@ -12,28 +12,16 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// CStor volume
-type CStor struct {
-	// Volumes are a list of PersistentVolumes which may or may not be CStor CSI provisioned
-	Volumes *corev1.PersistentVolumeList
-	// k8sClient is the k8sClient to fetch
-	k8sClient *client.K8sClient
-	// OpenEBS namespace
-	properties map[string]string
-}
-
-// Get implements the Volume interface to Get CStor volumes
-func (c *CStor) Get() ([]metav1.TableRow, error) {
-	pvList := c.Volumes
-	openebsNS := c.properties["openebs-ns"]
+// GetCStor returns a list of CStor volumes
+func GetCStor(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	var (
 		cvMap  map[string]v1.CStorVolume
 		cvaMap map[string]v1.CStorVolumeAttachment
 	)
 	// TODO: What to do if these throw some errors?, errors need to be of two kinds: warnings/errors
-	_, cvMap, _ = c.k8sClient.GetCVs(nil, util.Map, "", util.MapOptions{
+	_, cvMap, _ = c.GetCVs(nil, util.Map, "", util.MapOptions{
 		Key: util.Name})
-	_, cvaMap, _ = c.k8sClient.GetCVAs(util.Map, "", util.MapOptions{
+	_, cvaMap, _ = c.GetCVAs(util.Map, "", util.MapOptions{
 		Key:      util.Label,
 		LabelKey: "Volname"})
 	var rows []metav1.TableRow
@@ -60,7 +48,6 @@ func (c *CStor) Get() ([]metav1.TableRow, error) {
 			if cvaOk {
 				attachedNode = cva.Labels["nodeID"]
 			}
-
 			// TODO: What should be done for multiple AccessModes
 			accessMode := pv.Spec.AccessModes[0]
 			rows = append(rows, metav1.TableRow{
