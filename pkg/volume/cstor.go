@@ -1,3 +1,19 @@
+/*
+Copyright 2020-2021 The OpenEBS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package volume
 
 import (
@@ -18,12 +34,19 @@ func GetCStor(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsN
 		cvMap  map[string]v1.CStorVolume
 		cvaMap map[string]v1.CStorVolumeAttachment
 	)
-	// TODO: What to do if these throw some errors?, errors need to be of two kinds: warnings/errors
-	_, cvMap, _ = c.GetCVs(nil, util.Map, "", util.MapOptions{
+	// no need to proceed if CVs/CVAs don't exist
+	var err error
+	_, cvMap, err = c.GetCVs(nil, util.Map, "", util.MapOptions{
 		Key: util.Name})
-	_, cvaMap, _ = c.GetCVAs(util.Map, "", util.MapOptions{
+	if err != nil {
+		return nil, fmt.Errorf("failed to list CStorVolumes")
+	}
+	_, cvaMap, err = c.GetCVAs(util.Map, "", util.MapOptions{
 		Key:      util.Label,
 		LabelKey: "Volname"})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list CStorVolumeAttachments")
+	}
 	var rows []metav1.TableRow
 	// 3. Show the required ones
 	for _, pv := range pvList.Items {
