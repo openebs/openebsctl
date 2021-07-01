@@ -53,7 +53,7 @@ openebsctl:
 	@echo "----------------------------"
 	@echo "--> openebsctl                    "
 	@echo "----------------------------"
-	@PNAME=OPENEBSCTL CTLNAME=${OPENEBSCTL} sh -c "'$(PWD)/build.sh'"
+	@PNAME=OPENEBSCTL CTLNAME=${OPENEBSCTL} sh -c "'$(PWD)/scripts/build.sh'"
 	@echo "--> Removing old directory..."
 	@sudo rm -rf /usr/local/bin/${OPENEBSCTL}
 	@echo "----------------------------"

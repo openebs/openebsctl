@@ -49,6 +49,10 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
    sudo mv kubectl-openebs /usr/local/bin/
    ```
   Or, download the `debian` package from the [release](https://github.com/openebs/openebsctl/releases) page and double click it launch the installer.
+  Or, we can also use script to install the latest version :-
+   ```shell
+   wget https://raw.githubusercontent.com/openebs/openebsctl/develop/scripts/install-latest.sh -O - | bash
+   ```
 * For Mac, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
   ```shell
    tar -xzvf kubectl-openebs_v0.1.0_Darwin_x86_64.tar.gz
