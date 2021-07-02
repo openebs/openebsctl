@@ -27,9 +27,10 @@ var (
 This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
-#
-$ kubectl openebs describe [pool|volume] [name]
-
+$ kubectl openebs describe volume [name]
+Options:
+Advanced: Override the auto-detected OPENEBS_NAMESPACE
+--openebs-namespace=[...]
 `
 )
 
