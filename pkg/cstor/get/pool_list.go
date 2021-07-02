@@ -24,39 +24,13 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
-	"github.com/openebs/openebsctl/client"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 )
-
-var (
-	poolListCommandHelpText = `
-This command lists of all known pools in the Cluster.
-
-Usage:
-$ kubectl openebs get pools [options]
-`
-)
-
-// NewCmdGetPool displays status of OpenEBS Pool(s)
-func NewCmdGetPool() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "pool",
-		Aliases: []string{"pools", "p"},
-		Short:   "Displays status information about Pool(s)",
-		Long:    poolListCommandHelpText,
-		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(RunPoolsList(cmd, args, openebsNs), util.Fatal)
-		},
-	}
-	return cmd
-}
 
 //RunPoolsList fetchs & lists the pools
-func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
+func RunPoolsList(pools []string, openebsNs string) error {
 	k8sClient, err := client.NewK8sClient(openebsNs)
 	util.CheckErr(err, util.Fatal)
 	if openebsNs == "" {
@@ -75,6 +49,7 @@ func RunPoolsList(cmd *cobra.Command, pools []string, openebsNs string) error {
 		// Get one or more
 		cpools, err = k8sClient.GetCSPIs(pools, "")
 	}
+
 	if err != nil {
 		return errors.Wrap(err, "error listing pools")
 	}

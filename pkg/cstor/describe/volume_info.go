@@ -25,22 +25,10 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 
-	"github.com/openebs/openebsctl/client"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-)
-
-var (
-	volumeInfoCommandHelpText = `
-This command fetches information and status of the various
-aspects of a cStor Volume such as ISCSI, Controller, and Replica.
-
-#
-$ kubectl openebs describe [volume] [names...]
-
-`
 )
 
 const (
@@ -72,25 +60,8 @@ TARGET IP        :  {{.TargetIP}}
 `
 )
 
-// NewCmdDescribeVolume displays OpenEBS Volume information.
-func NewCmdDescribeVolume() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "volume",
-		Aliases: []string{"volumes", "vol", "v", "vols"},
-		Short:   "Displays Openebs volume information",
-		Long:    volumeInfoCommandHelpText,
-		Example: `kubectl openebs describe volume [vol]`,
-		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: Get this from flags, pflag, etc
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(RunVolumeInfo(cmd, args, openebsNs), util.Fatal)
-		},
-	}
-	return cmd
-}
-
 // RunVolumeInfo runs info command and make call to DisplayVolumeInfo to display the results
-func RunVolumeInfo(cmd *cobra.Command, vols []string, openebsNs string) error {
+func RunVolumeInfo(vols []string, openebsNs string) error {
 	// the stuff automatically coming from kubectl command execution
 	clientset, err := client.NewK8sClient(openebsNs)
 	util.CheckErr(err, util.Fatal)

@@ -29,8 +29,9 @@ import (
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -337,8 +338,8 @@ func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelecto
 			csMap[cv.Name] = cv
 		}
 		for _, name := range volNames {
-			if pool, ok := csMap[name]; ok {
-				list = append(list, pool)
+			if cv, ok := csMap[name]; ok {
+				list = append(list, cv)
 			} else {
 				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
 			}
@@ -587,10 +588,10 @@ func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelecto
 			jvsMap[jv.Name] = jv
 		}
 		for _, name := range volNames {
-			if pool, ok := jvsMap[name]; ok {
-				list = append(list, pool)
+			if jv, ok := jvsMap[name]; ok {
+				list = append(list, jv)
 			} else {
-				fmt.Printf("Error from server (NotFound): cStorVolume %s not found\n", name)
+				fmt.Printf("Error from server (NotFound): jivavolume %s not found\n", name)
 			}
 		}
 	}

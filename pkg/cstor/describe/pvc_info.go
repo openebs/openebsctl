@@ -23,23 +23,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
-	"github.com/openebs/openebsctl/client"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
 	"k8s.io/cli-runtime/pkg/printers"
-)
-
-var (
-	pvcInfoCommandHelpText = `
-This command fetches information and status  of  the  various  aspects 
-of  the  PersistentVolumeClaims  and  its underlying related resources 
-in the provided namespace. If no namespace is provided it uses default
-namespace for execution.
-
-$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
-
-`
 )
 
 const (
@@ -82,28 +69,8 @@ PV STATUS    	 : {{.PVStatus}}
 `
 )
 
-// NewCmdDescribePVC Displays the pvc describe details
-func NewCmdDescribePVC() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:     "pvc",
-		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
-		Short:   "Displays PersistentVolumeClaim information",
-		Long:    pvcInfoCommandHelpText,
-		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
-		Run: func(cmd *cobra.Command, args []string) {
-			var pvNs, openebsNamespace string
-			if pvNs, _ = cmd.Flags().GetString("namespace"); pvNs == "" {
-				pvNs = "default"
-			}
-			openebsNamespace, _ = cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(RunPVCInfo(cmd, args, pvNs, openebsNamespace), util.Fatal)
-		},
-	}
-	return cmd
-}
-
 // RunPVCInfo runs info command and make call to display the results
-func RunPVCInfo(cmd *cobra.Command, pvcs []string, ns string, openebsNs string) error {
+func RunPVCInfo(pvcs []string, ns string, openebsNs string) error {
 	if len(pvcs) == 0 {
 		return errors.New("Please give at least one pvc name to describe")
 	}

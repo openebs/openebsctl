@@ -30,7 +30,7 @@ set -e
 #cd "$DIR"
 
 
-GIT_COMMIT="$PWD/(git rev-parse HEAD)"
+GIT_COMMIT="$(git rev-parse --short HEAD)"
 
 # Set BUILDMETA based on travis tag
 #if [[ -n "$TRAVIS_TAG" ]] && [[ $TRAVIS_TAG != *"RC"* ]]; then
@@ -102,10 +102,11 @@ if [ $GOOS = "windows" ]; then
     output_name+='.exe'
 fi
 
+# Build & set the Version variable in binary
+# Ref: https://www.digitalocean.com/community/tutorials/using-ldflags-to-set-version-information-for-go-applications
 env GOOS=$GOOS GOARCH=$GOARCH go build -ldflags \
-    "-X main.CtlName='${CTLNAME}'" \
-    -o $output_name\
-    ./${CTLNAME}/
+    "-X github.com/openebs/openebsctl/cmd/openebs.Version=$GIT_COMMIT" \
+    -o $output_name
 #-o $optput_name $(PKG)/cmd/$
 
 

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2021 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,29 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package command
+package cmd
 
 import (
 	"flag"
 
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/describe"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/command/get"
-	v "github.com/openebs/openebsctl/kubectl-openebs/cli/command/version"
-	"github.com/openebs/openebsctl/kubectl-openebs/cli/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
+
+	"github.com/openebs/openebsctl/cmd/completion"
+	"github.com/openebs/openebsctl/cmd/describe"
+	"github.com/openebs/openebsctl/cmd/get"
+	v "github.com/openebs/openebsctl/cmd/version"
 )
 
-// Version is the version of the openebsctl binary, info filled by goreleaser
+// Version is the version of the openebsctl binary, info filled by go-releaser
 var Version = "dev"
 
 // NewOpenebsCommand creates the `openebs` command and its nested children.
 func NewOpenebsCommand() *cobra.Command {
 	var openebsNs string
 	cmd := &cobra.Command{
-		Use:   "openebs",
-		Short: "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
+		Use:       "openebs",
+		ValidArgs: []string{"get", "describe", "completion"},
+		Short:     "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components
 Find out more about OpenEBS on https://docs.openebs.io/`,
 		Version: Version,
@@ -45,9 +47,8 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.AddCommand(
-		// TODO: Re-organize sub-commands into packages
 		// Add a helper command to show what version of X is installed
-		util.NewCmdCompletion(cmd),
+		completion.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
@@ -56,5 +57,6 @@ Find out more about OpenEBS on https://docs.openebs.io/`,
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	_ = flag.CommandLine.Parse([]string{})
 	_ = viper.BindPFlag("namespace", cmd.PersistentFlags().Lookup("namespace"))
+	_ = viper.BindPFlag("openebs-namespace", cmd.PersistentFlags().Lookup("openebs-namespace"))
 	return cmd
 }
