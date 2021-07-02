@@ -24,10 +24,18 @@ import (
 
 var (
 	volumesListCommandHelpText = `
-This command displays status of available zfs Volumes.
-If no volume ID is given, a list of all known volumes will be displayed.
+This command displays status of available OpenEBS volumes.
 
-Usage: kubectl openebs cStor volume list [options]
+Usage: kubectl openebs get volume [options]
+
+Options:
+--------
+Filter volumes by cas-type
+--cas-type=[jiva|cstor]
+
+Advanced:
+Filter by a fixed OpenEBS namespace
+--openebs-namespace=[...]
 `
 )
 
