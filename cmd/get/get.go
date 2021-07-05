@@ -51,6 +51,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	cmd.AddCommand(
 		NewCmdGetVolume(),
 		NewCmdGetPool(),
+		NewCmdGetBD(),
 	)
 	return cmd
 }
