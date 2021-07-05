@@ -24,7 +24,7 @@ import (
 
 var (
 	bdListCommandHelpText = `
-This command displays status of available OpenEBS blockdevices.
+This command displays status of available OpenEBS BlockDevice(s).
 
 Usage: kubectl openebs get bd [options]
 
@@ -39,7 +39,7 @@ func NewCmdGetBD() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "bd",
 		Aliases: []string{"bds", "blockdevice", "blockdevices"},
-		Short:   "Displays status information about BlockDevices",
+		Short:   "Displays status information about BlockDevice(s)",
 		Long:    bdListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Should this method create the k8sClient object
