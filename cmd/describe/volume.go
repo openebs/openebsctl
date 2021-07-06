@@ -17,8 +17,8 @@ limitations under the License.
 package describe
 
 import (
-	"github.com/openebs/openebsctl/pkg/cstor/describe"
 	"github.com/openebs/openebsctl/pkg/util"
+	"github.com/openebs/openebsctl/pkg/volume"
 	"github.com/spf13/cobra"
 )
 
@@ -44,12 +44,8 @@ func NewCmdDescribeVolume() *cobra.Command {
 		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Get this from flags, pflag, etc
-			var ns string
-			if ns, _ = cmd.Flags().GetString("namespace"); ns == "" {
-				// NOTE: The error comes as nil even when the ns flag is not specified
-				ns = "openebs"
-			}
-			util.CheckErr(describe.RunVolumeInfo(args, ns), util.Fatal)
+			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
+			util.CheckErr(volume.Describe(args, openebsNS), util.Fatal)
 		},
 	}
 	return cmd

@@ -160,7 +160,6 @@ var (
 		{Name: "Storage Class", Type: "string"},
 		{Name: "Status", Type: "string"},
 	}
-
 	// BDTreeListColumnDefinations stores the Table headers for Block Device Details, when displayed as tree
 	BDTreeListColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
@@ -170,5 +169,14 @@ var (
 		{Name: "Status", Type: "string"},
 		{Name: "FsType", Type: "string"},
 		{Name: "MountPoint", Type: "string"},
+	}
+	// JivaReplicaPVCColumnDefinations
+	JivaReplicaPVCColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "Status", Type: "string"},
+		{Name: "Volume", Type: "string"},
+		{Name: "Capacity", Type: "string"},
+		{Name: "Storageclass", Type: "string"},
+		{Name: "Volumemode", Type: "string"},
 	}
 )

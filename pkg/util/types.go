@@ -81,7 +81,9 @@ type VolumeInfo struct {
 	Version string
 	Size    string
 	// Status of the CStor volume
-	Status v1.CStorVolumePhase
+	Status string
+	// JVP is the name of the JivaVolumePolicy
+	JVP string
 }
 
 // PortalInfo keep info about the ISCSI Target Portal.
