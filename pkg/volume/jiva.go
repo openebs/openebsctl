@@ -18,9 +18,10 @@ package volume
 
 import (
 	"fmt"
-	"k8s.io/cli-runtime/pkg/printers"
 	"os"
 	"time"
+
+	"k8s.io/cli-runtime/pkg/printers"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -99,14 +100,15 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 	return rows, nil
 }
 
-// DescribeJivaVolume
+// DescribeJivaVolume describes a jiva storage engine PersistentVolume
 func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error {
-	// 1. Get Jv
+	// 1. Get the JivaVolume Corresponding to the pv name
 	jv, err := c.GetJV(vol.Name)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
 		return err
 	}
+	// 2. Fill in JivaVolume related details
 	jivaVolInfo := util.VolumeInfo{
 		AccessMode:   util.AccessModeToString(vol.Spec.AccessModes),
 		Capacity:     util.ConvertToIBytes(vol.Spec.Capacity.Storage().String()),
@@ -122,10 +124,17 @@ func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error 
 		Status:       jv.Status.Status,
 		JVP:          jv.Annotations["openebs.io/volume-policy"],
 	}
+	// 3. Print the Volume information
 	util.PrintByTemplate("jivaVolumeInfo", jivaVolInfoTemplate, jivaVolInfo)
+	// 4. Print the Portal Information
 	util.TemplatePrinter(jivaPortalTemplate, jv)
+	// 5. Fetch the replica PVCs and create rows for cli-runtime
 	rows := []metav1.TableRow{}
 	pvcList, err := c.GetPVCs(jv.Namespace, nil, "openebs.io/component=jiva-replica,openebs.io/persistent-volume="+jv.Name)
+	if err != nil || len(pvcList.Items) == 0 {
+		fmt.Println("No replicas found for the JivaVolume" + vol.Name)
+		return nil
+	}
 	for _, pvc := range pvcList.Items {
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{
 			pvc.Name,
@@ -136,6 +145,7 @@ func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error 
 			util.Duration(time.Since(pvc.ObjectMeta.CreationTimestamp.Time)),
 			pvc.Spec.VolumeMode}})
 	}
+	// 6. Print the replica details if present
 	util.TablePrinter(util.JivaReplicaPVCColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }

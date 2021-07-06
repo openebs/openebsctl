@@ -18,10 +18,11 @@ package volume
 
 import (
 	"fmt"
-	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
-	"k8s.io/cli-runtime/pkg/printers"
 	"os"
 	"time"
+
+	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+	"k8s.io/cli-runtime/pkg/printers"
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -114,7 +115,8 @@ func GetCStor(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsN
 	return rows, nil
 }
 
-func DescribeCstorVolume(c *client.K8sClient, vol corev1.PersistentVolume) error  {
+// DescribeCstorVolume describes a cstor storage engine PersistentVolume
+func DescribeCstorVolume(c *client.K8sClient, vol corev1.PersistentVolume) error {
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	// 1. cStor volume info

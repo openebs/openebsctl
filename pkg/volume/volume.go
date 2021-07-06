@@ -57,6 +57,53 @@ func Get(vols []string, openebsNS, casType string) error {
 	return nil
 }
 
+// Describe manages various implementations of Volume Describing
+func Describe(vols []string, openebsNs string) error {
+	if vols == nil {
+		return errors.New("please provide atleast one pv name to describe")
+	}
+	// Clienset creation
+	k, _ := client.NewK8sClient(openebsNs)
+
+	// 1. Get a list of required PersistentVolumes
+	var pvList *corev1.PersistentVolumeList
+	pvList, err := k.GetPVs(vols, "")
+	if err != nil {
+		return errors.New("no volumes found corresponding to the names")
+	}
+	// 2. Get the namespaces
+	nsMap, _ := k.GetOpenEBSNamespaceMap()
+	// 3. Range over the list of PVs
+	for _, pv := range pvList.Items {
+		// 4. Fetch the storage class, used to get the cas-type
+		//TODO: Add cas-type label in every storage engine pv
+		sc, err := k.GetSC(pv.Spec.StorageClassName)
+		// 5. Get cas type
+		casType := ""
+		if err != nil {
+			casType = util.GetCasTypeFromPV(&pv)
+		} else {
+			casType = util.GetCasType(&pv, sc)
+		}
+		// 6. Assign a namespace corresponding to the engine
+		if openebsNs == "" {
+			if val, ok := nsMap[casType]; ok {
+				k.Ns = val
+			} else {
+				return errors.New("could not determine the underlying storage engine ns, please provide using '--openebs-namespace' flag")
+			}
+		}
+		// 7. Describe the volume based on its casType
+		if desc, ok := CasDescribeMap()[casType]; ok {
+			err = desc(k, pv)
+			if err != nil {
+				continue
+			}
+		}
+	}
+	return nil
+}
+
 // CasList returns a list of functions by cas-types for volume listing
 func CasList() []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error) {
 	// a good hack to implement immutable lists in Golang & also write tests for it
@@ -79,51 +126,4 @@ func CasDescribeMap() map[string]func(*client.K8sClient, corev1.PersistentVolume
 		util.JivaCasType:  DescribeJivaVolume,
 		util.CstorCasType: DescribeCstorVolume,
 	}
-}
-
-// Describe manages various implementations of Volume Describing
-func Describe(vols []string, openebsNs string) error {
-	if vols == nil {
-		return errors.New("please provide atleast one pv name to describe")
-	}
-	// Clienset creation
-	k, _ := client.NewK8sClient(openebsNs)
-
-	// 1. Get a list of required PersistentVolumes
-	var pvList *corev1.PersistentVolumeList
-	pvList, err := k.GetPVs(vols, "")
-	if err != nil {
-		return errors.New("no volumes found corresponding to the names")
-	}
-	nsMap, _ := k.GetOpenEBSNamespaceMap()
-	// 2. Range over the list of PVs
-	for _, pv := range pvList.Items {
-		// 3. Fetch the storage class, used to get the cas-type
-		//TODO: Add cas-type label in every storage engine pv
-		sc, err := k.GetSC(pv.Spec.StorageClassName)
-		// 4. Get cas type
-		casType := ""
-		if err != nil {
-			casType = util.GetCasTypeFromPV(&pv)
-		}else{
-			casType = util.GetCasType(&pv, sc)
-		}
-		// 5. Assign a namespace corresponding to the engine
-		if openebsNs == "" {
-			// 5. Get the namespaces
-			if val, ok := nsMap[casType]; ok {
-				k.Ns = val
-			} else {
-				return errors.New("could not determine the underlying storage engine ns, please provide using '--openebs-namespace' flag")
-			}
-		}
-		// 6. Describe the volume based on its casType
-		if desc, ok := CasDescribeMap()[casType]; ok {
-			err = desc(k, pv)
-			if err != nil {
-				continue
-			}
-		}
-	}
-	return nil
 }
