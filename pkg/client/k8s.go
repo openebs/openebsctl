@@ -636,3 +636,18 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 		return nil, fmt.Errorf("got 0 statefulsets with the label openebs.io/component-name=%s", name)
 	}
 }
+
+// GetCSIControllerPod returns the CSI controller pod with a specific
+// openebs-component-name label key
+func (k K8sClient) GetCSIControllerPod(name string) (*corev1.Pod, error) {
+	if pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
+	}); err == nil && len(pods.Items) == 1 {
+		// TODO: Think about Evicted pods
+		return &pods.Items[0], nil
+	} else if pods != nil {
+		return nil, fmt.Errorf("got %d pods with the label openebs.io/component-name=%s", len(pods.Items), name)
+	} else {
+		return nil, fmt.Errorf("got 0 pods with the label openebs.io/component-name=%s", name)
+	}
+}

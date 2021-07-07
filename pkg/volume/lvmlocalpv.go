@@ -28,9 +28,15 @@ import (
 
 // GetLVMLocalPV returns a list of LVM-LocalPV volumes
 func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
+	var rows []metav1.TableRow
+	var version string
+	if ctrlPod, err := c.GetCSIControllerPod("openebs-lvm-controller"); err == nil {
+		version = ctrlPod.Labels["openebs.io/version"]
+	} else {
+		version = "N/A"
+	}
 	for _, pv := range pvList.Items {
-		var attachedNode, storageVersion, customStatus, ns string
-		var rows []metav1.TableRow
+		var attachedNode, customStatus, ns string
 		_, lvmVolMap, err := c.GetLVMvol(nil, util.Map, "", util.MapOptions{Key: util.Name})
 		if err != nil {
 			return nil, fmt.Errorf("failed to list ZFSVolumes")
@@ -47,13 +53,12 @@ func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, ope
 			}
 			accessMode := pv.Spec.AccessModes[0]
 			customStatus = lvmVol.Status.State
-			storageVersion = ""
 			attachedNode = lvmVol.Spec.OwnerNodeID
 			rows = append(rows, metav1.TableRow{
 				Cells: []interface{}{
-					ns, pv.Name, customStatus, storageVersion, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
+					ns, pv.Name, customStatus, version, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
 					accessMode, attachedNode}})
 		}
 	}
-	return nil, nil
+	return rows, nil
 }
