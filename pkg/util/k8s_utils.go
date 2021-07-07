@@ -37,30 +37,36 @@ func GetUsedCapacityFromCVR(cvrList *cstorv1.CStorVolumeReplicaList) string {
 // GetCasType from the v1pv and v1sc, this is a fallback checker method, it checks
 // both the resource only if the castype is not found.
 func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
-	if val := GetCasTypeFromPV(v1PV); val != Unknown {
-		return val
+	if v1PV != nil {
+		if val := GetCasTypeFromPV(v1PV); val != Unknown {
+			return val
+		}
 	}
-	if val := GetCasTypeFromSC(v1SC); val != Unknown {
-		return val
+	if v1SC != nil {
+		if val := GetCasTypeFromSC(v1SC); val != Unknown {
+			return val
+		}
 	}
 	return Unknown
 }
 
 // GetCasTypeFromPV from the passed PersistentVolume or the Stora
 func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
-	if v1PV.ObjectMeta.Labels != nil {
-		if val, ok := v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]; ok {
-			return val
+	if v1PV != nil {
+		if v1PV.ObjectMeta.Labels != nil {
+			if val, ok := v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]; ok {
+				return val
+			}
 		}
-	}
-	if v1PV.ObjectMeta.Annotations != nil {
-		if val, ok := v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]; ok {
-			return val
+		if v1PV.ObjectMeta.Annotations != nil {
+			if val, ok := v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]; ok {
+				return val
+			}
 		}
-	}
-	if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
-		if val, ok := v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]; ok {
-			return val
+		if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
+			if val, ok := v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]; ok {
+				return val
+			}
 		}
 	}
 	return Unknown
@@ -68,13 +74,15 @@ func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 
 // GetCasTypeFromSC by passing the storage class
 func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
-	if v1SC.Parameters != nil {
-		if val, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
+	if v1SC != nil {
+		if v1SC.Parameters != nil {
+			if val, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
+				return val
+			}
+		}
+		if val, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
 			return val
 		}
-	}
-	if val, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
-		return val
 	}
 	return Unknown
 }

@@ -30,7 +30,8 @@ import (
 )
 
 const (
-	jivaVolInfoTemplate = `
+	// JivaVolInfoTemplate to store the jiva volume and pvc describe related details
+	JivaVolInfoTemplate = `
 {{.Name}} Details :
 -----------------
 NAME            : {{.Name}}
@@ -45,8 +46,8 @@ STATUS          : {{.Status}}
 REPLICA COUNT	: {{.ReplicaCount}}
 
 `
-
-	jivaPortalTemplate = `
+	// JivaPortalTemplate to store the portal details for jiva volume and pvc
+	JivaPortalTemplate = `
 Portal Details :
 ------------------
 IQN              :  {{.spec.iscsiSpec.iqn}}
@@ -101,11 +102,11 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 }
 
 // DescribeJivaVolume describes a jiva storage engine PersistentVolume
-func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error {
+func DescribeJivaVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error {
 	// 1. Get the JivaVolume Corresponding to the pv name
 	jv, err := c.GetJV(vol.Name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
 		return err
 	}
 	// 2. Fill in JivaVolume related details
@@ -125,11 +126,11 @@ func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error 
 		JVP:          jv.Annotations["openebs.io/volume-policy"],
 	}
 	// 3. Print the Volume information
-	util.PrintByTemplate("jivaVolumeInfo", jivaVolInfoTemplate, jivaVolInfo)
+	_ = util.PrintByTemplate("jivaVolumeInfo", JivaVolInfoTemplate, jivaVolInfo)
 	// 4. Print the Portal Information
-	util.TemplatePrinter(jivaPortalTemplate, jv)
+	util.TemplatePrinter(JivaPortalTemplate, jv)
 	// 5. Fetch the replica PVCs and create rows for cli-runtime
-	rows := []metav1.TableRow{}
+	var rows []metav1.TableRow
 	pvcList, err := c.GetPVCs(jv.Namespace, nil, "openebs.io/component=jiva-replica,openebs.io/persistent-volume="+jv.Name)
 	if err != nil || len(pvcList.Items) == 0 {
 		fmt.Println("No replicas found for the JivaVolume" + vol.Name)
@@ -146,6 +147,7 @@ func DescribeJivaVolume(c *client.K8sClient, vol corev1.PersistentVolume) error 
 			pvc.Spec.VolumeMode}})
 	}
 	// 6. Print the replica details if present
+	fmt.Printf("Replica Details :\n-----------------\n")
 	util.TablePrinter(util.JivaReplicaPVCColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }

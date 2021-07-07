@@ -34,6 +34,10 @@ $ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
 
 # Describe a cStor Pool Instance:
 $ kubectl openebs describe pool [cspi-name] -n [namespace]
+
+Options:
+Advanced: Override the auto-detected OPENEBS_NAMESPACE
+--openebs-namespace=[...]
 `
 )
 

@@ -116,19 +116,19 @@ func GetCStor(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsN
 }
 
 // DescribeCstorVolume describes a cstor storage engine PersistentVolume
-func DescribeCstorVolume(c *client.K8sClient, vol corev1.PersistentVolume) error {
+func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error {
 	// Fetch all details of a volume is called to get the volume controller's
 	// info such as controller's IP, status, iqn, replica IPs etc.
 	// 1. cStor volume info
 	volumeInfo, err := c.GetCV(vol.Name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get cStorVolume for %s\n", vol.Name)
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get cStorVolume for %s\n", vol.Name)
 		return err
 	}
 	// 2. cStor Volume Config
 	cvcInfo, err := c.GetCVC(vol.Name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get cStor Volume config for %s\n", vol.Name)
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get cStor Volume config for %s\n", vol.Name)
 		return err
 	}
 	// 3. Get Node for Target Pod from the openebs-ns
@@ -136,7 +136,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol corev1.PersistentVolume) error
 	var nodeName string
 	if err != nil {
 		nodeName = util.NotAttached
-		fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", vol.Name)
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", vol.Name)
 	} else {
 		nodeName = node.Spec.Volume.OwnerNodeID
 	}
@@ -144,7 +144,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol corev1.PersistentVolume) error
 	// 5. cStor Volume Replicas
 	cvrInfo, err := c.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", vol.Name)
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", vol.Name)
 	}
 
 	cSPCLabel := cstortypes.CStorPoolClusterLabelKey

@@ -95,7 +95,7 @@ func Describe(vols []string, openebsNs string) error {
 		}
 		// 7. Describe the volume based on its casType
 		if desc, ok := CasDescribeMap()[casType]; ok {
-			err = desc(k, pv)
+			err = desc(k, &pv)
 			if err != nil {
 				continue
 			}
@@ -120,9 +120,9 @@ func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeLis
 }
 
 // CasDescribeMap returns a map cas-types to functions for volume describing
-func CasDescribeMap() map[string]func(*client.K8sClient, corev1.PersistentVolume) error {
+func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolume) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
-	return map[string]func(*client.K8sClient, corev1.PersistentVolume) error{
+	return map[string]func(*client.K8sClient, *corev1.PersistentVolume) error{
 		util.JivaCasType:  DescribeJivaVolume,
 		util.CstorCasType: DescribeCstorVolume,
 	}

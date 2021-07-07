@@ -7,7 +7,7 @@ before:
 
 builds:
   # TODO: Need to change according to the refactor
-  - main: './kubectl-openebs/main.go'
+  - main: './kubectl-openebs.go'
     env:
       - CGO_ENABLED=0
     goos: ['linux', 'darwin', 'windows']

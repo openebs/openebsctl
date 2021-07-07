@@ -17,7 +17,7 @@ limitations under the License.
 package describe
 
 import (
-	"github.com/openebs/openebsctl/pkg/cstor/describe"
+	"github.com/openebs/openebsctl/pkg/persistentvolumeclaim"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -30,13 +30,14 @@ in the provided namespace. If no namespace is provided it uses default
 namespace for execution.
 
 $ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
-
+Options:
+Advanced: Override the auto-detected OPENEBS_NAMESPACE
+--openebs-namespace=[...]
 `
 )
 
 // NewCmdDescribePVC Displays the pvc describe details
 func NewCmdDescribePVC() *cobra.Command {
-	var openebsNs string
 	cmd := &cobra.Command{
 		Use:     "pvc",
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
@@ -49,9 +50,8 @@ func NewCmdDescribePVC() *cobra.Command {
 				pvNs = "default"
 			}
 			openebsNamespace, _ = cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(describe.RunPVCInfo(args, pvNs, openebsNamespace), util.Fatal)
+			util.CheckErr(persistentvolumeclaim.Describe(args, pvNs, openebsNamespace), util.Fatal)
 		},
 	}
-	cmd.Flags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	return cmd
 }

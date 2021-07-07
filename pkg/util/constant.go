@@ -19,14 +19,6 @@ package util
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 const (
-	// BytesToGB used to convert bytes to GB
-	BytesToGB = 1073741824
-	// BytesToMB used to convert bytes to MB
-	BytesToMB = 1048567
-	// BytesToKB used to convert bytes to KB
-	BytesToKB = 1024
-	// MicSec used to convert to microsec to second
-	MicSec = 1000000
 	// MinWidth used in tabwriter
 	MinWidth = 0
 	// MaxWidth used in tabwriter
@@ -88,8 +80,8 @@ var (
 		{Name: "Status", Type: "string"},
 		{Name: "Age", Type: "string"},
 	}
-	// CstorTargetDetailsColumnDefinations stores the Table headers for Cstor Target Details
-	CstorTargetDetailsColumnDefinations = []metav1.TableColumnDefinition{
+	// PodDetailsColumnDefinations stores the Table headers for Cstor Target Details
+	PodDetailsColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Namespace", Type: "string"},
 		{Name: "Name", Type: "string"},
 		{Name: "Ready", Type: "string"},
@@ -177,6 +169,6 @@ var (
 		{Name: "Volume", Type: "string"},
 		{Name: "Capacity", Type: "string"},
 		{Name: "Storageclass", Type: "string"},
-		{Name: "Volumemode", Type: "string"},
+		{Name: "Age", Type: "string"},
 	}
 )
