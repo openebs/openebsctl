@@ -44,10 +44,10 @@ func Get(bds []string, openebsNS string) error {
 
 // createTreeByNode uses the [node <- list of bds on the node] and creates a tree like output,
 // also showing the relevant details to the bds.
-func createTreeByNode(k *client.K8sClient, bds []string) error {
+func createTreeByNode(k *client.K8sClient, bdNames []string) error {
 	// 1. Get a list of the BlockDevices
 	var bdList *v1alpha1.BlockDeviceList
-	bdList, err := k.GetBDs(bds, "")
+	bdList, err := k.GetBDs(bdNames, "")
 	if err != nil {
 		return err
 	}
@@ -55,10 +55,10 @@ func createTreeByNode(k *client.K8sClient, bds []string) error {
 	var nodeBDlistMap = map[string][]v1alpha1.BlockDevice{}
 	for _, bd := range bdList.Items {
 		if _, ok := nodeBDlistMap[bd.Spec.NodeAttributes.NodeName]; ok {
-			// Append to the node if key exists
+			// Append to the node if nodeName exists
 			nodeBDlistMap[bd.Spec.NodeAttributes.NodeName] = append(nodeBDlistMap[bd.Spec.NodeAttributes.NodeName], bd)
 		} else {
-			// Create new key with node name and add the bd, if node does not exist
+			// Create new nodeName with node name and add the bd, if node does not exist
 			nodeBDlistMap[bd.Spec.NodeAttributes.NodeName] = []v1alpha1.BlockDevice{bd}
 		}
 	}
@@ -67,37 +67,28 @@ func createTreeByNode(k *client.K8sClient, bds []string) error {
 		// If there are no block devices show error
 		return errors.New("no blockdevices found in the " + k.Ns + " namespace")
 	}
-	for key, value := range nodeBDlistMap {
+	for nodeName, bds := range nodeBDlistMap {
 		// Create the root, which contains only the node-name
-		rows = append(rows, metav1.TableRow{Cells: []interface{}{key, "", "", "", "", "", ""}})
-		for i, bd := range value {
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{nodeName, "", "", "", "", "", ""}})
+		for i, bd := range bds {
 			// If the bd is the last bd in the list, or the list has only one bd
 			// append lastElementPrefix before bd name
-			if i == len(value)-1 {
-				rows = append(rows, metav1.TableRow{
-					Cells: []interface{}{
-						lastElemPrefix + bd.Name,
-						bd.Spec.Path,
-						humanize.IBytes(bd.Spec.Capacity.Storage),
-						bd.Status.ClaimState,
-						bd.Status.State,
-						bd.Spec.FileSystem.Type,
-						bd.Spec.FileSystem.Mountpoint,
-					}})
+			prefix := ""
+			if i == len(bds)-1 {
+				prefix = lastElemPrefix
 			} else {
-				// If the bd is the not last bd in the list append firstElementPrefix before
-				// bd name which signifies there are more to append in the tree.
-				rows = append(rows, metav1.TableRow{
-					Cells: []interface{}{
-						firstElemPrefix + bd.Name,
-						bd.Spec.Path,
-						humanize.IBytes(bd.Spec.Capacity.Storage),
-						bd.Status.ClaimState,
-						bd.Status.State,
-						bd.Spec.FileSystem.Type,
-						bd.Spec.FileSystem.Mountpoint,
-					}})
+				prefix = firstElemPrefix
 			}
+			rows = append(rows, metav1.TableRow{
+				Cells: []interface{}{
+					prefix + bd.Name,
+					bd.Spec.Path,
+					humanize.IBytes(bd.Spec.Capacity.Storage),
+					bd.Status.ClaimState,
+					bd.Status.State,
+					bd.Spec.FileSystem.Type,
+					bd.Spec.FileSystem.Mountpoint,
+				}})
 		}
 		// Add an empty row so that the tree looks neat
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{"", "", "", "", "", "", ""}})
