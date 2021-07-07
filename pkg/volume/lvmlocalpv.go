@@ -30,16 +30,17 @@ import (
 func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	var rows []metav1.TableRow
 	var version string
-	if ctrlPod, err := c.GetCSIControllerPod("openebs-lvm-controller"); err == nil {
-		version = ctrlPod.Labels["openebs.io/version"]
-	} else {
+	if CSIctrl, err := c.GetCSIControllerPod("openebs-lvm-controller"); err == nil {
+		version = CSIctrl.Labels["openebs.io/version"]
+	}
+	if version == "" {
 		version = "N/A"
 	}
 	for _, pv := range pvList.Items {
 		var attachedNode, customStatus, ns string
 		_, lvmVolMap, err := c.GetLVMvol(nil, util.Map, "", util.MapOptions{Key: util.Name})
 		if err != nil {
-			return nil, fmt.Errorf("failed to list ZFSVolumes")
+			return nil, fmt.Errorf("failed to list LVMVolumes")
 		}
 		if pv.Spec.CSI != nil && pv.Spec.CSI.Driver == util.LocalPVLVMCSIDriver {
 			lvmVol, ok := lvmVolMap[pv.Name]

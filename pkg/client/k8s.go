@@ -641,7 +641,7 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 // openebs-component-name label key
 func (k K8sClient) GetCSIControllerPod(name string) (*corev1.Pod, error) {
 	if pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
+		FieldSelector: "status.phase=Running", LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
 	}); err == nil && len(pods.Items) == 1 {
 		// TODO: Think about Evicted pods
 		return &pods.Items[0], nil
