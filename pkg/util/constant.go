@@ -45,6 +45,8 @@ const (
 	ZFSCasType = "zfslocalpv"
 	// JivaCasType is the cas type name for Jiva
 	JivaCasType = "jiva"
+	// LVMLocalPV is the cas type name for LocalPV-LVM
+	LVMLocalPV = "lvmlocalpv"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -62,6 +64,8 @@ const (
 	JivaCSIDriver = "jiva.csi.openebs.io"
 	// ZFSCSIDriver is the name of the ZFS localpv CSI driver
 	ZFSCSIDriver = "zfs.csi.openebs.io"
+	// LocalPVLVMCSIDriver is the name of the LVM LocalPV CSI driver
+	LocalPVLVMCSIDriver = "local.csi.openebs.io"
 )
 
 var (
