@@ -47,14 +47,14 @@ PV STATUS          : {{.PVStatus}}
 
 // DescribeJivaVolumeClaim describes a jiva storage engine PersistentVolumeClaim
 func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, vol *corev1.PersistentVolume) error {
-	// 1. Get the JivaVolume Corresponding to the pv name
+	// 1. Get the JivaVolume Corresponding to the pvc name
 	jv, err := c.GetJV(pvc.Spec.VolumeName)
 	if err != nil {
 		fmt.Printf("failed to get JivaVolume for %s\n", pvc.Spec.VolumeName)
 		return err
 	}
-	// 2. Fill in JivaVolume related details
-	jivaVolInfo := util.JivaPVCInfo{
+	// 2. Fill in Jiva Volume Claim related details
+	jivaPvcInfo := util.JivaPVCInfo{
 		Name:             pvc.Name,
 		Namespace:        pvc.Namespace,
 		CasType:          util.JivaCasType,
@@ -63,20 +63,20 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		Size:             util.ConvertToIBytes(jv.Spec.Capacity),
 	}
 	if jv != nil {
-		jivaVolInfo.AttachedToNode = jv.Labels["nodeID"]
-		jivaVolInfo.JVP = jv.Annotations["openebs.io/volume-policy"]
-		jivaVolInfo.JVStatus = jv.Status.Status
+		jivaPvcInfo.AttachedToNode = jv.Labels["nodeID"]
+		jivaPvcInfo.JVP = jv.Annotations["openebs.io/volume-policy"]
+		jivaPvcInfo.JVStatus = jv.Status.Status
 	}
 	if vol != nil {
-		jivaVolInfo.PVStatus = vol.Status.Phase
+		jivaPvcInfo.PVStatus = vol.Status.Phase
 	}
-	// 3. Print the Volume information
-	_ = util.PrintByTemplate("jivaVolumeInfo", jivaPvcInfoTemplate, jivaVolInfo)
+	// 3. Print the Jiva Volume Claim information
+	_ = util.PrintByTemplate("jivaPvcInfo", jivaPvcInfoTemplate, jivaPvcInfo)
 	// 4. Print the Portal Information
 	if jv != nil {
 		util.TemplatePrinter(volume.JivaPortalTemplate, jv)
 	}
-	// 5. Fetch the jiva controller and replica pod details
+	// 5. Fetch the Jiva controller and replica pod details
 	podList, err := c.GetJVTargetPod(jv.Name)
 	if err == nil {
 		fmt.Printf("Controller and Replica Pod Details :" + "\n-----------------------------------\n")

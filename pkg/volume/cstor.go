@@ -46,9 +46,7 @@ CSPC            : {{.CSPC}}
 SIZE            : {{.Size}}
 STATUS          : {{.Status}}
 REPLICA COUNT	: {{.ReplicaCount}}
-
 `
-
 	cstorPortalTemplate = `
 Portal Details :
 ------------------
@@ -57,7 +55,6 @@ VOLUME NAME      :  {{.VolumeName}}
 TARGET NODE NAME :  {{.TargetNodeName}}
 PORTAL           :  {{.Portal}}
 TARGET IP        :  {{.TargetIP}}
-
 `
 )
 

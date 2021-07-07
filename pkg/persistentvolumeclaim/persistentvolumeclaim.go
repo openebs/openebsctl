@@ -31,7 +31,7 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 	// Clienset creation
 	k, _ := client.NewK8sClient(openebsNs)
 
-	// 1. Get a list of required PersistentVolumes
+	// 1. Get a list of required PersistentVolumeClaims
 	var pvcList *corev1.PersistentVolumeClaimList
 	pvcList, err := k.GetPVCs(namespace, pvcs, "")
 	if err != nil {
@@ -39,10 +39,10 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 	}
 	// 2. Get the namespaces
 	nsMap, _ := k.GetOpenEBSNamespaceMap()
-	// 3. Range over the list of PVs
+	// 3. Range over the list of PVCs
 	for _, pvc := range pvcList.Items {
 		// 4. Fetch the storage class, used to get the cas-type
-		//TODO: Add cas-type label in every storage engine pv
+		// TODO: Add cas-type label in every storage engine pv
 		sc, _ := k.GetSC(*pvc.Spec.StorageClassName)
 		pv, _ := k.GetPV(pvc.Spec.VolumeName)
 		// 5. Get cas type

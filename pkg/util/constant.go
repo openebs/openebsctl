@@ -80,7 +80,7 @@ var (
 		{Name: "Status", Type: "string"},
 		{Name: "Age", Type: "string"},
 	}
-	// PodDetailsColumnDefinations stores the Table headers for Cstor Target Details
+	// PodDetailsColumnDefinations stores the Table headers for Pod Details
 	PodDetailsColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Namespace", Type: "string"},
 		{Name: "Name", Type: "string"},
@@ -162,7 +162,7 @@ var (
 		{Name: "FsType", Type: "string"},
 		{Name: "MountPoint", Type: "string"},
 	}
-	// JivaReplicaPVCColumnDefinations
+	// JivaReplicaPVCColumnDefinations stores the Table headers for Jiva Replica PVC details
 	JivaReplicaPVCColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
 		{Name: "Status", Type: "string"},

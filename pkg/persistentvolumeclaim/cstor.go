@@ -41,7 +41,7 @@ POOL             : {{.Pool}}
 STORAGE CLASS    : {{.StorageClassName}}
 SIZE             : {{.Size}}
 USED             : {{.Used}}
-CV STATUS	     : {{.CVStatus}}
+CV STATUS	 : {{.CVStatus}}
 PV STATUS        : {{.PVStatus}}
 `
 
@@ -117,7 +117,7 @@ func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeC
 	// if the TargetPod is not found.
 	tgtPod, err := c.GetCVTargetPod(pvc.Name, pvc.Spec.VolumeName)
 	if err == nil {
-		fmt.Printf("Target Details :\n----------------\n")
+		fmt.Printf("\nTarget Details :\n----------------\n")
 		var rows []metav1.TableRow
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{
 			tgtPod.Namespace, tgtPod.Name,
@@ -126,7 +126,7 @@ func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeC
 			tgtPod.Status.PodIP, tgtPod.Spec.NodeName}})
 		util.TablePrinter(util.PodDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	} else {
-		fmt.Printf("Target Details :\n----------------\nNo target pod exists for the CstorVolume\n")
+		fmt.Printf("\nTarget Details :\n----------------\nNo target pod exists for the CstorVolume\n")
 	}
 
 	// If CVRs are found list them and show relevant details else notify the user none of the replicas are
