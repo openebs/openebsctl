@@ -23,15 +23,18 @@ import (
 )
 
 const (
-	getCmdHelp = `Display one or many OpenEBS resources like volumes, pools
+	getCmdHelp = `Display one or many OpenEBS resources like volumes, pools, blockdevices
 
-$ kubectl openebs get [volumes|pools] [-n example-namespace]
+$ kubectl openebs get [volumes|pools|bds] [flags]
 
 # Get volumes
 $ kubectl openebs get volume
 
 # Get pools
 $ kubectl openebs get pool
+
+# Get blockdevices
+$ kubectl openebs get bd
 `
 )
 
@@ -51,6 +54,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	cmd.AddCommand(
 		NewCmdGetVolume(),
 		NewCmdGetPool(),
+		NewCmdGetBD(),
 	)
 	return cmd
 }
