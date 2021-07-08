@@ -66,7 +66,7 @@ var (
 	}
 	bd3 = v1alpha1.BlockDevice{
 		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "some-fake-bd-3",Namespace: "fake-ns"},
+		ObjectMeta: metav1.ObjectMeta{Name: "some-fake-bd-3", Namespace: "fake-ns"},
 		Spec: v1alpha1.DeviceSpec{
 			Path:     "/dev/sdb",
 			Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
