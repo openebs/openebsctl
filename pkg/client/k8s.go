@@ -25,12 +25,15 @@ import (
 	"strings"
 
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
+	"github.com/openebs/openebsctl/pkg/util"
+	"github.com/pkg/errors"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	"github.com/openebs/openebsctl/pkg/util"
-	"github.com/pkg/errors"
+	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
+	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
+	zfsBuilder "github.com/openebs/zfs-localpv/pkg/builder/volbuilder"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -625,21 +628,113 @@ func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelecto
 	return nil, nil, errors.New("invalid return type")
 }
 
-// GetCSIControllerSTS returns the CSI controller sts with a specific
-// openebs-component-name label key
-func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error) {
-	if sts, err := k.K8sCS.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
-	}); err == nil && len(sts.Items) == 1 {
-		return &sts.Items[0], nil
-	} else if sts != nil {
-		return nil, fmt.Errorf("got %d statefulsets with the label openebs.io/component-name=%s", len(sts.Items), name)
-	} else {
-		return nil, fmt.Errorf("got 0 statefulsets with the label openebs.io/component-name=%s", name)
+// GetZFSVols returns a list or a map of ZFSVolume depending upon rType & options
+func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*zfs.ZFSVolumeList, map[string]zfs.ZFSVolume, error) {
+	config := os.Getenv("KUBECONFIG")
+	zvols, err := zfsBuilder.NewKubeclient(zfsBuilder.WithKubeConfigPath(config)).
+		WithNamespace("").
+		List(metav1.ListOptions{
+			LabelSelector: labelSelector,
+		})
+	if err != nil {
+		return nil, nil, err
 	}
+	var list []zfs.ZFSVolume
+	if volNames == nil || len(volNames) == 0 {
+		list = zvols.Items
+	} else {
+		zvsMap := make(map[string]zfs.ZFSVolume)
+		for _, zv := range zvols.Items {
+			zvsMap[zv.Name] = zv
+		}
+		for _, name := range volNames {
+			if zv, ok := zvsMap[name]; ok {
+				list = append(list, zv)
+			} else {
+				fmt.Printf("Error from server (NotFound): zfsVolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &zfs.ZFSVolumeList{
+			Items: list,
+		}, nil, nil
+	}
+	if rType == util.Map {
+		zvMap := make(map[string]zfs.ZFSVolume)
+		switch options.Key {
+		case util.Label:
+			for _, zv := range list {
+				if vol, ok := zv.Labels[options.LabelKey]; ok {
+					zvMap[vol] = zv
+				}
+			}
+			return nil, zvMap, nil
+		case util.Name:
+			for _, zv := range list {
+				zvMap[zv.Name] = zv
+			}
+			return nil, zvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
 }
 
-// GetCSIControllerSTS returns the CSI controller StatefulSet with a specific
+// GetLVMvol returns a list or a map of LVMVolume depending upon rType & options
+func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*lvm.LVMVolumeList, map[string]lvm.LVMVolume, error) {
+	lvs := lvm.LVMVolumeList{}
+	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
+	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/local.openebs.io/v1alpha1").
+		Resource("lvmvolumes").Do(context.TODO()).Into(&lvs)
+	if err != nil {
+		return nil, nil, err
+	}
+	var list []lvm.LVMVolume
+	if lVols == nil || len(lVols) == 0 {
+		list = lvs.Items
+	} else {
+		lvsMap := make(map[string]lvm.LVMVolume)
+		for _, lv := range lvs.Items {
+			lvsMap[lv.Name] = lv
+		}
+		for _, name := range lVols {
+			if lv, ok := lvsMap[name]; ok {
+				list = append(list, lv)
+			} else {
+				fmt.Printf("Error from server (NotFound): lvmvolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &lvm.LVMVolumeList{
+			Items: list,
+		}, nil, nil
+	}
+	if rType == util.Map {
+		lvMap := make(map[string]lvm.LVMVolume)
+		switch options.Key {
+		case util.Label:
+			for _, lv := range list {
+				if vol, ok := lv.Labels[options.LabelKey]; ok {
+					lvMap[vol] = lv
+				}
+			}
+			return nil, lvMap, nil
+		case util.Name:
+			for _, lv := range list {
+				lvMap[lv.Name] = lv
+			}
+			return nil, lvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
+}
+
+// GetCSIControllerSTS returns the CSI controller sts with a specific
 // openebs-component-name label key
 func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error) {
 	if sts, err := k.K8sCS.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{
