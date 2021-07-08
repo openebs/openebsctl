@@ -51,7 +51,6 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 	jv, err := c.GetJV(pvc.Spec.VolumeName)
 	if err != nil {
 		fmt.Printf("failed to get JivaVolume for %s\n", pvc.Spec.VolumeName)
-		return err
 	}
 	// 2. Fill in Jiva Volume Claim related details
 	jivaPvcInfo := util.JivaPVCInfo{
