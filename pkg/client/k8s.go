@@ -25,14 +25,15 @@ import (
 	"strings"
 
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
+	"github.com/openebs/openebsctl/pkg/util"
+	"github.com/pkg/errors"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	"github.com/openebs/openebsctl/pkg/util"
+	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
 	zfsBuilder "github.com/openebs/zfs-localpv/pkg/builder/volbuilder"
-	"github.com/pkg/errors"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -149,8 +150,9 @@ func homeDir() string {
 */
 
 // GetOpenEBSNamespace from the specific engine component based on cas-type
+// NOTE: This will not work correctly if CSI controller pod runs in kube-system NS
 func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
-	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
 	if err != nil || len(pods.Items) == 0 {
 		return "", errors.New("unable to determine openebs namespace")
 	}
@@ -158,13 +160,14 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 }
 
 // GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[cstor] = cstor-ns
+// NOTE: This will not work correctly if CSI controller pod runs in kube-system NS
 func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
 	for _, v := range util.CasTypeAndComponentNameMap {
 		label = label + v + ","
 	}
 	label += ")"
-	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: label})
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: label})
 	if err != nil || pods == nil || len(pods.Items) == 0 {
 		return nil, errors.New("unable to determine openebs namespace")
 	}
@@ -672,6 +675,58 @@ func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSel
 				zvMap[zv.Name] = zv
 			}
 			return nil, zvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
+}
+
+// GetLVMvol returns a list or a map of LVMVolume depending upon rType & options
+func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*lvm.LVMVolumeList, map[string]lvm.LVMVolume, error) {
+	lvs := lvm.LVMVolumeList{}
+	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
+	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/local.openebs.io/v1alpha1").
+		Resource("lvmvolumes").Do(context.TODO()).Into(&lvs)
+	if err != nil {
+		return nil, nil, err
+	}
+	var list []lvm.LVMVolume
+	if lVols == nil || len(lVols) == 0 {
+		list = lvs.Items
+	} else {
+		lvsMap := make(map[string]lvm.LVMVolume)
+		for _, lv := range lvs.Items {
+			lvsMap[lv.Name] = lv
+		}
+		for _, name := range lVols {
+			if lv, ok := lvsMap[name]; ok {
+				list = append(list, lv)
+			} else {
+				fmt.Printf("Error from server (NotFound): lvmvolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &lvm.LVMVolumeList{
+			Items: list,
+		}, nil, nil
+	}
+	if rType == util.Map {
+		lvMap := make(map[string]lvm.LVMVolume)
+		switch options.Key {
+		case util.Label:
+			for _, lv := range list {
+				if vol, ok := lv.Labels[options.LabelKey]; ok {
+					lvMap[vol] = lv
+				}
+			}
+			return nil, lvMap, nil
+		case util.Name:
+			for _, lv := range list {
+				lvMap[lv.Name] = lv
+			}
+			return nil, lvMap, nil
 		default:
 			return nil, nil, errors.New("invalid map options")
 		}

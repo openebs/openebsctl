@@ -6,6 +6,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/openebs/api/v2 v2.3.0
 	github.com/openebs/jiva-operator v1.12.2-0.20210607114402-811a3af7c34a
+	github.com/openebs/lvm-localpv v0.6.0
 	github.com/openebs/zfs-localpv v1.8.0
 	github.com/pkg/errors v0.9.1
 	github.com/ryanuber/columnize v2.1.0+incompatible
