@@ -26,13 +26,21 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetJiva returns a list of JivaVolumes
-func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
+// GetZFSLocalPVs returns a list of ZFSVolumes
+func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	// 1. Fetch all relevant volume CRs without worrying about openebsNS
-	_, jvMap, err := c.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
+	_, zvolMap, err := c.GetZFSVols(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	if err != nil {
-		return nil, fmt.Errorf("failed to list JivaVolumes")
+		return nil, fmt.Errorf("failed to list ZFSVolumes")
 	}
+	var version string
+	if CSIctrl, err := c.GetCSIControllerSTS("openebs-zfs-controller"); err == nil {
+		version = CSIctrl.Labels["openebs.io/version"]
+	}
+	if version == "" {
+		version = "N/A"
+	}
+
 	var rows []metav1.TableRow
 	// 3. Show the required ones
 	for _, pv := range pvList.Items {
@@ -40,29 +48,28 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
-		var attachedNode, storageVersion, customStatus, ns string
+		var attachedNode, customStatus, ns string
 		// TODO: Estimate the cas-type and decide to print it out
 		// Should all AccessModes be shown in a csv format, or the highest be displayed ROO < RWO < RWX?
-		if pv.Spec.CSI != nil && pv.Spec.CSI.Driver == util.JivaCSIDriver {
-			jv, ok := jvMap[pv.Name]
+		if pv.Spec.CSI != nil && pv.Spec.CSI.Driver == util.ZFSCSIDriver {
+			zvol, ok := zvolMap[pv.Name]
 			if !ok {
-				_, _ = fmt.Fprintln(os.Stderr, "couldn't find jv "+pv.Name)
+				_, _ = fmt.Fprintln(os.Stderr, "couldn't find zfs localpv volume "+pv.Name)
 			}
-			ns = jv.Namespace
+			ns = zvol.Namespace
 			if openebsNS != "" && openebsNS != ns {
 				continue
 			}
-			customStatus = jv.Status.Status // RW, RO, etc
-			attachedNode = jv.Labels["nodeID"]
-			storageVersion = jv.VersionDetails.Status.Current
+			customStatus = zvol.Status.State // RW, RO, etc
+			attachedNode = zvol.Labels["kubernetes.io/nodename"]
 		} else {
-			// Skip non-Jiva options
+			// Skip non-ZFS options
 			continue
 		}
 		accessMode := pv.Spec.AccessModes[0]
 		rows = append(rows, metav1.TableRow{
 			Cells: []interface{}{
-				ns, name, customStatus, storageVersion, capacity, sc, attached,
+				ns, name, customStatus, version, capacity, sc, attached,
 				accessMode, attachedNode},
 		})
 	}

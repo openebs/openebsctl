@@ -41,6 +41,8 @@ const (
 	OpenEBSCasTypeKeySc = "cas-type"
 	// CstorCasType cas type name
 	CstorCasType = "cstor"
+	// ZFSCasType cas type name
+	ZFSCasType = "zfslocalpv"
 	// JivaCasType is the cas type name for Jiva
 	JivaCasType = "jiva"
 	// Healthy cstor volume status
@@ -58,6 +60,8 @@ const (
 	CStorCSIDriver = "cstor.csi.openebs.io"
 	// JivaCSIDriver is the name of the Jiva CSI driver
 	JivaCSIDriver = "jiva.csi.openebs.io"
+	// ZFSCSIDriver is the name of the ZFS localpv CSI driver
+	ZFSCSIDriver = "zfs.csi.openebs.io"
 )
 
 var (

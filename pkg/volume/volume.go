@@ -59,7 +59,8 @@ func Get(vols []string, openebsNS, casType string) error {
 // CasList returns a list of functions by cas-types for volume listing
 func CasList() []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error) {
 	// a good hack to implement immutable lists in Golang & also write tests for it
-	return []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){GetJiva, GetCStor}
+	return []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){
+		GetJiva, GetCStor, GetZFSLocalPVs}
 }
 
 // CasMap returns a map cas-types to functions for volume listing
@@ -68,5 +69,6 @@ func CasMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, s
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){
 		util.JivaCasType:  GetJiva,
 		util.CstorCasType: GetCStor,
+		util.ZFSCasType:   GetZFSLocalPVs,
 	}
 }
