@@ -639,17 +639,16 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 	}
 }
 
-// GetCSIControllerPod returns the CSI controller pod with a specific
+// GetCSIControllerSTS returns the CSI controller StatefulSet with a specific
 // openebs-component-name label key
-func (k K8sClient) GetCSIControllerPod(name string) (*corev1.Pod, error) {
-	if pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
-		FieldSelector: "status.phase=Running", LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
-	}); err == nil && len(pods.Items) == 1 {
-		// TODO: Think about Evicted pods
-		return &pods.Items[0], nil
-	} else if pods != nil {
-		return nil, fmt.Errorf("got %d pods with the label openebs.io/component-name=%s", len(pods.Items), name)
+func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error) {
+	if sts, err := k.K8sCS.AppsV1().StatefulSets("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", name),
+	}); err == nil && len(sts.Items) == 1 {
+		return &sts.Items[0], nil
+	} else if sts != nil {
+		return nil, fmt.Errorf("got %d statefulsets with the label openebs.io/component-name=%s", len(sts.Items), name)
 	} else {
-		return nil, fmt.Errorf("got 0 pods with the label openebs.io/component-name=%s", name)
+		return nil, fmt.Errorf("got 0 statefulsets with the label openebs.io/component-name=%s", name)
 	}
 }

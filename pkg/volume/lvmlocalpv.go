@@ -30,7 +30,7 @@ import (
 func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	var rows []metav1.TableRow
 	var version string
-	if CSIctrl, err := c.GetCSIControllerPod("openebs-lvm-controller"); err == nil {
+	if CSIctrl, err := c.GetCSIControllerSTS("openebs-lvm-controller"); err == nil {
 		version = CSIctrl.Labels["openebs.io/version"]
 	}
 	if version == "" {
