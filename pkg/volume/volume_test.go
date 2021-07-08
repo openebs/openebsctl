@@ -25,7 +25,7 @@ import (
 	"testing"
 )
 
-const supportedCasTypeCount = 2
+const supportedCasTypeCount = 3
 
 // TestCasList is a dummy test which ensures that each cas-type volumes can be
 // listed individually as well as collectively

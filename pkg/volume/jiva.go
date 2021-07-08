@@ -58,6 +58,7 @@ PORTAL           :  {{.spec.iscsiSpec.targetIP}}:{{.spec.iscsiSpec.targetPort}}
 `
 )
 
+
 // GetJiva returns a list of JivaVolumes
 func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	// 1. Fetch all relevant volume CRs without worrying about openebsNS
@@ -88,7 +89,7 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 			attachedNode = jv.Labels["nodeID"]
 			storageVersion = jv.VersionDetails.Status.Current
 		} else {
-			// Skip non-CStor & non-Jiva options
+			// Skip non-Jiva options
 			continue
 		}
 		accessMode := pv.Spec.AccessModes[0]

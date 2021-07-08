@@ -31,7 +31,7 @@ Usage: kubectl openebs get volume [options]
 Options:
 --------
 Filter volumes by cas-type
---cas-type=[jiva|cstor]
+--cas-type=[jiva|cstor|zfslocalpv]
 
 Advanced:
 Filter by a fixed OpenEBS namespace
