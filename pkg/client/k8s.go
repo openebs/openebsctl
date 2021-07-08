@@ -632,6 +632,7 @@ func (k K8sClient) GetJVTargetPod(volumeName string) (*corev1.PodList, error) {
 		return nil, errors.New("The controller and replica pod for the volume was not found")
 	}
 	return pods, nil
+}
 
 // GetZFSVols returns a list or a map of ZFSVolume depending upon rType & options
 func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*zfs.ZFSVolumeList, map[string]zfs.ZFSVolume, error) {
@@ -699,5 +700,4 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 	} else {
 		return nil, fmt.Errorf("got 0 statefulsets with the label openebs.io/component-name=%s", name)
 	}
-
 }
