@@ -81,7 +81,9 @@ type VolumeInfo struct {
 	Version string
 	Size    string
 	// Status of the CStor volume
-	Status v1.CStorVolumePhase
+	Status string
+	// JVP is the name of the JivaVolumePolicy
+	JVP string
 }
 
 // PortalInfo keep info about the ISCSI Target Portal.
@@ -122,7 +124,23 @@ type CstorPVCInfo struct {
 	StorageClassName string
 	Size             string
 	Used             string
-	PVStatus         v1.CStorVolumePhase
+	CVStatus         v1.CStorVolumePhase
+	PVStatus         corev1.PersistentVolumePhase
+}
+
+// JivaPVCInfo struct will have all the details we want to give in the output for describe pvc
+// details section for jiva pvc
+type JivaPVCInfo struct {
+	Name             string
+	Namespace        string
+	CasType          string
+	BoundVolume      string
+	AttachedToNode   string
+	JVP              string
+	StorageClassName string
+	Size             string
+	JVStatus         string
+	PVStatus         corev1.PersistentVolumePhase
 }
 
 // PVCInfo struct will have all the details we want to give in the output for describe pvc

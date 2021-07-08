@@ -628,6 +628,15 @@ func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelecto
 	return nil, nil, errors.New("invalid return type")
 }
 
+// GetJVTargetPod returns the Jiva Volume Controller and Replica Pods, corresponding to the volumeName.
+func (k K8sClient) GetJVTargetPod(volumeName string) (*corev1.PodList, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: fmt.Sprintf("openebs.io/cas-type=jiva,openebs.io/persistent-volume=%s", volumeName)})
+	if err != nil || len(pods.Items) == 0 {
+		return nil, errors.New("The controller and replica pod for the volume was not found")
+	}
+	return pods, nil
+}
+
 // GetZFSVols returns a list or a map of ZFSVolume depending upon rType & options
 func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*zfs.ZFSVolumeList, map[string]zfs.ZFSVolume, error) {
 	config := os.Getenv("KUBECONFIG")

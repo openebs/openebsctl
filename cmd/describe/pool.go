@@ -27,7 +27,11 @@ var (
 This command fetches information and status of the various aspects 
 of the cStor Pool Instance and its underlying related resources in the provided namespace.
 If no namespace is provided it uses default namespace for execution.
+
 $ kubectl openebs describe pool [cspi-name] -n [namespace]
+Options:
+Advanced: Override the auto-detected OPENEBS_NAMESPACE
+--openebs-namespace=[...]
 `
 )
 

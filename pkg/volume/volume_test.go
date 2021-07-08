@@ -16,7 +16,7 @@ limitations under the License.
 
 /*
 A hacky set of tests to ensure cas-types don't get missed out in either
-the CasList or the CasMap. This makes logical errors fail builds, to catch
+the CasList or the CasListMap. This makes logical errors fail builds, to catch
 more mistakes in build time than in run-time.
 */
 package volume
@@ -39,7 +39,7 @@ func TestCasList(t *testing.T) {
 // TestCasMap is a dummy test which ensures that each cas-type volumes can be
 // listed individually as well as collectively
 func TestCasMap(t *testing.T) {
-	if got := CasMap(); len(got) != supportedCasTypeCount {
+	if got := CasListMap(); len(got) != supportedCasTypeCount {
 		t.Fatalf("mismatched number of supported cas-types in the function map, got: %d, expected: %d",
 			len(got), supportedCasTypeCount)
 	}
@@ -48,7 +48,7 @@ func TestCasMap(t *testing.T) {
 // TestCasMap_EmptyAbsent checks if "" cas-type hasn't been added, doing so
 // will introduce a wrong-implementation to fetch all volumes across cas-types
 func TestCasMap_EmptyAbsent(t *testing.T) {
-	if _, ok := CasMap()[""]; ok {
+	if _, ok := CasListMap()[""]; ok {
 		t.Fatalf("\"\" is not a valid cas-type, please remove it, it'll break some logic")
 	}
 }

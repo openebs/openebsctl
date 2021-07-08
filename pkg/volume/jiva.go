@@ -19,12 +19,45 @@ package volume
 import (
 	"fmt"
 	"os"
+	"time"
+
+	"k8s.io/cli-runtime/pkg/printers"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+const (
+	// JivaVolInfoTemplate to store the jiva volume and pvc describe related details
+	JivaVolInfoTemplate = `
+{{.Name}} Details :
+-----------------
+NAME            : {{.Name}}
+ACCESS MODE     : {{.AccessMode}}
+CSI DRIVER      : {{.CSIDriver}}
+STORAGE CLASS   : {{.StorageClass}}
+VOLUME PHASE    : {{.VolumePhase }}
+VERSION         : {{.Version}}
+JVP             : {{.JVP}}
+SIZE            : {{.Size}}
+STATUS          : {{.Status}}
+REPLICA COUNT	: {{.ReplicaCount}}
+
+`
+	// JivaPortalTemplate to store the portal details for jiva volume and pvc
+	JivaPortalTemplate = `
+Portal Details :
+------------------
+IQN              :  {{.spec.iscsiSpec.iqn}}
+VOLUME NAME      :  {{.metadata.name}}
+TARGET NODE NAME :  {{.metadata.labels.nodeID}}
+PORTAL           :  {{.spec.iscsiSpec.targetIP}}:{{.spec.iscsiSpec.targetPort}}
+
+`
+)
+
 
 // GetJiva returns a list of JivaVolumes
 func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
@@ -67,4 +100,55 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 		})
 	}
 	return rows, nil
+}
+
+// DescribeJivaVolume describes a jiva storage engine PersistentVolume
+func DescribeJivaVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error {
+	// 1. Get the JivaVolume Corresponding to the pv name
+	jv, err := c.GetJV(vol.Name)
+	if err != nil {
+		_,_ = fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
+		return err
+	}
+	// 2. Fill in JivaVolume related details
+	jivaVolInfo := util.VolumeInfo{
+		AccessMode:   util.AccessModeToString(vol.Spec.AccessModes),
+		Capacity:     util.ConvertToIBytes(vol.Spec.Capacity.Storage().String()),
+		CSIDriver:    vol.Spec.CSI.Driver,
+		Name:         jv.Name,
+		Namespace:    jv.Namespace,
+		PVC:          vol.Spec.ClaimRef.Name,
+		ReplicaCount: jv.Spec.Policy.Target.ReplicationFactor,
+		VolumePhase:  vol.Status.Phase,
+		StorageClass: vol.Spec.StorageClassName,
+		Version:      jv.VersionDetails.Status.Current,
+		Size:         util.ConvertToIBytes(vol.Spec.Capacity.Storage().String()),
+		Status:       jv.Status.Status,
+		JVP:          jv.Annotations["openebs.io/volume-policy"],
+	}
+	// 3. Print the Volume information
+	_ = util.PrintByTemplate("jivaVolumeInfo", JivaVolInfoTemplate, jivaVolInfo)
+	// 4. Print the Portal Information
+	util.TemplatePrinter(JivaPortalTemplate, jv)
+	// 5. Fetch the replica PVCs and create rows for cli-runtime
+	var rows []metav1.TableRow
+	pvcList, err := c.GetPVCs(jv.Namespace, nil, "openebs.io/component=jiva-replica,openebs.io/persistent-volume="+jv.Name)
+	if err != nil || len(pvcList.Items) == 0 {
+		fmt.Println("No replicas found for the JivaVolume" + vol.Name)
+		return nil
+	}
+	for _, pvc := range pvcList.Items {
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{
+			pvc.Name,
+			pvc.Status.Phase,
+			pvc.Spec.VolumeName,
+			util.ConvertToIBytes(pvc.Spec.Resources.Requests.Storage().String()),
+			*pvc.Spec.StorageClassName,
+			util.Duration(time.Since(pvc.ObjectMeta.CreationTimestamp.Time)),
+			pvc.Spec.VolumeMode}})
+	}
+	// 6. Print the replica details if present
+	fmt.Printf("Replica Details :\n-----------------\n")
+	util.TablePrinter(util.JivaReplicaPVCColumnDefinations, rows, printers.PrintOptions{Wide: true})
+	return nil
 }
