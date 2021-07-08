@@ -206,7 +206,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cStorBackupList, err := c.GetCVBackups(vol.Name)
+	cStorBackupList, _ := c.GetCVBackups(vol.Name)
 	if cStorBackupList != nil {
 		fmt.Printf("\nCstor Backup Details :\n" + "---------------------\n")
 		var rows []metav1.TableRow
@@ -223,7 +223,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cstorCompletedBackupList, err := c.GetCVCompletedBackups(vol.Name)
+	cstorCompletedBackupList, _ := c.GetCVCompletedBackups(vol.Name)
 	if cstorCompletedBackupList != nil {
 		fmt.Printf("\nCstor Completed Backup Details :" + "\n-------------------------------\n")
 		var rows []metav1.TableRow
@@ -238,7 +238,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorCompletedBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cStorRestoreList, err := c.GetCVRestores(vol.Name)
+	cStorRestoreList, _ := c.GetCVRestores(vol.Name)
 	if cStorRestoreList != nil {
 		fmt.Printf("\nCstor Restores Details :" + "\n-----------------------\n")
 		var rows []metav1.TableRow
