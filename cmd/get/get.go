@@ -23,18 +23,27 @@ import (
 )
 
 const (
-	getCmdHelp = `Display one or many OpenEBS resources like volumes, pools, blockdevices
+	getCmdHelp = `Display one or many OpenEBS resources like volumes, storages, blockdevices
 
-$ kubectl openebs get [volumes|pools|bds] [flags]
+$ kubectl openebs get [volume|storage|bd] [flags]
 
 # Get volumes
-$ kubectl openebs get volume
+$ kubectl openebs get volume [options]
 
-# Get pools
-$ kubectl openebs get pool
+# Get storages
+$ kubectl openebs get storage [options]
 
 # Get blockdevices
 $ kubectl openebs get bd
+
+Options:
+--------
+Filter volumes by cas-type
+--cas-type=[cstor]
+
+Advanced:
+Filter by a fixed OpenEBS namespace
+--openebs-namespace=[...]
 `
 )
 
@@ -44,7 +53,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "get",
 		Short:     "Provides operations related to a Volume",
-		ValidArgs: []string{"pool", "volume"},
+		ValidArgs: []string{"storage", "volume", "bd"},
 		Long:      getCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println(getCmdHelp)
@@ -53,7 +62,7 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.AddCommand(
 		NewCmdGetVolume(),
-		NewCmdGetPool(),
+		NewCmdGetStorage(),
 		NewCmdGetBD(),
 	)
 	return cmd

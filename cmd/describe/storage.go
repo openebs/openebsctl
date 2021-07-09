@@ -17,35 +17,40 @@ limitations under the License.
 package describe
 
 import (
-	"github.com/openebs/openebsctl/pkg/cstor/describe"
+	"github.com/openebs/openebsctl/pkg/storage"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
 var (
-	poolInfoCommandHelpText = `
+	storageInfoCommandHelpText = `
 This command fetches information and status of the various aspects 
-of the cStor Pool Instance and its underlying related resources in the provided namespace.
-If no namespace is provided it uses default namespace for execution.
+of the openebs storage and its underlying related resources in the openebs namespace.
 
-$ kubectl openebs describe pool [cspi-name] -n [namespace]
+$ kubectl openebs describe storage [storage-name-1...n] [options]
+
 Options:
-Advanced: Override the auto-detected OPENEBS_NAMESPACE
+--------
+Filter volumes by cas-type
+--cas-type=[cstor]
+
+Advanced:
+Filter by a fixed OpenEBS namespace
 --openebs-namespace=[...]
 `
 )
 
-// NewCmdDescribePool displays OpenEBS cStor pool instance information.
-func NewCmdDescribePool() *cobra.Command {
+// NewCmdDescribeStorage displays OpenEBS storage related information.
+func NewCmdDescribeStorage() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "pool",
-		Aliases: []string{"pools", "p"},
-		Short:   "Displays cStorPoolInstance information",
-		Long:    poolInfoCommandHelpText,
-		Example: `kubectl openebs describe pool cspi-one -n openebs`,
+		Use:     "storage",
+		Aliases: []string{"storages", "s"},
+		Short:   "Displays storage related information",
+		Long:    storageInfoCommandHelpText,
+		Example: `kubectl openebs describe storage storage-1`,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(describe.RunPoolInfo(cmd, args, openebsNs), util.Fatal)
+			util.CheckErr(storage.Describe(args, openebsNs), util.Fatal)
 		},
 	}
 	return cmd

@@ -88,7 +88,7 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
   Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
 * #### Get `cStor` pools
   ```bash
-  $ kubectl openebs get pools
+  $ kubectl openebs get storage --cas-type=cstor
   NAME                      HOSTNAME                FREE     CAPACITY   READ ONLY   PROVISIONED REPLICAS   HEALTHY REPLICAS   STATUS    AGE
   cstor-storage-k5c2        node1-virtual-machine   45 GiB   45 GiB     false       1                      0                  ONLINE    10d2h
   default-cstor-disk-dcrm   node1-virtual-machine   73 GiB   90 GiB     false       7                      7                  ONLINE    27d2h
@@ -139,7 +139,7 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
   ```
 * #### Describe `cStor` pool
   ```bash
-  $ kubectl openebs describe pool default-cstor-disk-fp6v --openebs-namespace=openebs
+  $ kubectl openebs describe storage default-cstor-disk-fp6v --openebs-namespace=openebs
   
   default-cstor-disk-fp6v Details :
   ----------------

@@ -14,20 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package describe
+package storage
 
 import (
 	"fmt"
-
-	"github.com/openebs/api/v2/pkg/apis/types"
+	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/openebs/api/v2/pkg/apis/types"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
+
+	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -41,32 +43,49 @@ FREE CAPACITY    : {{.FreeCapacity}}
 READ ONLY STATUS : {{.ReadOnlyStatus}}
 STATUS	         : {{.Status}}
 RAID TYPE        : {{.RaidType}}
-
 `
 )
 
-// RunPoolInfo method runs info command and make call to DisplayPoolInfo to display the results
-func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
-	if len(pools) != 1 {
-		return errors.New("Please give one cspi name to describe")
+// GetCstorPools fetchs & lists the pools
+func GetCstorPools(c *client.K8sClient, pools []string) error {
+	var (
+		cpools *v1.CStorPoolInstanceList
+		err    error
+	)
+	if len(pools) == 0 {
+		// List all
+		cpools, err = c.GetCSPIs(nil, "")
+	} else {
+		// Get one or more
+		cpools, err = c.GetCSPIs(pools, "")
 	}
-	clientset, err := client.NewK8sClient(openebsNs)
 	if err != nil {
-		return errors.Wrap(err, "Failed to execute pool info command")
+		return errors.Wrap(err, "error listing pools")
 	}
-
-	if openebsNs == "" {
-		nsFromCli, err := clientset.GetOpenEBSNamespace(util.CstorCasType)
-		if err != nil {
-			//return errors.Wrap(err, "Error determining the openebs namespace, please specify using \"--openebs-namespace\" flag")
-			return errors.New("no cstor pools found in the cluster")
-		}
-		clientset.Ns = nsFromCli
+	var rows []metav1.TableRow
+	for _, item := range cpools.Items {
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{
+			item.ObjectMeta.Name,
+			item.ObjectMeta.Labels["kubernetes.io/hostname"],
+			util.ConvertToIBytes(item.Status.Capacity.Free.String()),
+			util.ConvertToIBytes(item.Status.Capacity.Total.String()),
+			item.Status.ReadOnly,
+			item.Status.ProvisionedReplicas,
+			item.Status.HealthyReplicas,
+			item.Status.Phase,
+			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time))}})
 	}
+	if len(cpools.Items) == 0 {
+		fmt.Println("No Pools are found")
+	} else {
+		util.TablePrinter(util.CstorPoolListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+	}
+	return nil
+}
 
-	// Fetch the CSPI object by passing the name of CSPI taken through CLI in ns namespace
-	poolName := pools[0]
-	poolInfo, err := clientset.GetCSPI(poolName)
+// DescribeCstorPool method runs info command and make call to DisplayPoolInfo to display the results
+func DescribeCstorPool(c *client.K8sClient, poolName string) error {
+	poolInfo, err := c.GetCSPI(poolName)
 	if err != nil {
 		return errors.Wrap(err, "Error getting pool info")
 	}
@@ -98,7 +117,7 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 	// Fetch info for every block device
 	var bdRows []metav1.TableRow
 	for _, item := range BlockDevicesInPool {
-		bd, err := clientset.GetBD(item)
+		bd, err := c.GetBD(item)
 		if err != nil {
 			fmt.Printf("Could not find the blockdevice : %s\n", item)
 		} else {
@@ -106,7 +125,7 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 		}
 	}
 	if len(bdRows) != 0 {
-		fmt.Printf("Blockdevice details :\n" + "---------------------\n")
+		fmt.Printf("\nBlockdevice details :\n" + "---------------------\n")
 		util.TablePrinter(util.BDListColumnDefinations, bdRows, printers.PrintOptions{Wide: true})
 	} else {
 		fmt.Printf("Could not find any blockdevice that belongs to the pool\n")
@@ -114,13 +133,13 @@ func RunPoolInfo(cmd *cobra.Command, pools []string, openebsNs string) error {
 
 	// Fetch info for provisional replica
 	var cvrRows []metav1.TableRow
-	CVRsInPool, err := clientset.GetCVRs(types.CStorPoolInstanceNameLabelKey + "=" + poolName)
+	CVRsInPool, err := c.GetCVRs(types.CStorPoolInstanceNameLabelKey + "=" + poolName)
 	if err != nil {
 		fmt.Printf("None of the replicas are running")
 	} else {
 		for _, cvr := range CVRsInPool.Items {
 			pvcName := ""
-			pv, err := clientset.GetPV(cvr.Labels["openebs.io/persistent-volume"])
+			pv, err := c.GetPV(cvr.Labels["openebs.io/persistent-volume"])
 			if err == nil {
 				pvcName = pv.Spec.ClaimRef.Name
 			}

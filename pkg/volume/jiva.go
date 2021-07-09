@@ -58,7 +58,6 @@ PORTAL           :  {{.spec.iscsiSpec.targetIP}}:{{.spec.iscsiSpec.targetPort}}
 `
 )
 
-
 // GetJiva returns a list of JivaVolumes
 func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	// 1. Fetch all relevant volume CRs without worrying about openebsNS
@@ -107,7 +106,7 @@ func DescribeJivaVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error
 	// 1. Get the JivaVolume Corresponding to the pv name
 	jv, err := c.GetJV(vol.Name)
 	if err != nil {
-		_,_ = fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
+		_, _ = fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s\n", vol.Name)
 		return err
 	}
 	// 2. Fill in JivaVolume related details
