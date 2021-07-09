@@ -17,31 +17,40 @@ limitations under the License.
 package get
 
 import (
-	"github.com/openebs/openebsctl/pkg/cstor/get"
+	"github.com/openebs/openebsctl/pkg/storage"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
 var (
-	poolListCommandHelpText = `
-This command lists of all known pools in the Cluster.
+	storageListCommandHelpText = `
+This command lists of all/specific known storages in the Cluster.
 
 Usage:
-$ kubectl openebs get pool [options]
+$ kubectl openebs get storage [options]
+
+Options:
+--------
+Filter storages by cas-type
+--cas-type=[cstor]
+
+Advanced:
+Filter by a fixed OpenEBS namespace
+--openebs-namespace=[...]
 `
 )
 
-// NewCmdGetPool displays status of OpenEBS Pool(s)
-func NewCmdGetPool() *cobra.Command {
+// NewCmdGetStorage displays status of OpenEBS Pool(s)
+func NewCmdGetStorage() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "pool",
-		Aliases: []string{"pools", "p"},
-		Short:   "Displays status information about Pool(s)",
-		Long:    poolListCommandHelpText,
+		Use:     "storage",
+		Aliases: []string{"storages", "s"},
+		Short:   "Displays status information about Storage(s)",
+		Long:    storageListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
-			// TODO: De-couple CLI code, logic code, API code
-			util.CheckErr(get.RunPoolsList(args, openebsNS), util.Fatal)
+			casType, _ := cmd.Flags().GetString("cas-type")
+			util.CheckErr(storage.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
 	return cmd

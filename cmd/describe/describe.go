@@ -24,20 +24,20 @@ import (
 
 const (
 	volumeCommandHelpText = `# Show detail of a specific OpenEBS resource:
-$ kubectl openebs describe [volumes|pools|pvc] [name]
+$ kubectl openebs describe [volumes|storage|pvc] [name]
 
 # Describe a Volume:
-$ kubectl openebs describe volume pvc-abcd -n [namespace]
+$ kubectl openebs describe volume pvc-abcd -n [namespace] [options]
 
 # Describe PVCs present in the same namespace:
-$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
+$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace] [options]
 
-# Describe a cStor Pool Instance:
-$ kubectl openebs describe pool [cspi-name] -n [namespace]
+# Describe a Storage :
+$ kubectl openebs describe storage [name1] [name2] ... [nameN] [options]
 
 Options:
 Advanced: Override the auto-detected OPENEBS_NAMESPACE
---openebs-namespace=[...]
+--openebs-namespace=[...] [options]
 `
 )
 
@@ -56,7 +56,7 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 	cmd.AddCommand(
 		NewCmdDescribeVolume(),
 		NewCmdDescribePVC(),
-		NewCmdDescribePool(),
+		NewCmdDescribeStorage(),
 	)
 
 	return cmd
