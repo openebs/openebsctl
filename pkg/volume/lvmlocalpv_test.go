@@ -23,7 +23,7 @@ import (
 
 	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	"github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/fake"
-	fake2 "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/typed/lvm/v1alpha1/fake"
+	fakelvm "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/typed/lvm/v1alpha1/fake"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	appsv1 "k8s.io/api/apps/v1"
@@ -205,7 +205,7 @@ func TestGetLVMLocalPV(t *testing.T) {
 // lvmVolNotExists makes fakelvmClientSet return error
 func lvmVolNotExists(c *client.K8sClient) {
 	// NOTE: Set the VERB & Resource correctly & make it work for single resources
-	c.LVMCS.LocalV1alpha1().(*fake2.FakeLocalV1alpha1).Fake.PrependReactor("*", "*", func(action k8stest.Action) (handled bool, ret runtime.Object, err error) {
+	c.LVMCS.LocalV1alpha1().(*fakelvm.FakeLocalV1alpha1).Fake.PrependReactor("*", "*", func(action k8stest.Action) (handled bool, ret runtime.Object, err error) {
 		return true, nil, fmt.Errorf("failed to list LVMVolumes")
 	})
 }
