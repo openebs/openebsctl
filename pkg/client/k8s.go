@@ -25,13 +25,13 @@ import (
 	"strings"
 
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
+	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
 	zfsBuilder "github.com/openebs/zfs-localpv/pkg/builder/volbuilder"
 
@@ -63,6 +63,8 @@ type K8sClient struct {
 	// OpenebsClientset capable of accessing the OpenEBS
 	// components
 	OpenebsCS openebsclientset.Interface
+	// LVMCS is the client for accessing OpenEBS LVM components
+	LVMCS lvmclient.Interface
 }
 
 /*
@@ -85,10 +87,12 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build OpenEBS clientset")
 	}
+	lv, err := getLVMclient(config)
 	return &K8sClient{
 		Ns:        ns,
 		K8sCS:     k8sCS,
 		OpenebsCS: openebsCS,
+		LVMCS:     lv,
 	}, nil
 }
 
@@ -684,58 +688,6 @@ func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSel
 				zvMap[zv.Name] = zv
 			}
 			return nil, zvMap, nil
-		default:
-			return nil, nil, errors.New("invalid map options")
-		}
-	}
-	return nil, nil, errors.New("invalid return type")
-}
-
-// GetLVMvol returns a list or a map of LVMVolume depending upon rType & options
-func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*lvm.LVMVolumeList, map[string]lvm.LVMVolume, error) {
-	lvs := lvm.LVMVolumeList{}
-	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
-	err := k.K8sCS.Discovery().RESTClient().Get().AbsPath("/apis/local.openebs.io/v1alpha1").
-		Resource("lvmvolumes").Do(context.TODO()).Into(&lvs)
-	if err != nil {
-		return nil, nil, err
-	}
-	var list []lvm.LVMVolume
-	if lVols == nil || len(lVols) == 0 {
-		list = lvs.Items
-	} else {
-		lvsMap := make(map[string]lvm.LVMVolume)
-		for _, lv := range lvs.Items {
-			lvsMap[lv.Name] = lv
-		}
-		for _, name := range lVols {
-			if lv, ok := lvsMap[name]; ok {
-				list = append(list, lv)
-			} else {
-				fmt.Printf("Error from server (NotFound): lvmvolume %s not found\n", name)
-			}
-		}
-	}
-	if rType == util.List {
-		return &lvm.LVMVolumeList{
-			Items: list,
-		}, nil, nil
-	}
-	if rType == util.Map {
-		lvMap := make(map[string]lvm.LVMVolume)
-		switch options.Key {
-		case util.Label:
-			for _, lv := range list {
-				if vol, ok := lv.Labels[options.LabelKey]; ok {
-					lvMap[vol] = lv
-				}
-			}
-			return nil, lvMap, nil
-		case util.Name:
-			for _, lv := range list {
-				lvMap[lv.Name] = lv
-			}
-			return nil, lvMap, nil
 		default:
 			return nil, nil, errors.New("invalid map options")
 		}

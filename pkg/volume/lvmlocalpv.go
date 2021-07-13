@@ -57,7 +57,7 @@ func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, ope
 			attachedNode = lvmVol.Spec.OwnerNodeID
 			rows = append(rows, metav1.TableRow{
 				Cells: []interface{}{
-					ns, pv.Name, customStatus, version, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
+					ns, pv.Name, customStatus, version, pv.Spec.Capacity.Storage().String(), pv.Spec.StorageClassName, pv.Status.Phase,
 					accessMode, attachedNode}})
 		}
 	}

@@ -31,10 +31,15 @@ func Get(vols []string, openebsNS, casType string) error {
 	k, _ := client.NewK8sClient("")
 	// 1. Get a list of required PersistentVolumes
 	var pvList *corev1.PersistentVolumeList
+	var err error
 	if vols == nil {
-		pvList, _ = k.GetPVs(nil, "")
+		pvList, err = k.GetPVs(nil, "")
 	} else {
-		pvList, _ = k.GetPVs(vols, "")
+		pvList, err = k.GetPVs(vols, "")
+	}
+	if err != nil {
+		// stop if no PVs found
+		return err
 	}
 	// TODO: (improvisation) Only call specific cas-functions for a
 	// list-obj-by-name & if only 2-3 cas-exist
