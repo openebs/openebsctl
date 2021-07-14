@@ -17,72 +17,10 @@ limitations under the License.
 package blockdevice
 
 import (
-	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	openebsFakeClientset "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"testing"
-)
-
-var (
-	bd1 = v1alpha1.BlockDevice{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "some-fake-bd-1"},
-		Spec: v1alpha1.DeviceSpec{
-			Path:     "/dev/sdb",
-			Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
-			FileSystem: v1alpha1.FileSystemInfo{
-				Type:       "zfs_member",
-				Mountpoint: "/var/some-fake-point",
-			},
-			NodeAttributes: v1alpha1.NodeAttribute{
-				NodeName: "fake-node-1",
-			},
-		},
-		Status: v1alpha1.DeviceStatus{
-			ClaimState: "Claimed",
-			State:      "Active",
-		},
-	}
-	bd2 = v1alpha1.BlockDevice{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "some-fake-bd-2"},
-		Spec: v1alpha1.DeviceSpec{
-			Path:     "/dev/sdb",
-			Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
-			FileSystem: v1alpha1.FileSystemInfo{
-				Type:       "zfs_member",
-				Mountpoint: "/var/some-fake-point",
-			},
-			NodeAttributes: v1alpha1.NodeAttribute{
-				NodeName: "fake-node-1",
-			},
-		},
-		Status: v1alpha1.DeviceStatus{
-			ClaimState: "Claimed",
-			State:      "Active",
-		},
-	}
-	bd3 = v1alpha1.BlockDevice{
-		TypeMeta:   metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{Name: "some-fake-bd-3", Namespace: "fake-ns"},
-		Spec: v1alpha1.DeviceSpec{
-			Path:     "/dev/sdb",
-			Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
-			FileSystem: v1alpha1.FileSystemInfo{
-				Type:       "lvm_member",
-				Mountpoint: "/var/some-fake-point",
-			},
-			NodeAttributes: v1alpha1.NodeAttribute{
-				NodeName: "fake-node-2",
-			},
-		},
-		Status: v1alpha1.DeviceStatus{
-			ClaimState: "Claimed",
-			State:      "Active",
-		},
-	}
 )
 
 func Test_createTreeByNode(t *testing.T) {
