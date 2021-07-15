@@ -69,7 +69,7 @@ func Describe(storages []string, openebsNs, casType string) error {
 	}
 	for _, storageName := range storages {
 		// 3. Describe the storage
-		if list, ok := CasDescribeMap()[casType]; ok {
+		if list, ok := CasDescribeMap()[util.CstorCasType]; ok {
 			err := list(k, storageName)
 			if err != nil {
 				return err
