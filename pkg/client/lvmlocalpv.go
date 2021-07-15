@@ -50,7 +50,7 @@ func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelecto
 		return nil, nil, err
 	}
 	var list []lvm.LVMVolume
-	if lVols == nil || len(lVols) == 0 {
+	if len(lVols) == 0 {
 		list = lvs.Items
 	} else {
 		lvsMap := make(map[string]lvm.LVMVolume)
