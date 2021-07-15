@@ -173,12 +173,13 @@ var (
 		{Name: "FsType", Type: "string"},
 		{Name: "MountPoint", Type: "string"},
 	}
-
+	// LVMvolgroupListColumnDefinitions stores the table headers for listing lvm vg-group when displayed as tree
 	LVMvolgroupListColumnDefinitions = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
 		{Name: "FreeSize", Type: "string"},
 		{Name: "TotalSize", Type: "string"},
 	}
+	// ZFSPoolListColumnDefinitions stores the table headers for listing zfs pools when displayed as tree
 	ZFSPoolListColumnDefinitions = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
 		{Name: "FreeSize", Type: "string"},
