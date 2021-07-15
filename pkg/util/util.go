@@ -100,8 +100,8 @@ func TablePrinter(columns []metav1.TableColumnDefinition, rows []metav1.TableRow
 	}
 	out := bytes.NewBuffer([]byte{})
 	printer := printers.NewTablePrinter(options)
-	printer.PrintObj(table, out)
-	fmt.Printf(out.String())
+	_ = printer.PrintObj(table, out)
+	fmt.Printf("%s",out.String())
 }
 
 // TemplatePrinter uses cli-runtime TemplatePrinter to print by template without extra type

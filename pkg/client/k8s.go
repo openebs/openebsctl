@@ -87,7 +87,7 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build OpenEBS clientset")
 	}
-	lv, err := getLVMclient(config)
+	lv, _ := getLVMclient(config)
 	return &K8sClient{
 		Ns:        ns,
 		K8sCS:     k8sCS,
@@ -222,7 +222,7 @@ func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.Pers
 		volMap[vol.Name] = vol
 	}
 	var list []corev1.PersistentVolume
-	if volNames == nil || len(volNames) == 0 {
+	if len(volNames) == 0 {
 		return pvs, nil
 	}
 	for _, name := range volNames {
@@ -256,7 +256,7 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string, labelselector st
 	if err != nil {
 		return nil, err
 	}
-	if pvcNames == nil || len(pvcNames) == 0 {
+	if len(pvcNames) == 0 {
 		return pvcs, nil
 	}
 	pvcNamePVCmap := make(map[string]corev1.PersistentVolumeClaim)
@@ -296,7 +296,7 @@ func (k K8sClient) GetBDs(bdNames []string, labelselector string) (*v1alpha1.Blo
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while getting block device")
 	}
-	if bdNames == nil || len(bdNames) == 0 {
+	if len(bdNames) == 0 {
 		return bds, nil
 	}
 	bdNameBDmap := make(map[string]v1alpha1.BlockDevice)
@@ -340,7 +340,7 @@ func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelecto
 		return nil, nil, errors.Wrapf(err, "Error while getting volumes")
 	}
 	var list []cstorv1.CStorVolume
-	if volNames == nil || len(volNames) == 0 {
+	if len(volNames) == 0 {
 		list = cVols.Items
 	} else {
 		csMap := make(map[string]cstorv1.CStorVolume)
@@ -539,7 +539,7 @@ func (k K8sClient) GetCSPIs(cspiNames []string, labelselector string) (*cstorv1.
 	if err != nil {
 		return nil, errors.Wrapf(err, "Error while getting cspi")
 	}
-	if cspiNames == nil || len(cspiNames) == 0 {
+	if len(cspiNames) == 0 {
 		return cspi, nil
 	}
 	poolMap := make(map[string]cstorv1.CStorPoolInstance)
@@ -590,7 +590,7 @@ func (k K8sClient) GetJVs(volNames []string, rType util.ReturnType, labelSelecto
 		return nil, nil, err
 	}
 	var list []jiva.JivaVolume
-	if volNames == nil || len(volNames) == 0 {
+	if len(volNames) == 0 {
 		list = jvs.Items
 	} else {
 		jvsMap := make(map[string]jiva.JivaVolume)
@@ -653,7 +653,7 @@ func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSel
 		return nil, nil, err
 	}
 	var list []zfs.ZFSVolume
-	if volNames == nil || len(volNames) == 0 {
+	if len(volNames) == 0 {
 		list = zvols.Items
 	} else {
 		zvsMap := make(map[string]zfs.ZFSVolume)

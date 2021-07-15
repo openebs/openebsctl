@@ -59,7 +59,7 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		CasType:          util.JivaCasType,
 		BoundVolume:      pvc.Spec.VolumeName,
 		StorageClassName: *pvc.Spec.StorageClassName,
-		Size:             util.ConvertToIBytes(jv.Spec.Capacity),
+		Size:             pvc.Spec.Resources.Requests.Storage().String(),
 	}
 	if jv != nil {
 		jivaPvcInfo.AttachedToNode = jv.Labels["nodeID"]

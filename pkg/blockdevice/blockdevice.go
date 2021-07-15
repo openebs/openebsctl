@@ -54,13 +54,7 @@ func createTreeByNode(k *client.K8sClient, bdNames []string) error {
 	// 2. Create a map out of the list of bds, by their node names.
 	var nodeBDlistMap = map[string][]v1alpha1.BlockDevice{}
 	for _, bd := range bdList.Items {
-		if _, ok := nodeBDlistMap[bd.Spec.NodeAttributes.NodeName]; ok {
-			// Append to the node if nodeName exists
-			nodeBDlistMap[bd.Spec.NodeAttributes.NodeName] = append(nodeBDlistMap[bd.Spec.NodeAttributes.NodeName], bd)
-		} else {
-			// Create new nodeName with node name and add the bd, if node does not exist
-			nodeBDlistMap[bd.Spec.NodeAttributes.NodeName] = []v1alpha1.BlockDevice{bd}
-		}
+		nodeBDlistMap[bd.Spec.NodeAttributes.NodeName] = append(nodeBDlistMap[bd.Spec.NodeAttributes.NodeName], bd)
 	}
 	var rows []metav1.TableRow
 	if len(nodeBDlistMap) == 0 {
