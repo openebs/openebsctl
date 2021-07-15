@@ -52,7 +52,7 @@ func Get(pools []string, openebsNS string, casType string) error {
 // CasList has a list of method implementations for different cas-types
 func CasList() []func(*client.K8sClient, []string) error {
 	return []func(*client.K8sClient, []string) error{
-		GetCstorPools, GetVolumeGroups, GetZFSNodes}
+		GetCstorPools, GetVolumeGroups, GetZFSPools}
 }
 
 // Describe manages various implementations of Storage Describing
@@ -85,7 +85,7 @@ func CasListMap() map[string]func(*client.K8sClient, []string) error {
 	return map[string]func(*client.K8sClient, []string) error{
 		util.CstorCasType: GetCstorPools,
 		util.LVMLocalPV:   GetVolumeGroups,
-		util.ZFSCasType:   GetZFSNodes,
+		util.ZFSCasType:   GetZFSPools,
 	}
 }
 

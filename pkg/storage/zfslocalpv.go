@@ -25,8 +25,8 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-// GetZFSNodes lists all zfspools by zfsnodes
-func GetZFSNodes(c *client.K8sClient, zfsnodes []string) error {
+// GetZFSPools lists all zfspools by zfsnodes
+func GetZFSPools(c *client.K8sClient, zfsnodes []string) error {
 	zfsNodes, err := c.GetZFSNodes()
 	if err != nil {
 		return err
