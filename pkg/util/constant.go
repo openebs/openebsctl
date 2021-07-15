@@ -179,6 +179,11 @@ var (
 		{Name: "FreeSize", Type: "string"},
 		{Name: "TotalSize", Type: "string"},
 	}
+	ZFSPoolListColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "FreeSize", Type: "string"},
+	}
+
 	// JivaReplicaPVCColumnDefinations stores the Table headers for Jiva Replica PVC details
 	JivaReplicaPVCColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},

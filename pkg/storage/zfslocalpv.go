@@ -25,36 +25,31 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-const (
-	firstElemPrefix = `├─`
-	lastElemPrefix  = `└─`
-)
-
-// GetVolumeGroups lists all volume groups by node
-func GetVolumeGroups(c *client.K8sClient, vgs []string) error {
-	lvmNodes, err := c.GetLVMNodes()
+// GetZFSNodes lists all zfspools by zfsnodes
+func GetZFSNodes(c *client.K8sClient, zfsnodes []string) error {
+	zfsNodes, err := c.GetZFSNodes()
 	if err != nil {
 		return err
 	}
 	var rows []metav1.TableRow
-	for _, lv := range lvmNodes.Items {
-		rows = append(rows, metav1.TableRow{Cells: []interface{}{lv.Name, "", "", ""}})
-		for i, vg := range lv.VolumeGroups {
+	for _, zfsNode := range zfsNodes.Items {
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{zfsNode.Name, ""}})
+		for i, pool := range zfsNode.Pools {
 			var prefix string
-			if i < len(lv.VolumeGroups)-1 {
+			if i < len(zfsNode.Pools)-1 {
 				prefix = firstElemPrefix
 			} else {
 				prefix = lastElemPrefix
 			}
-			rows = append(rows, metav1.TableRow{Cells: []interface{}{prefix + vg.Name,
-				util.ConvertToIBytes(vg.Free.String()), util.ConvertToIBytes(vg.Size.String())}})
+			rows = append(rows, metav1.TableRow{Cells: []interface{}{prefix + pool.Name,
+				util.ConvertToIBytes(pool.Free.String())}})
 		}
-		rows = append(rows, metav1.TableRow{Cells: []interface{}{"", "", ""}})
+		rows = append(rows, metav1.TableRow{Cells: []interface{}{"", ""}})
 	}
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
-		return fmt.Errorf("no lvm volumegroups found")
+		return fmt.Errorf("no zfspools found")
 	}
-	util.TablePrinter(util.LVMvolgroupListColumnDefinitions, rows, printers.PrintOptions{Wide: true})
+	util.TablePrinter(util.ZFSPoolListColumnDefinitions, rows, printers.PrintOptions{Wide: true})
 	return nil
 }
