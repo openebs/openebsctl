@@ -27,13 +27,12 @@ import (
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
+	zfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/pkg/errors"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
-	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
-	zfsBuilder "github.com/openebs/zfs-localpv/pkg/builder/volbuilder"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -65,6 +64,8 @@ type K8sClient struct {
 	OpenebsCS openebsclientset.Interface
 	// LVMCS is the client for accessing OpenEBS LVM components
 	LVMCS lvmclient.Interface
+	// ZFCS is the client for accessing OpenEBS ZFS components
+	ZFCS zfsclient.Interface
 }
 
 /*
@@ -88,11 +89,13 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 		return nil, errors.Wrap(err, "failed to build OpenEBS clientset")
 	}
 	lv, _ := getLVMclient(config)
+	zf, _ := getZFSclient(config)
 	return &K8sClient{
 		Ns:        ns,
 		K8sCS:     k8sCS,
 		OpenebsCS: openebsCS,
 		LVMCS:     lv,
+		ZFCS:      zf,
 	}, nil
 }
 
@@ -639,60 +642,6 @@ func (k K8sClient) GetJVTargetPod(volumeName string) (*corev1.PodList, error) {
 		return nil, errors.New("The controller and replica pod for the volume was not found")
 	}
 	return pods, nil
-}
-
-// GetZFSVols returns a list or a map of ZFSVolume depending upon rType & options
-func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*zfs.ZFSVolumeList, map[string]zfs.ZFSVolume, error) {
-	config := os.Getenv("KUBECONFIG")
-	zvols, err := zfsBuilder.NewKubeclient(zfsBuilder.WithKubeConfigPath(config)).
-		WithNamespace("").
-		List(metav1.ListOptions{
-			LabelSelector: labelSelector,
-		})
-	if err != nil {
-		return nil, nil, err
-	}
-	var list []zfs.ZFSVolume
-	if len(volNames) == 0 {
-		list = zvols.Items
-	} else {
-		zvsMap := make(map[string]zfs.ZFSVolume)
-		for _, zv := range zvols.Items {
-			zvsMap[zv.Name] = zv
-		}
-		for _, name := range volNames {
-			if zv, ok := zvsMap[name]; ok {
-				list = append(list, zv)
-			} else {
-				fmt.Printf("Error from server (NotFound): zfsVolume %s not found\n", name)
-			}
-		}
-	}
-	if rType == util.List {
-		return &zfs.ZFSVolumeList{
-			Items: list,
-		}, nil, nil
-	}
-	if rType == util.Map {
-		zvMap := make(map[string]zfs.ZFSVolume)
-		switch options.Key {
-		case util.Label:
-			for _, zv := range list {
-				if vol, ok := zv.Labels[options.LabelKey]; ok {
-					zvMap[vol] = zv
-				}
-			}
-			return nil, zvMap, nil
-		case util.Name:
-			for _, zv := range list {
-				zvMap[zv.Name] = zv
-			}
-			return nil, zvMap, nil
-		default:
-			return nil, nil, errors.New("invalid map options")
-		}
-	}
-	return nil, nil, errors.New("invalid return type")
 }
 
 // GetCSIControllerSTS returns the CSI controller sts with a specific
