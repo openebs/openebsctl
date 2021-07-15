@@ -343,7 +343,6 @@ github.com/openebs/api/v2 v2.3.0/go.mod h1:nLCaNvVjgjkjeD2a+n1fMbv5HjoEYP4XB8OAb
 github.com/openebs/jiva-operator v1.12.2-0.20210607114402-811a3af7c34a h1:HuCp3D9TOhJogGTcH5JePJuebceQhPRgB5SizB0bmTg=
 github.com/openebs/jiva-operator v1.12.2-0.20210607114402-811a3af7c34a/go.mod h1:5oMQaMQKa0swN1hJnAP7CEMI/MOLVz0S2Mcu0H/l0oc=
 github.com/openebs/lib-csi v0.3.0/go.mod h1:uruyzJiTwRoytQPQXOf4spaezn1cjkiAXjvFGw6aY/8=
-github.com/openebs/lib-csi v0.6.0 h1:nucurCo91lKNhtjbYNPJIrbJU0F4oinphZtkGWI/DEY=
 github.com/openebs/lib-csi v0.6.0/go.mod h1:KWANWF2zNB8RYyELegid8PxHFrP/cdttR320NA9gVUQ=
 github.com/openebs/lvm-localpv v0.6.0 h1:2LWSF/qy6jGKNAALtIN1O5y6tEKhwTGcVUcxy0Qgnpk=
 github.com/openebs/lvm-localpv v0.6.0/go.mod h1:DVDU+pjCFdb3rZd4MwVVEZ2eXqq+LT16CpQTm1j0MYo=

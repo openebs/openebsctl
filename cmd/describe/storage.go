@@ -17,6 +17,8 @@ limitations under the License.
 package describe
 
 import (
+	"strings"
+
 	"github.com/openebs/openebsctl/pkg/storage"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
@@ -50,7 +52,9 @@ func NewCmdDescribeStorage() *cobra.Command {
 		Example: `kubectl openebs describe storage storage-1`,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(storage.Describe(args, openebsNs), util.Fatal)
+			casType, _ := cmd.Flags().GetString("cas-type")
+			casType = strings.ToLower(casType)
+			util.CheckErr(storage.Describe(args, openebsNs, casType), util.Fatal)
 		},
 	}
 	return cmd

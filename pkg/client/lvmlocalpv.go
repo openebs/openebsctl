@@ -91,3 +91,8 @@ func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelecto
 	}
 	return nil, nil, errors.New("invalid return type")
 }
+
+// GetLVMNodes return a list of LVMNodes
+func (k K8sClient) GetLVMNodes() (*lvm.LVMNodeList, error) {
+	return k.LVMCS.LocalV1alpha1().LVMNodes("").List(context.TODO(), v1.ListOptions{})
+}

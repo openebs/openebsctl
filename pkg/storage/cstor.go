@@ -76,10 +76,9 @@ func GetCstorPools(c *client.K8sClient, pools []string) error {
 			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time))}})
 	}
 	if len(cpools.Items) == 0 {
-		fmt.Println("No Pools are found")
-	} else {
-		util.TablePrinter(util.CstorPoolListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+		return fmt.Errorf("no cstor pools are found")
 	}
+	util.TablePrinter(util.CstorPoolListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }
 
