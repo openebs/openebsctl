@@ -57,6 +57,7 @@ const (
 	// ZFSCSIDriver is the name of the ZFS localpv CSI driver
 	ZFSCSIDriver = "zfs.csi.openebs.io"
 	// LocalPVLVMCSIDriver is the name of the LVM LocalPV CSI driver
+	// NOTE: This might also mean local-hostpath, local-device or zfs-localpv later.
 	LocalPVLVMCSIDriver = "local.csi.openebs.io"
 )
 
@@ -65,11 +66,13 @@ var (
 	CasTypeAndComponentNameMap = map[string]string{
 		CstorCasType: "openebs-cstor-csi-controller",
 		JivaCasType:  "openebs-jiva-csi-controller",
+		LVMLocalPV:   "openebs-lvm-controller",
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
 	ComponentNameToCasTypeMap = map[string]string{
 		"openebs-cstor-csi-controller": CstorCasType,
 		"openebs-jiva-csi-controller":  JivaCasType,
+		"openebs-lvm-controller":       LVMLocalPV,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
@@ -169,6 +172,12 @@ var (
 		{Name: "Status", Type: "string"},
 		{Name: "FsType", Type: "string"},
 		{Name: "MountPoint", Type: "string"},
+	}
+
+	LVMvolgroupListColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
+		{Name: "FreeSize", Type: "string"},
+		{Name: "TotalSize", Type: "string"},
 	}
 	// JivaReplicaPVCColumnDefinations stores the Table headers for Jiva Replica PVC details
 	JivaReplicaPVCColumnDefinations = []metav1.TableColumnDefinition{

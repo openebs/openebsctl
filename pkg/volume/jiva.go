@@ -73,7 +73,6 @@ func GetJiva(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
 		var attachedNode, storageVersion, customStatus, ns string
-		// TODO: Estimate the cas-type and decide to print it out
 		// Should all AccessModes be shown in a csv format, or the highest be displayed ROO < RWO < RWX?
 		if pv.Spec.CSI != nil && pv.Spec.CSI.Driver == util.JivaCSIDriver {
 			jv, ok := jvMap[pv.Name]
