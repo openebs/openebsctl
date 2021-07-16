@@ -54,7 +54,7 @@ We have added support for `cStor` storage engine.<br/>
 * Adding support for managing Storage Devices
 * Adding support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilized pools.
 * Adding support for getting overall status (like kubectl openebs cluster-info)
-* Ability to generate raise GitHub issues with required troubleshooting information.
+* Ability to raise GitHub issues with required troubleshooting information.
 
 ## Resolved Bugs
 

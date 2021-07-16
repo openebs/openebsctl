@@ -53,8 +53,8 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
 * Binaries for Linux, Mac and Windows are available as tarballs and zip in the [release](https://github.com/openebs/openebsctl/releases) page.
 * For Linux, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
    ```shell
-   tar -xvf kubectl-openebs_v0.1.0_Linux_x86_64.tar.gz
-   cd kubectl-openebs_v0.1.0_Linux_x86_64
+   tar -xvf kubectl-openebs_v0.2.0_Linux_x86_64.tar.gz
+   cd kubectl-openebs_v0.2.0_Linux_x86_64
    sudo mv kubectl-openebs /usr/local/bin/
    ```
   Or, download the `debian` package from the [release](https://github.com/openebs/openebsctl/releases) page and double click it launch the installer if using GUI.<br/><br/>
@@ -64,8 +64,8 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
    ```
 * For Mac, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
   ```shell
-   tar -xzvf kubectl-openebs_v0.1.0_Darwin_x86_64.tar.gz
-   cd kubectl-openebs_v0.1.0_Darwin_x86_64
+   tar -xzvf kubectl-openebs_v0.2.0_Darwin_x86_64.tar.gz
+   cd kubectl-openebs_v0.2.0_Darwin_x86_64
    sudo mv kubectl-openebs /usr/local/bin/
    ```
 * For Windows, download the respective zip from [release](https://github.com/openebs/openebsctl/releases) page and :-
