@@ -63,13 +63,13 @@ openebsctl:
 	@sudo cp -a "$(PWD)/bin/OPENEBSCTL/${OPENEBSCTL}"  /usr/local/bin/${OPENEBSCTL}
 	@echo "=> copied to /usr/local/bin"
 
-.PHONY: golint
-golint:
-	@echo "+ Installing golint"
-	@GO111MODULE=on go get -u golang.org/x/lint/golint;
-	@echo "--> Running golint"
-	@golint -set_exit_status $(PACKAGES)
-	@echo "Golint successful !"
+.PHONY: golangci
+golangci:
+	@echo "+ Installing golangci-lint"
+	@GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1;
+	@echo "--> Running golangci-lint"
+	@golangci-lint run -set_exit_status $(PACKAGES)
+	@echo "Golangci-lint successful !"
 	@echo "--------------------------------"
 
 .PHONY: license-check
