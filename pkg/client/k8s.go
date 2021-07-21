@@ -339,8 +339,8 @@ func (k K8sClient) GetCV(volName string) (*cstorv1.CStorVolume, error) {
 // Only one type can be returned at a time, please define the other type as '_' while calling.
 func (k K8sClient) GetCVs(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeList, map[string]cstorv1.CStorVolume, error) {
 	cVols, err := k.OpenebsCS.CstorV1().CStorVolumes("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "Error while getting volumes")
+	if len(cVols.Items) == 0 {
+		return nil, nil, errors.Errorf("Error while getting volumes%v", err)
 	}
 	var list []cstorv1.CStorVolume
 	if len(volNames) == 0 {
@@ -404,8 +404,8 @@ func (k K8sClient) GetCVA(labelSelector string) (*cstorv1.CStorVolumeAttachment,
 // Only one type can be returned at a time, please define the other type as '_' while calling.
 func (k K8sClient) GetCVAs(rType util.ReturnType, labelSelector string, options util.MapOptions) (*cstorv1.CStorVolumeAttachmentList, map[string]cstorv1.CStorVolumeAttachment, error) {
 	cvaList, err := k.OpenebsCS.CstorV1().CStorVolumeAttachments("").List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector})
-	if err != nil {
-		return nil, nil, err
+	if len(cvaList.Items) == 0 {
+		return nil, nil, errors.Errorf("No CVA found for %s, %v", labelSelector, err)
 	}
 	if rType == util.List {
 		return cvaList, nil, nil

@@ -45,7 +45,7 @@ func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, op
 	// 3. Show the required ones
 	for _, pv := range pvList.Items {
 		name := pv.Name
-		capacity := pv.Spec.Capacity.Storage()
+		capacity := util.ConvertToIBytes(pv.Spec.Capacity.Storage().String())
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
 		var attachedNode, customStatus, ns string
