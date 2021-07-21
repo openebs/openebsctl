@@ -105,7 +105,7 @@ func GetCStor(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsN
 			accessMode := pv.Spec.AccessModes[0]
 			rows = append(rows, metav1.TableRow{
 				Cells: []interface{}{
-					ns, pv.Name, customStatus, storageVersion, pv.Spec.Capacity.Storage(), pv.Spec.StorageClassName, pv.Status.Phase,
+					ns, pv.Name, customStatus, storageVersion, util.ConvertToIBytes(pv.Spec.Capacity.Storage().String()), pv.Spec.StorageClassName, pv.Status.Phase,
 					accessMode, attachedNode}})
 		}
 	}
@@ -140,7 +140,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 
 	// 5. cStor Volume Replicas
 	cvrInfo, err := c.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
-	if err != nil {
+	if len(cvrInfo.Items) == 0 {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", vol.Name)
 	}
 
@@ -163,10 +163,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 
 	// Print the output for the portal status info
-	err = util.PrintByTemplate("volume", cstorVolInfoTemplate, volume)
-	if err != nil {
-		return err
-	}
+	_ = util.PrintByTemplate("volume", cstorVolInfoTemplate, volume)
 
 	portalInfo := util.PortalInfo{
 		IQN:            volumeInfo.Spec.Iqn,
@@ -177,16 +174,13 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 
 	// Print the output for the portal status info
-	err = util.PrintByTemplate("PortalInfo", cstorPortalTemplate, portalInfo)
-	if err != nil {
-		return err
-	}
+	_ = util.PrintByTemplate("PortalInfo", cstorPortalTemplate, portalInfo)
 
 	replicaCount := volumeInfo.Spec.ReplicationFactor
 	// This case will occur only if user has manually specified zero replica.
 	// or if none of the replicas are healthy & running
 	if replicaCount == 0 || len(volumeInfo.Status.ReplicaStatuses) == 0 {
-		fmt.Printf("None of the replicas are running\n")
+		fmt.Printf("\nNone of the replicas are running\n")
 		//please check the volume pod's status by running [kubectl describe pvc -l=openebs/replica --all-namespaces]\Oor try again later.")
 		return nil
 	}
@@ -206,7 +200,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorReplicaColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cStorBackupList, _ := c.GetCVBackups(vol.Name)
+	cStorBackupList, _ := c.GetCVBackups(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
 	if cStorBackupList != nil {
 		fmt.Printf("\nCstor Backup Details :\n" + "---------------------\n")
 		var rows []metav1.TableRow
@@ -223,7 +217,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cstorCompletedBackupList, _ := c.GetCVCompletedBackups(vol.Name)
+	cstorCompletedBackupList, _ := c.GetCVCompletedBackups(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
 	if cstorCompletedBackupList != nil {
 		fmt.Printf("\nCstor Completed Backup Details :" + "\n-------------------------------\n")
 		var rows []metav1.TableRow
@@ -238,7 +232,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		util.TablePrinter(util.CstorCompletedBackupColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	}
 
-	cStorRestoreList, _ := c.GetCVRestores(vol.Name)
+	cStorRestoreList, _ := c.GetCVRestores(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
 	if cStorRestoreList != nil {
 		fmt.Printf("\nCstor Restores Details :" + "\n-----------------------\n")
 		var rows []metav1.TableRow

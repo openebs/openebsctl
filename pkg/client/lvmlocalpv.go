@@ -45,7 +45,7 @@ func getLVMclient(kubeconfig string) (*lvmclient.Clientset, error) {
 // GetLVMvol returns a list or a map of LVMVolume depending upon rType & options
 func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*lvm.LVMVolumeList, map[string]lvm.LVMVolume, error) {
 	// NOTE: The resource name must be plural and the API-group should be present for getting CRs
-	lvs, err := k.LVMCS.LocalV1alpha1().LVMVolumes(k.Ns).List(context.TODO(), v1.ListOptions{LabelSelector: labelSelector})
+	lvs, err := k.LVMCS.LocalV1alpha1().LVMVolumes("").List(context.TODO(), v1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		return nil, nil, err
 	}

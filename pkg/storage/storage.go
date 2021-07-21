@@ -31,6 +31,8 @@ func Get(pools []string, openebsNS string, casType string) error {
 	if f, ok := CasListMap()[casType]; ok {
 		// if a cas-type is found, run it and return the error
 		return f(k, pools)
+	} else if casType != "" {
+		return fmt.Errorf("cas-type %s is not supported", casType)
 	}
 	// 3. Call all functions & exit
 	var separator bool
