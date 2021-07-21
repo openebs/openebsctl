@@ -108,10 +108,7 @@ func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeC
 	}
 
 	// Printing the Filled Details of the Cstor PVC
-	err = util.PrintByTemplate("pvc", cstorPvcInfoTemplate, pvcInfo)
-	if err != nil {
-		return err
-	}
+	_ = util.PrintByTemplate("pvc", cstorPvcInfoTemplate, pvcInfo)
 
 	// fetching the underlying TargetPod for the PV, to display its relevant details and notify the user
 	// if the TargetPod is not found.
