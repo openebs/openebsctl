@@ -45,7 +45,7 @@ var (
 var nsCstor = corev1.Namespace{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "cstor",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{},
 		Finalizers:        []string{},
 	},
@@ -55,7 +55,7 @@ var nsCstor = corev1.Namespace{
 var cv1 = v1.CStorVolume{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -95,7 +95,7 @@ var cv1 = v1.CStorVolume{
 var cv2 = v1.CStorVolume{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-2",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -135,7 +135,7 @@ var cv2 = v1.CStorVolume{
 var cvc1 = v1.CStorVolumeConfig{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -156,7 +156,7 @@ var cvc1 = v1.CStorVolumeConfig{
 var cvc2 = v1.CStorVolumeConfig{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-2",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -177,7 +177,7 @@ var cvc2 = v1.CStorVolumeConfig{
 var cva1 = v1.CStorVolumeAttachment{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1-cva",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{"Volname": "pvc-1", "nodeID": "node-1"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -188,7 +188,7 @@ var cva1 = v1.CStorVolumeAttachment{
 var cva2 = v1.CStorVolumeAttachment{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-2-cva",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{"Volname": "pvc-2", "nodeID": "node-2"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -199,7 +199,7 @@ var cva2 = v1.CStorVolumeAttachment{
 var cvr1 = v1.CStorVolumeReplica{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1-rep-1",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -216,7 +216,7 @@ var cvr1 = v1.CStorVolumeReplica{
 var cvr2 = v1.CStorVolumeReplica{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1-rep-2",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -233,7 +233,7 @@ var cvr2 = v1.CStorVolumeReplica{
 var cvr3 = v1.CStorVolumeReplica{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-1-rep-3",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -250,7 +250,7 @@ var cvr3 = v1.CStorVolumeReplica{
 var cvr4 = v1.CStorVolumeReplica{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "pvc-2-rep-1",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-2"},
 		Finalizers:        []string{},
 		Namespace:         "cstor",
@@ -270,7 +270,7 @@ var (
 	cstorPVC1       = corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "cstor-pvc-1",
-			CreationTimestamp: metav1.Time{time.Now()},
+			CreationTimestamp: metav1.Time{Time: time.Now()},
 			Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-2"},
 			Finalizers:        []string{},
 			Namespace:         "default",
@@ -290,7 +290,7 @@ var (
 	cstorPVC2 = corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "cstor-pvc-2",
-			CreationTimestamp: metav1.Time{time.Now()},
+			CreationTimestamp: metav1.Time{Time: time.Now()},
 			Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-2"},
 			Finalizers:        []string{},
 			Namespace:         "default",
@@ -310,7 +310,7 @@ var (
 	cstorPV1 = corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "pvc-1",
-			CreationTimestamp: metav1.Time{time.Now()},
+			CreationTimestamp: metav1.Time{Time: time.Now()},
 			Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 			Finalizers:        []string{},
 		},
@@ -336,7 +336,7 @@ var (
 	cstorPV2 = corev1.PersistentVolume{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:              "pvc-2",
-			CreationTimestamp: metav1.Time{time.Now()},
+			CreationTimestamp: metav1.Time{Time: time.Now()},
 			Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-2"},
 			Finalizers:        []string{},
 		},
@@ -361,7 +361,7 @@ var (
 var cbkp = v1.CStorBackup{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "bkp-name",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 	},
@@ -379,7 +379,7 @@ var cbkp = v1.CStorBackup{
 var ccbkp = v1.CStorCompletedBackup{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "completed-bkp-name",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 	},
@@ -394,7 +394,7 @@ var ccbkp = v1.CStorCompletedBackup{
 var crestore = v1.CStorRestore{
 	ObjectMeta: metav1.ObjectMeta{
 		Name:              "restore-name",
-		CreationTimestamp: metav1.Time{time.Now()},
+		CreationTimestamp: metav1.Time{Time: time.Now()},
 		Labels:            map[string]string{cstortypes.PersistentVolumeLabelKey: "pvc-1"},
 		Finalizers:        []string{},
 	},
@@ -494,16 +494,6 @@ var localpvCSICtrlSTS = appsv1.StatefulSet{
 * ZFS LOCAL PV
 ****************/
 
-var nsLocalPV = corev1.Namespace{
-	ObjectMeta: metav1.ObjectMeta{
-		Name:              "zfslocalpv",
-		CreationTimestamp: metav1.Time{time.Now()},
-		Labels:            map[string]string{},
-		Finalizers:        []string{},
-	},
-	Spec: corev1.NamespaceSpec{Finalizers: []corev1.FinalizerName{corev1.FinalizerKubernetes}},
-}
-
 var zfsVol1 = zfs.ZFSVolume{
 	TypeMeta: metav1.TypeMeta{
 		Kind:       "ZFSVolume",
@@ -513,7 +503,7 @@ var zfsVol1 = zfs.ZFSVolume{
 		Name:              "pvc-1",
 		Namespace:         "zfslocalpv",
 		CreationTimestamp: metav1.Time{Time: time.Now()},
-		Labels:            map[string]string{"kubernetes.io/nodename":"node1"},
+		Labels:            map[string]string{"kubernetes.io/nodename": "node1"},
 		Annotations:       map[string]string{},
 		OwnerReferences:   nil,
 		Finalizers:        nil,
@@ -585,7 +575,7 @@ var localpvzfsCSICtrlSTS = appsv1.StatefulSet{
 //var nsJiva = corev1.Namespace{
 //	ObjectMeta: metav1.ObjectMeta{
 //		Name:              "jiva",
-//		CreationTimestamp: metav1.Time{time.Now()},
+//		CreationTimestamp: metav1.Time{Time: time.Now()},
 //		Labels:            map[string]string{},
 //		Finalizers:        []string{},
 //	},

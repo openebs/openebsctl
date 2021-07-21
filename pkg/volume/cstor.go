@@ -139,7 +139,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 
 	// 5. cStor Volume Replicas
-	cvrInfo, err := c.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
+	cvrInfo, _ := c.GetCVRs(cstortypes.PersistentVolumeLabelKey + "=" + vol.Name)
 	if len(cvrInfo.Items) == 0 {
 		_, _ = fmt.Fprintf(os.Stderr, "failed to get cStor Volume Replicas for %s\n", vol.Name)
 	}
