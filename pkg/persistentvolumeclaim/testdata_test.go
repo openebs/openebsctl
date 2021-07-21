@@ -413,7 +413,3 @@ var cstorTargetPod = corev1.Pod{
 	Spec:   corev1.PodSpec{NodeName: "node-1"},
 	Status: corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{{Ready: true}, {Ready: true}, {Ready: true}}, PodIP: "10.2.2.2", Phase: "Running"},
 }
-
-/****************
-* CSTOR
-****************/
