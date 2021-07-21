@@ -150,5 +150,3 @@ func zfsVolNotExists(c *client.K8sClient) {
 	})
 }
 //
-//[{[zfslocalpv pvc-1 Ready 1.9.0 4Gi zfs-sc-1 Bound ReadWriteOnce node1] [] {[] <nil>}}]
-//[{[zfslocalpv pvc-1 Ready 1.9.0 4Gi zfs-sc-1 Bound ReadWriteOnce node1] [] {[] <nil>}}]
