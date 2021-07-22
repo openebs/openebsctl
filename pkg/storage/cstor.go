@@ -26,7 +26,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 
-	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
@@ -46,19 +45,9 @@ RAID TYPE        : {{.RaidType}}
 `
 )
 
-// GetCstorPools fetchs & lists the pools
+// GetCstorPools lists the pools
 func GetCstorPools(c *client.K8sClient, pools []string) error {
-	var (
-		cpools *v1.CStorPoolInstanceList
-		err    error
-	)
-	if len(pools) == 0 {
-		// List all
-		cpools, err = c.GetCSPIs(nil, "")
-	} else {
-		// Get one or more
-		cpools, err = c.GetCSPIs(pools, "")
-	}
+	cpools, err := c.GetCSPIs(pools, "")
 	if err != nil {
 		return errors.Wrap(err, "error listing pools")
 	}
@@ -72,7 +61,7 @@ func GetCstorPools(c *client.K8sClient, pools []string) error {
 			item.Status.ReadOnly,
 			item.Status.ProvisionedReplicas,
 			item.Status.HealthyReplicas,
-			item.Status.Phase,
+			string(item.Status.Phase),
 			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time))}})
 	}
 	if len(cpools.Items) == 0 {
