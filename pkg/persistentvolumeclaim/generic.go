@@ -51,9 +51,7 @@ func DescribeGenericVolumeClaim(pvc *corev1.PersistentVolumeClaim, pv *corev1.Pe
 	}
 	pvcInfo.CasType = casType
 	// 2. Print the details
-	err := util.PrintByTemplate("pvc", genericPvcInfoTemplate, pvcInfo)
-	if err != nil {
-		return err
-	}
+	_ = util.PrintByTemplate("pvc", genericPvcInfoTemplate, pvcInfo)
+
 	return nil
 }
