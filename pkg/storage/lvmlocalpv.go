@@ -34,6 +34,7 @@ const (
 func GetVolumeGroups(c *client.K8sClient, vgs []string) error {
 	lvmNodes, err := c.GetLVMNodes()
 	if err != nil {
+		// should this error be white-washed with return fmt.Errorf("no lvm volumegroups found")
 		return err
 	}
 	var rows []metav1.TableRow
@@ -53,8 +54,10 @@ func GetVolumeGroups(c *client.K8sClient, vgs []string) error {
 	}
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
+		// TODO: Improve this in issue #56
 		return fmt.Errorf("no lvm volumegroups found")
 	}
+	// TODO: return a []metav1.TableRow, error for stronger unit tests
 	util.TablePrinter(util.LVMvolgroupListColumnDefinitions, rows, printers.PrintOptions{Wide: true})
 	return nil
 }
