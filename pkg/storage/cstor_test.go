@@ -52,7 +52,7 @@ var cspi1 = cstorv1.CStorPoolInstance{
 		NodeSelector: map[string]string{"kubernetes.io/hostname": "node1"},
 		PoolConfig:   cstorv1.PoolConfig{DataRaidGroupType: "stripe", WriteCacheGroupType: "", Compression: "off"},
 		DataRaidGroups: []cstorv1.RaidGroup{{
-			[]cstorv1.CStorPoolInstanceBlockDevice{{"bd-1", 1234567, "/dev/disk/by-id/abcd/def"}}}},
+			CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-1", Capacity: 1234567, DevLink: "/dev/disk/by-id/abcd/def"}}}},
 		WriteCacheRaidGroups: nil,
 	},
 	Status: cstorv1.CStorPoolInstanceStatus{
@@ -103,7 +103,7 @@ var bd2 = v1alpha1.BlockDevice{
 		PhysicalSectorSize: 123456789,
 		LogicalSectorSize:  123456789,
 	},
-		FileSystem: v1alpha1.FileSystemInfo{"zfs_member", "/home/kubernetes/volume-abcd"}},
+		FileSystem: v1alpha1.FileSystemInfo{Type: "zfs_member", Mountpoint: "/home/kubernetes/volume-abcd"}},
 	Status: v1alpha1.DeviceStatus{
 		ClaimState: "Claimed",
 		State:      "Active",
@@ -162,7 +162,7 @@ var cspi2 = cstorv1.CStorPoolInstance{
 		NodeSelector: map[string]string{"kubernetes.io/hostname": "node2"},
 		PoolConfig:   cstorv1.PoolConfig{DataRaidGroupType: "stripe", WriteCacheGroupType: "", Compression: "off"},
 		DataRaidGroups: []cstorv1.RaidGroup{{
-			[]cstorv1.CStorPoolInstanceBlockDevice{{"bd2", 1234567, "/dev/disk/by-id/abcd/def"}}}},
+			CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd2", Capacity: 1234567, DevLink: "/dev/disk/by-id/abcd/def"}}}},
 		WriteCacheRaidGroups: nil,
 	},
 	Status: cstorv1.CStorPoolInstanceStatus{
