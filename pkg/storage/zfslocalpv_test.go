@@ -18,47 +18,12 @@ import (
 	"testing"
 
 	"github.com/openebs/openebsctl/pkg/client"
-	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
 	fakezfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakezfs "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/typed/zfs/v1/fake"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stest "k8s.io/client-go/testing"
 )
-
-var zfsNode1 = zfs.ZFSNode{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "ZFSNode",
-		APIVersion: "zfs.openebs.io/v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "node1",
-		Namespace: "zfs",
-		// OwnerReference: refers to the K8s-node where the zfs volume is created
-	},
-	Pools: []zfs.Pool{
-		{
-			Name: "zfs-pool1",
-			UUID: "15423895941648453427",
-			Free: resource.MustParse("33285828Ki"),
-		},
-	},
-}
-
-var zfsNode2 = zfs.ZFSNode{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "ZFSNode",
-		APIVersion: "zfs.openebs.io/v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "node2",
-		Namespace: "zfs",
-		// OwnerReference: refers to the K8s-node where the zfs volume is created
-	},
-	Pools: []zfs.Pool{{Name: "zfs-pool2", UUID: "15423895941648453428", Free: resource.MustParse("33285828Ki")},
-		{Name: "zfs-pool3", UUID: "15423895941648453426", Free: resource.MustParse("33285828Ki")}},
-}
 
 func TestGetZFSPools(t *testing.T) {
 	type args struct {

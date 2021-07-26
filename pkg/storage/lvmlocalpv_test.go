@@ -17,48 +17,13 @@ import (
 	"fmt"
 	"testing"
 
-	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	fakelvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakelvm "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/typed/lvm/v1alpha1/fake"
 	"github.com/openebs/openebsctl/pkg/client"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stest "k8s.io/client-go/testing"
 )
-
-var (
-	fourGigiByte = resource.MustParse("4Gi")
-	fiveGigiByte = resource.MustParse("5Gi")
-)
-var lvmNode1 = lvm.LVMNode{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "LVMNode",
-		APIVersion: "local.openebs.io/v1alpha1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "node1",
-		Namespace: "lvm",
-	},
-	VolumeGroups: []lvm.VolumeGroup{{Name: "lvmvg", UUID: "ed6fko-Lf33-AW2d-Vblk-cUJZ-sQt5-Gr4rcH", Size: fiveGigiByte,
-		Free: fourGigiByte, LVCount: 1, PVCount: 1},
-		{Name: "lvmvg2", UUID: "ed6fko-Lf33-AW2d-Vblk-cUJZ-sQt5-Hr4rcI", Size: fiveGigiByte,
-			Free: fourGigiByte, LVCount: 1, PVCount: 1}},
-}
-var lvmNode2 = lvm.LVMNode{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "LVMNode",
-		APIVersion: "local.openebs.io/v1alpha1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "node2",
-		Namespace: "lvm",
-	},
-	VolumeGroups: []lvm.VolumeGroup{{Name: "lvmvg", UUID: "ed6fko-Lf33-AW2d-Vblk-cUJZ-sQt5-Gr4rcH", Size: fiveGigiByte,
-		Free: fourGigiByte, LVCount: 2, PVCount: 2},
-		{Name: "lvmvg2", UUID: "ed6fko-Lf33-AW2d-Vblk-cUJZ-sQt5-Hr4rcI", Size: fiveGigiByte,
-			Free: fourGigiByte, LVCount: 1, PVCount: 1}},
-}
 
 func TestGetVolumeGroup(t *testing.T) {
 	type args struct {
