@@ -15,9 +15,11 @@ package storage
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	fakezfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakezfs "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/typed/zfs/v1/fake"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -51,7 +53,7 @@ func TestGetZFSPools(t *testing.T) {
 			nil,
 			[]metav1.TableRow{
 				{Cells: []interface{}{"node1", ""}},
-				{Cells: []interface{}{firstElemPrefix + "zfs-pool1", "32 GiB"}},
+				{Cells: []interface{}{lastElemPrefix + "zfs-pool1", "32 GiB"}},
 				{Cells: []interface{}{"", ""}},
 				{Cells: []interface{}{"node2", ""}},
 				{Cells: []interface{}{firstElemPrefix + "zfs-pool2", "32 GiB"}},
@@ -66,9 +68,18 @@ func TestGetZFSPools(t *testing.T) {
 			if tt.zfsfunc != nil {
 				tt.zfsfunc(tt.args.c)
 			}
-			if err := GetZFSPools(tt.args.c, tt.args.zfsnodes); (err != nil) != tt.wantErr {
+			if head, row, err := GetZFSPools(tt.args.c, tt.args.zfsnodes); (err != nil) != tt.wantErr {
 				t.Errorf("GetZFSPools() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err == nil {
+				if !reflect.DeepEqual(row, tt.want) {
+					t.Errorf("GetZFSPools() returned %v want = %v", row, tt.want)
+				}
+				if !reflect.DeepEqual(head, util.ZFSPoolListColumnDefinitions) {
+					t.Errorf("GetZFSPools() returned wrong headers = %v want = %v", head,
+						util.ZFSPoolListColumnDefinitions)
+				}
 			}
+
 		})
 	}
 }

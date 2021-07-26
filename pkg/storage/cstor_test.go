@@ -18,11 +18,13 @@ package storage
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	fakecstor "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/api/v2/pkg/client/clientset/versioned/typed/cstor/v1/fake"
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	corefake "k8s.io/client-go/kubernetes/fake"
@@ -56,8 +58,8 @@ func TestGetCstorPool(t *testing.T) {
 			},
 			nil,
 			[]metav1.TableRow{
-				{Cells: []interface{}{"pool-1", "node1", "174 GiB", "188 GiB", false, 2, 2, "ONLINE"}},
-				{Cells: []interface{}{"pool-2", "node2", "174 GiB", "188 GiB", false, 2, 2, "ONLINE"}}},
+				{Cells: []interface{}{"pool-1", "node1", "174 GiB", "188 GiB", false, int32(2), int32(2), "ONLINE"}},
+				{Cells: []interface{}{"pool-2", "node2", "174 GiB", "188 GiB", false, int32(2), int32(2), "ONLINE"}}},
 
 			false,
 		},
@@ -76,8 +78,21 @@ func TestGetCstorPool(t *testing.T) {
 			if tt.cstorfunc != nil {
 				tt.cstorfunc(tt.args.c)
 			}
-			if err := GetCstorPools(tt.args.c, tt.args.poolName); (err != nil) != tt.wantErr {
-				t.Errorf("DescribeCstorPool() error = %v, wantErr %v", err, tt.wantErr)
+			if head, row, err := GetCstorPools(tt.args.c, tt.args.poolName); (err != nil) != tt.wantErr {
+				t.Errorf("GetCstorPool() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err == nil {
+				if len(row) != len(tt.want) {
+					t.Errorf("GetCstorPool() returned %d rows, wanted %d elements", len(row), len(tt.want))
+				}
+				for i, cspi := range row {
+					if !reflect.DeepEqual(cspi.Cells[0:8], tt.want[i].Cells) {
+						t.Errorf("GetCstorPool() returned %v want = %v", row, tt.want)
+					}
+				}
+				if !reflect.DeepEqual(head, util.CstorPoolListColumnDefinations) {
+					t.Errorf("GetCstorPools() returned wrong headers = %v want = %v", head,
+						util.CstorPoolListColumnDefinations)
+				}
 			}
 			// TODO: Check all but the last item of want
 		})

@@ -15,11 +15,13 @@ package storage
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	fakelvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakelvm "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/typed/lvm/v1alpha1/fake"
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	k8stest "k8s.io/client-go/testing"
@@ -62,12 +64,12 @@ func TestGetVolumeGroup(t *testing.T) {
 			},
 			want: []metav1.TableRow{
 				{Cells: []interface{}{"node1", "", "", ""}},
-				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0GiB", "5.0GiB"}},
-				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0GiB", "5.0GiB"}},
+				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0 GiB", "5.0 GiB"}},
+				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0 GiB", "5.0 GiB"}},
 				{Cells: []interface{}{"", "", ""}},
 				{Cells: []interface{}{"node2", "", "", ""}},
-				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0GiB", "5.0GiB"}},
-				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0GiB", "5.0GiB"}},
+				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0 GiB", "5.0 GiB"}},
+				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0 GiB", "5.0 GiB"}},
 				{Cells: []interface{}{"", "", ""}},
 			},
 			wantErr: false,
@@ -80,8 +82,16 @@ func TestGetVolumeGroup(t *testing.T) {
 				tt.args.lvmfunc(tt.args.c)
 			}
 			// 2. Run the test & assert the result
-			if err := GetVolumeGroups(tt.args.c, tt.args.vg); (err != nil) != tt.wantErr {
+			if head, row, err := GetVolumeGroups(tt.args.c, tt.args.vg); (err != nil) != tt.wantErr {
 				t.Errorf("GetVolumeGroups() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err == nil {
+				if !reflect.DeepEqual(row, tt.want) {
+					t.Errorf("GetVolumeGroups() returned %v want = %v", row, tt.want)
+				}
+				if !reflect.DeepEqual(head, util.LVMvolgroupListColumnDefinitions) {
+					t.Errorf("GetVolumeGroups() returned wrong headers = %v want = %v", head,
+						util.LVMvolgroupListColumnDefinitions)
+				}
 			}
 		})
 	}

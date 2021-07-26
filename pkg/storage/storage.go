@@ -21,6 +21,8 @@ import (
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 // Get manages various implementations of Storage listing
@@ -30,30 +32,31 @@ func Get(pools []string, openebsNS string, casType string) error {
 	// 2. If casType is specified, call the specific function & exit
 	if f, ok := CasListMap()[casType]; ok {
 		// if a cas-type is found, run it and return the error
-		return f(k, pools)
+		header, rows, err := f(k, pools)
+		if err != nil {
+			return err
+		} else {
+			util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
+		}
 	} else if casType != "" {
 		return fmt.Errorf("cas-type %s is not supported", casType)
 	}
 	// 3. Call all functions & exit
-	var separator bool
 	for _, f := range CasList() {
-		if separator {
-			fmt.Println()
-		}
-		err := f(k, pools)
+		header, row, err := f(k, pools)
 		if err == nil {
+			// 4. Find the correct heading & print the rows
+			util.TablePrinter(header, row, printers.PrintOptions{Wide: true})
 			// A visual separator for different cas-type pools/storage entities
-			separator = true
-		} else {
-			separator = false
+			fmt.Println()
 		}
 	}
 	return nil
 }
 
 // CasList has a list of method implementations for different cas-types
-func CasList() []func(*client.K8sClient, []string) error {
-	return []func(*client.K8sClient, []string) error{
+func CasList() []func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
+	return []func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error){
 		GetCstorPools, GetVolumeGroups, GetZFSPools}
 }
 
@@ -82,9 +85,9 @@ func Describe(storages []string, openebsNs, casType string) error {
 }
 
 // CasListMap returns a map cas-types to functions for Storage listing
-func CasListMap() map[string]func(*client.K8sClient, []string) error {
+func CasListMap() map[string]func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	// a good hack to implement immutable maps in Golang & also write tests for it
-	return map[string]func(*client.K8sClient, []string) error{
+	return map[string]func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error){
 		util.CstorCasType: GetCstorPools,
 		util.LVMLocalPV:   GetVolumeGroups,
 		util.ZFSCasType:   GetZFSPools,

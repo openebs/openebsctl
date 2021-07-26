@@ -22,7 +22,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -31,11 +30,11 @@ const (
 )
 
 // GetVolumeGroups lists all volume groups by node
-func GetVolumeGroups(c *client.K8sClient, vgs []string) error {
+func GetVolumeGroups(c *client.K8sClient, vgs []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	lvmNodes, err := c.GetLVMNodes()
 	if err != nil {
 		// should this error be white-washed with return fmt.Errorf("no lvm volumegroups found")
-		return err
+		return nil, nil, err
 	}
 	var rows []metav1.TableRow
 	for _, lv := range lvmNodes.Items {
@@ -55,9 +54,7 @@ func GetVolumeGroups(c *client.K8sClient, vgs []string) error {
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
 		// TODO: Improve this in issue #56
-		return fmt.Errorf("no lvm volumegroups found")
+		return nil, nil, fmt.Errorf("no lvm volumegroups found")
 	}
-	// TODO: return a []metav1.TableRow, error for stronger unit tests
-	util.TablePrinter(util.LVMvolgroupListColumnDefinitions, rows, printers.PrintOptions{Wide: true})
-	return nil
+	return util.LVMvolgroupListColumnDefinitions, rows, nil
 }

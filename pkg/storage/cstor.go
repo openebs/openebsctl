@@ -46,10 +46,10 @@ RAID TYPE        : {{.RaidType}}
 )
 
 // GetCstorPools lists the pools
-func GetCstorPools(c *client.K8sClient, pools []string) error {
+func GetCstorPools(c *client.K8sClient, pools []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	cpools, err := c.GetCSPIs(pools, "")
 	if err != nil {
-		return errors.Wrap(err, "error listing pools")
+		return nil, nil, errors.Wrap(err, "error listing pools")
 	}
 	var rows []metav1.TableRow
 	for _, item := range cpools.Items {
@@ -65,10 +65,9 @@ func GetCstorPools(c *client.K8sClient, pools []string) error {
 			util.Duration(time.Since(item.ObjectMeta.CreationTimestamp.Time))}})
 	}
 	if len(cpools.Items) == 0 {
-		return fmt.Errorf("no cstor pools are found")
+		return nil, nil, fmt.Errorf("no cstor pools are found")
 	}
-	util.TablePrinter(util.CstorPoolListColumnDefinations, rows, printers.PrintOptions{Wide: true})
-	return nil
+	return util.CstorPoolListColumnDefinations, rows, nil
 }
 
 // DescribeCstorPool method runs info command and make call to DisplayPoolInfo to display the results
