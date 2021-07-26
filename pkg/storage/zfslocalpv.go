@@ -22,14 +22,13 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/printers"
 )
 
 // GetZFSPools lists all zfspools by zfsnodes
-func GetZFSPools(c *client.K8sClient, zfsnodes []string) error {
+func GetZFSPools(c *client.K8sClient, zfsnodes []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	zfsNodes, err := c.GetZFSNodes()
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	var rows []metav1.TableRow
 	for _, zfsNode := range zfsNodes.Items {
@@ -48,8 +47,7 @@ func GetZFSPools(c *client.K8sClient, zfsnodes []string) error {
 	}
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
-		return fmt.Errorf("no zfspools found")
+		return nil, nil, fmt.Errorf("no zfspools found")
 	}
-	util.TablePrinter(util.ZFSPoolListColumnDefinitions, rows, printers.PrintOptions{Wide: true})
-	return nil
+	return util.ZFSPoolListColumnDefinitions, rows, nil
 }
