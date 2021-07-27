@@ -17,10 +17,11 @@ limitations under the License.
 package util
 
 import (
+	"testing"
+
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
-	"testing"
 )
 
 var (
@@ -199,7 +200,7 @@ func TestGetReadyContainers(t *testing.T) {
 	}{
 		{
 			"valid Values",
-			args{containers: []corev1.ContainerStatus{{Ready: true},{Ready: true},{Ready: false}}},
+			args{containers: []corev1.ContainerStatus{{Ready: true}, {Ready: true}, {Ready: false}}},
 			"2/3",
 		},
 		{
@@ -229,22 +230,22 @@ func TestGetUsedCapacityFromCVR(t *testing.T) {
 		{
 			"Valid values",
 			args{cvrList: &cstorv1.CStorVolumeReplicaList{Items: []cstorv1.CStorVolumeReplica{{Status: cstorv1.CStorVolumeReplicaStatus{
-				Phase:              "Init",
-				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.1 GiB"},
-			}},{Status: cstorv1.CStorVolumeReplicaStatus{
-				Phase:              "Healthy",
-				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
+				Phase:    "Init",
+				Capacity: cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.1 GiB"},
+			}}, {Status: cstorv1.CStorVolumeReplicaStatus{
+				Phase:    "Healthy",
+				Capacity: cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
 			}}}}},
 			"2.5 GiB",
 		},
 		{
 			"Valid values",
 			args{cvrList: &cstorv1.CStorVolumeReplicaList{Items: []cstorv1.CStorVolumeReplica{{Status: cstorv1.CStorVolumeReplicaStatus{
-				Phase:              "Init",
-				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
-			}},{Status: cstorv1.CStorVolumeReplicaStatus{
-				Phase:              "Init",
-				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
+				Phase:    "Init",
+				Capacity: cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
+			}}, {Status: cstorv1.CStorVolumeReplicaStatus{
+				Phase:    "Init",
+				Capacity: cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
 			}}}}},
 			"",
 		},

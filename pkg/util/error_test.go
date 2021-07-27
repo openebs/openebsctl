@@ -18,8 +18,9 @@ package util
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"testing"
+
+	"github.com/pkg/errors"
 )
 
 func TestCheckErr(t *testing.T) {
@@ -34,7 +35,7 @@ func TestCheckErr(t *testing.T) {
 		{
 			"Error not nil",
 			args{
-				err:       errors.New("Some error occurred"),
+				err: errors.New("Some error occurred"),
 				handleErr: func(s string) {
 					fmt.Println("Handled")
 				},
@@ -43,7 +44,7 @@ func TestCheckErr(t *testing.T) {
 		{
 			"Error nil",
 			args{
-				err:       nil,
+				err: nil,
 				handleErr: func(s string) {
 					fmt.Println("Handled")
 				},

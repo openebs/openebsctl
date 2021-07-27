@@ -17,12 +17,13 @@ limitations under the License.
 package util
 
 import (
+	"time"
+
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 var (
