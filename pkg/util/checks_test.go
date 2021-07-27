@@ -19,6 +19,8 @@ package util
 import (
 	"reflect"
 	"testing"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestCheckForVol(t *testing.T) {
@@ -46,6 +48,35 @@ func TestCheckForVol(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := CheckForVol(tt.args.name, tt.args.vols); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("CheckForVol() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAccessModeToString(t *testing.T) {
+	type args struct {
+		accessModeArray []corev1.PersistentVolumeAccessMode
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"Valid Values",
+			args{[]corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce, corev1.ReadOnlyMany}},
+			"ReadWriteOnce ReadOnlyMany ",
+		},
+		{
+			"In valid Values",
+			args{[]corev1.PersistentVolumeAccessMode{}},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AccessModeToString(tt.args.accessModeArray); got != tt.want {
+				t.Errorf("AccessModeToString() = %v, want %v", got, tt.want)
 			}
 		})
 	}

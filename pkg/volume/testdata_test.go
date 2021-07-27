@@ -32,9 +32,6 @@ import (
 // Some storage sizes for PVs
 var (
 	fourGigiByte = resource.MustParse("4Gi")
-	//fiveGigaByte = resource.MustParse("5G")
-	//fiveGigaBit  = resource.MustParse("5G")
-	//fiveGigiBit  = resource.MustParse("5Gi")
 	blockFS = corev1.PersistentVolumeBlock
 )
 

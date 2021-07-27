@@ -20,8 +20,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-
-	v1 "k8s.io/api/storage/v1"
 )
 
 // CheckError prints err to stderr and exits with code 1 if err is not nil. Otherwise, it is a
@@ -41,15 +39,4 @@ func CheckErr(err error, handleErr func(string)) {
 		return
 	}
 	handleErr(err.Error())
-}
-
-// CheckVolAttachmentError is used to check if the volume is correctly attached
-// to the cspc
-func CheckVolAttachmentError(attachementStatus v1.VolumeAttachmentStatus) string {
-
-	if attachementStatus.Attached {
-		return "Attached"
-	}
-
-	return attachementStatus.AttachError.Message
 }
