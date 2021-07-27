@@ -230,7 +230,7 @@ func TestGetUsedCapacityFromCVR(t *testing.T) {
 			"Valid values",
 			args{cvrList: &cstorv1.CStorVolumeReplicaList{Items: []cstorv1.CStorVolumeReplica{{Status: cstorv1.CStorVolumeReplicaStatus{
 				Phase:              "Init",
-				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
+				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.1 GiB"},
 			}},{Status: cstorv1.CStorVolumeReplicaStatus{
 				Phase:              "Healthy",
 				Capacity:           cstorv1.CStorVolumeReplicaCapacityDetails{Total: "5.0 GiB", Used: "2.5 GiB"},
