@@ -19,12 +19,6 @@ package util
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 const (
-	// MinWidth used in tabwriter
-	MinWidth = 0
-	// MaxWidth used in tabwriter
-	MaxWidth = 0
-	// Padding used in tabwriter
-	Padding = 4
 	// OpenEBSCasTypeKey present in label of PV
 	OpenEBSCasTypeKey = "openebs.io/cas-type"
 	// Unknown to be retuned when cas type is not known
@@ -61,14 +55,28 @@ const (
 	LocalPVLVMCSIDriver = "local.csi.openebs.io"
 )
 
+// Constant CSI component-name label values
+const (
+	// CStorCSIControllerLabelValue is the label value of CSI controller STS & pod
+	CStorCSIControllerLabelValue = "openebs-cstor-csi-controller"
+	// JivaCSIControllerLabelValue is the label value of CSI controller STS & pod
+	JivaCSIControllerLabelValue = "openebs-jiva-csi-controller"
+	// LVMLocalPVcsiControllerLabelValue is the label value of CSI controller STS & pod
+	LVMLocalPVcsiControllerLabelValue = "openebs-lvm-controller"
+	// ZFSLocalPVcsiControllerLabelValue is the label value of CSI controller STS & pod
+	ZFSLocalPVcsiControllerLabelValue = "openebs-zfs-controller"
+)
+
 var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
+	// NOTE: Not including ZFSLocalPV as it'd break existing code
 	CasTypeAndComponentNameMap = map[string]string{
-		CstorCasType: "openebs-cstor-csi-controller",
-		JivaCasType:  "openebs-jiva-csi-controller",
-		LVMLocalPV:   "openebs-lvm-controller",
+		CstorCasType: CStorCSIControllerLabelValue,
+		JivaCasType:  JivaCSIControllerLabelValue,
+		LVMLocalPV:   LVMLocalPVcsiControllerLabelValue,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
+	// NOTE: Not including ZFSLocalPV as it'd break existing code
 	ComponentNameToCasTypeMap = map[string]string{
 		"openebs-cstor-csi-controller": CstorCasType,
 		"openebs-jiva-csi-controller":  JivaCasType,
@@ -80,8 +88,9 @@ var (
 		// This isn't supported by CLI
 		"openebs.io/provisioner-iscsi": JivaCasType,
 		"openebs.io/local":             "local",
-		"local.csi.openebs.io":         "localpv-lvm",
-		"zfs.csi.openebs.io":           "localpv-zfs",
+		// NOTE: In near future this might mean all local-pv volumes
+		"local.csi.openebs.io": LVMLocalPV,
+		"zfs.csi.openebs.io":   ZFSCasType,
 	}
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
 	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{

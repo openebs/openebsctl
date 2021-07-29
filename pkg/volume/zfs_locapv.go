@@ -26,6 +26,49 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const zfsVolInfo = `
+{{.Name}} Details :
+-----------------
+Name          : {{.Name}}
+Namespace     : {{.Namespace}}
+AccessMode    : {{.AccessMode}}
+CSIDriver     : {{.CSIDriver}}
+Capacity      : {{.Capacity}}
+PVC           : {{.PVC}}
+VolumePhase   : {{.VolumePhase}}
+StorageClass  : {{.StorageClass}}
+Version       : {{.Version}}
+Status        : {{.Status}
+VolumeType    : {{.VolumeType}}
+PoolName      : {{.PoolName}}
+FileSystem    : {{.FileSystem}}
+Compression   : {{.Compression}}
+Deduplication : {{.Dedup}}
+NodeID        : {{.NodeID}}
+Recordsize    : {{.Recordsize}}
+`
+
+// ZFSVolDesc is the output helper for ZfsVolDesc
+type ZFSVolDesc struct {
+	Name         string
+	Namespace    string
+	AccessMode   string
+	CSIDriver    string
+	Capacity     string
+	PVC          string
+	VolumePhase  corev1.PersistentVolumePhase
+	StorageClass string
+	Version      string
+	Status       string
+	VolumeType   string
+	PoolName     string
+	FileSystem   string
+	Compression  string
+	Dedup        string
+	NodeID       string
+	Recordsize   string
+}
+
 // GetZFSLocalPVs returns a list of ZFSVolumes
 func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	// 1. Fetch all relevant volume CRs without worrying about openebsNS
@@ -74,4 +117,49 @@ func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, op
 		})
 	}
 	return rows, nil
+}
+
+// DescribeZFSLocalPVs describes a single zfs-localpv volume
+func DescribeZFSLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) error {
+	if vol == nil {
+		return fmt.Errorf("ZFS volume nil")
+	}
+	zvols, _, err := c.GetZFSVols([]string{vol.Name}, util.List, "", util.MapOptions{})
+	if err != nil {
+		return err
+	}
+	zvol := zvols.Items[0]
+	var version string
+	if CSIctrl, err := c.GetCSIControllerSTS(util.ZFSLocalPVcsiControllerLabelValue); err == nil {
+		version = CSIctrl.Labels["openebs.io/version"]
+	}
+	if version == "" {
+		version = "N/A"
+	}
+	// TODO: Can NDM mark a zfs-localpv used volume as Claimed
+	// 1. Show some ZFS-pools
+	v := ZFSVolDesc{
+		AccessMode: util.AccessModeToString(vol.Spec.AccessModes),
+		Capacity:   vol.Spec.Capacity.Storage().String(),
+		CSIDriver:  vol.Spec.CSI.Driver,
+		Name:       vol.Name,
+		Namespace:  zvol.Name,
+		// assuming that zfsPVs aren't static-ally provisioned
+		PVC:          vol.Spec.ClaimRef.Name,
+		VolumePhase:  vol.Status.Phase,
+		StorageClass: vol.Spec.StorageClassName,
+		Version:      version,
+		// fix the duplicate entry
+		Status:      zvol.Status.State,
+		VolumeType:  zvol.Spec.VolumeType, // DATASET or ZVOL
+		PoolName:    zvol.Spec.PoolName,
+		FileSystem:  zvol.Spec.FsType,
+		Compression: zvol.Spec.Compression,
+		Dedup:       zvol.Spec.Dedup,
+		NodeID:      zvol.Spec.OwnerNodeID,
+		Recordsize:  zvol.Spec.RecordSize,
+	}
+	_ = util.PrintByTemplate("volume", zfsVolInfo, v)
+	// TODO: Add ZFSbackup, ZFSrestores, ZFSsnapshot info if available
+	return nil
 }
