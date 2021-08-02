@@ -91,6 +91,50 @@ func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSel
 }
 
 // GetZFSNodes return a list of ZFSNodes
-func (k K8sClient) GetZFSNodes() (*zfs.ZFSNodeList, error) {
-	return k.ZFCS.ZfsV1().ZFSNodes("").List(context.TODO(), metav1.ListOptions{})
+func (k K8sClient) GetZFSNodes(volNames []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*zfs.ZFSNodeList, map[string]zfs.ZFSNode, error) {
+	zfsNode, err := k.ZFCS.ZfsV1().ZFSNodes("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	var list []zfs.ZFSNode
+	if len(volNames) == 0 {
+		list = zfsNode.Items
+	} else {
+		zvsMap := make(map[string]zfs.ZFSNode)
+		for _, zn := range zfsNode.Items {
+			zvsMap[zn.Name] = zn
+		}
+		for _, name := range volNames {
+			if zv, ok := zvsMap[name]; ok {
+				list = append(list, zv)
+			} else {
+				fmt.Printf("Error from server (NotFound): zfsVolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &zfs.ZFSNodeList{
+			Items: list,
+		}, nil, nil
+	}
+	if rType == util.Map {
+		znMap := make(map[string]zfs.ZFSNode)
+		switch options.Key {
+		case util.Label:
+			for _, zn := range list {
+				if vol, ok := zn.Labels[options.LabelKey]; ok {
+					znMap[vol] = zn
+				}
+			}
+			return nil, znMap, nil
+		case util.Name:
+			for _, zn := range list {
+				znMap[zn.Name] = zn
+			}
+			return nil, znMap, nil
+		default:
+			return nil, nil, fmt.Errorf("invalid map options")
+		}
+	}
+	return nil, nil, fmt.Errorf("invalid return type")
 }

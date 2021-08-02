@@ -31,8 +31,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	cStorPoolInstanceInfoTemplate = `
+const cStorPoolInstanceInfoTemplate = `
 {{.Name}} Details :
 ----------------
 NAME             : {{.Name}}
@@ -43,7 +42,6 @@ READ ONLY STATUS : {{.ReadOnlyStatus}}
 STATUS	         : {{.Status}}
 RAID TYPE        : {{.RaidType}}
 `
-)
 
 // GetCstorPools lists the pools
 func GetCstorPools(c *client.K8sClient, pools []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
