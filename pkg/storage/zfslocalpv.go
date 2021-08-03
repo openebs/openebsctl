@@ -28,10 +28,10 @@ import (
 const zfsdesc = `
 {{.HostName}} Details :
 
-HOSTNAME      : {{.HostName}}
-Namespace     : {{.Namespace}}
-NumberOfPools : {{.NumberOfPools}}
-TotalFree     : {{.TotalFree}}
+HOSTNAME        : {{.HostName}}
+NAMESPACE       : {{.Namespace}}
+NUMBER OF POOLS : {{.NumberOfPools}}
+TOTAL FREE      : {{.TotalFree}}
 `
 
 // GetZFSPools lists all zfspools by zfsnodes
