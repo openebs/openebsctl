@@ -25,6 +25,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
+
+	"github.com/docker/go-units"
 	"github.com/dustin/go-humanize"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -123,4 +126,30 @@ func ConvertToIBytes(value string) string {
 		return value
 	}
 	return humanize.IBytes(iBytes)
+}
+
+// GetAvailableCapacity returns the available capacity irrespective of units
+func GetAvailableCapacity(total string, used string) string {
+	totalBytes, _ := units.RAMInBytes(total)
+	usedBytes, _ := units.RAMInBytes(used)
+	availableBytes := totalBytes - usedBytes
+	availableCapacity := humanize.IBytes(uint64(availableBytes))
+	return availableCapacity
+}
+
+// GetUsedPercentage returns the usage percentage irrespective of units
+func GetUsedPercentage(total string, used string) float64 {
+	totalBytes, _ := units.RAMInBytes(total)
+	usedBytes, _ := units.RAMInBytes(used)
+	percentage := (float64(usedBytes) / float64(totalBytes)) * 100
+	return percentage
+}
+
+// ColorStringOnStatus is used for coloring the strings based on statuses
+func ColorStringOnStatus(stringToColor string) string {
+	if stringToColor == "Healthy" || stringToColor == "Bound" || stringToColor == "Active" || stringToColor == "Running" || stringToColor == "Attached" || stringToColor == "ONLINE" {
+		return color.HiGreenString(stringToColor)
+	} else {
+		return color.HiRedString(stringToColor)
+	}
 }

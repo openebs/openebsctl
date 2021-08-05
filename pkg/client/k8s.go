@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	event "k8s.io/api/events/v1"
+
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -317,6 +319,33 @@ func (k K8sClient) GetBDs(bdNames []string, labelselector string) (*v1alpha1.Blo
 	}, nil
 }
 
+// GetBDCs returns a list of BlockDeviceClaims based on the values of bdcNames slice.
+// bdcNames slice if is nil or empty, it returns all the BDCs in the cluster.
+// bdcNames slice if is not nil or not empty, it return the BDCs whose names are present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetBDCs(bdcNames []string, labelselector string) (*v1alpha1.BlockDeviceClaimList, error) {
+	bds, err := k.OpenebsCS.OpenebsV1alpha1().BlockDeviceClaims(k.Ns).List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting block device")
+	}
+	if len(bdcNames) == 0 {
+		return bds, nil
+	}
+	bdcNameBDCmap := make(map[string]v1alpha1.BlockDeviceClaim)
+	for _, item := range bds.Items {
+		bdcNameBDCmap[item.Name] = item
+	}
+	var items = make([]v1alpha1.BlockDeviceClaim, 0)
+	for _, name := range bdcNames {
+		if _, ok := bdcNameBDCmap[name]; ok {
+			items = append(items, bdcNameBDCmap[name])
+		}
+	}
+	return &v1alpha1.BlockDeviceClaimList{
+		Items: items,
+	}, nil
+}
+
 /*
 	CSTOR STORAGE ENGINE SPECIFIC METHODS
 */
@@ -524,6 +553,15 @@ func (k K8sClient) GetCVRs(labelselector string) (*cstorv1.CStorVolumeReplicaLis
 	return cvrs, nil
 }
 
+// GetCSPC returns the CStorPoolCluster for cStor volume using the poolName passed.
+func (k K8sClient) GetCSPC(poolName string) (*cstorv1.CStorPoolCluster, error) {
+	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolClusters(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting cspc")
+	}
+	return cStorPool, nil
+}
+
 // GetCSPI returns the CStorPoolInstance for cStor volume using the poolName passed.
 func (k K8sClient) GetCSPI(poolName string) (*cstorv1.CStorPoolInstance, error) {
 	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})
@@ -656,4 +694,12 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 	} else {
 		return nil, fmt.Errorf("got 0 statefulsets with the label openebs.io/component-name=%s", name)
 	}
+}
+
+func (k K8sClient) GetEvents(fieldSelector string) (*event.EventList, error) {
+	events, err := k.K8sCS.EventsV1().Events("").List(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector})
+	if err != nil {
+		return nil, fmt.Errorf("error getting events for the resource : %v", err)
+	}
+	return events, nil
 }

@@ -40,15 +40,16 @@ func Get(pools []string, openebsNS string, casType string) error {
 		}
 	} else if casType != "" {
 		return fmt.Errorf("cas-type %s is not supported", casType)
-	}
-	// 3. Call all functions & exit
-	for _, f := range CasList() {
-		header, row, err := f(k, pools)
-		if err == nil {
-			// 4. Find the correct heading & print the rows
-			util.TablePrinter(header, row, printers.PrintOptions{Wide: true})
-			// A visual separator for different cas-type pools/storage entities
-			fmt.Println()
+	} else {
+		// 3. Call all functions & exit
+		for _, f := range CasList() {
+			header, row, err := f(k, pools)
+			if err == nil {
+				// 4. Find the correct heading & print the rows
+				util.TablePrinter(header, row, printers.PrintOptions{Wide: true})
+				// A visual separator for different cas-type pools/storage entities
+				fmt.Println()
+			}
 		}
 	}
 	return nil

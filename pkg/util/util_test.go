@@ -138,3 +138,33 @@ func TestConvertToIBytes(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUsedPercentage(t *testing.T) {
+	type args struct {
+		total string
+		used  string
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			"Test 1",
+			args{total: "12 GiB", used: "1 GiB"},
+			8.333333333333332,
+		},
+		{
+			"Test 2",
+			args{total: "12 GiB", used: "100 MiB"},
+			0.8138020833333334,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetUsedPercentage(tt.args.total, tt.args.used); got != tt.want {
+				t.Errorf("GetUsedPercentage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
