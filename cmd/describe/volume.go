@@ -36,7 +36,6 @@ Advanced: Override the auto-detected OPENEBS_NAMESPACE
 
 // NewCmdDescribeVolume displays OpenEBS Volume information.
 func NewCmdDescribeVolume() *cobra.Command {
-	var casType string
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"volumes", "vol", "v"},
@@ -49,6 +48,5 @@ func NewCmdDescribeVolume() *cobra.Command {
 			util.CheckErr(volume.Describe(args, openebsNS), util.Fatal)
 		},
 	}
-	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	return cmd
 }
