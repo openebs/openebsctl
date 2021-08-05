@@ -106,9 +106,14 @@ func TestDescribeZFSNode(t *testing.T) {
 			false,
 		},
 		{
-			"one ZFS node exist",
+			"one ZFS node exist with differing size units",
 			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode3)}, sName: "node3"},
 			false,
+		},
+		{
+			"two ZFS node exist, none asked for",
+			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode1, &zfsNode3)}, sName: "cstor-pool-name"},
+			true,
 		},
 	}
 	for _, tt := range tests {
