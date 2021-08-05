@@ -104,7 +104,6 @@ func Describe(vols []string, openebsNs string) error {
 				if zfs != nil && zfs.Items != nil && len(zfs.Items) > 0 {
 					k.Ns = zfs.Items[0].Namespace
 				}
-				err = DescribeZFSLocalPVs(k, &pv)
 				if err != nil {
 					return err
 				}

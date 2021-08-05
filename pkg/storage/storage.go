@@ -85,12 +85,11 @@ func Describe(storages []string, openebsNs, casType string) error {
 	if casType != "" {
 		if work, ok := CasDescribeMap()[casType]; ok {
 			for _, storage := range storages {
-				work(k, storage)
+				_ = work(k, storage)
 			}
 			return nil
-		} else {
-			return fmt.Errorf("")
 		}
+		return fmt.Errorf("cas-type %s unknown", casType)
 	}
 
 	// 4. Brute-force run describe the storage by all cas-type functions

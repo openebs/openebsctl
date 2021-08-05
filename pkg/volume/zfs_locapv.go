@@ -38,7 +38,7 @@ PVC           : {{.PVC}}
 VolumePhase   : {{.VolumePhase}}
 StorageClass  : {{.StorageClass}}
 Version       : {{.Version}}
-Status        : {{.Status}
+Status        : {{.Status}}
 VolumeType    : {{.VolumeType}}
 PoolName      : {{.PoolName}}
 FileSystem    : {{.FileSystem}}
