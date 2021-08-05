@@ -76,6 +76,9 @@ func DescribeZFSNode(c *client.K8sClient, sName string) error {
 	if err != nil {
 		return err
 	}
+	if len(zfsInfo.Items) == 0 {
+		return fmt.Errorf("zfsnode %s not found", sName)
+	}
 	zfsN := zfsInfo.Items[0]
 	var totalFree resource.Quantity
 	for _, pools := range zfsN.Pools {

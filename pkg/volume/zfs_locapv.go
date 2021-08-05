@@ -143,7 +143,7 @@ func DescribeZFSLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		Capacity:   vol.Spec.Capacity.Storage().String(),
 		CSIDriver:  vol.Spec.CSI.Driver,
 		Name:       vol.Name,
-		Namespace:  zvol.Name,
+		Namespace:  zvol.Namespace,
 		// assuming that zfsPVs aren't static-ally provisioned
 		PVC:          vol.Spec.ClaimRef.Name,
 		VolumePhase:  vol.Status.Phase,

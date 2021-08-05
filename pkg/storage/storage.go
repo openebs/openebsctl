@@ -77,8 +77,6 @@ func Describe(storages []string, openebsNs, casType string) error {
 			}
 		} else if val, ok := nsMap[casType]; ok {
 			k.Ns = val
-		} else {
-			return fmt.Errorf("please specify a valid --cas-type and --openebs-namespace")
 		}
 	}
 	// 3. Run a specific cas-type function
