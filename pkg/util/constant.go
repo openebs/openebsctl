@@ -85,12 +85,10 @@ var (
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
 		CStorCSIDriver: CstorCasType,
-		// This isn't supported by CLI
-		"openebs.io/provisioner-iscsi": JivaCasType,
-		"openebs.io/local":             "local",
+		JivaCSIDriver:  JivaCasType,
 		// NOTE: In near future this might mean all local-pv volumes
-		"local.csi.openebs.io": LVMLocalPV,
-		"zfs.csi.openebs.io":   ZFSCasType,
+		LocalPVLVMCSIDriver: LVMLocalPV,
+		ZFSCSIDriver:        ZFSCasType,
 	}
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
 	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{
