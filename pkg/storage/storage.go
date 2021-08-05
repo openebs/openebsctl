@@ -60,16 +60,44 @@ func CasList() []func(*client.K8sClient, []string) ([]metav1.TableColumnDefiniti
 }
 
 // Describe manages various implementations of Storage Describing
-func Describe(storages []string, openebsNs string) error {
+func Describe(storages []string, openebsNs, casType string) error {
 	// 1. Create the clientset
 	k, _ := client.NewK8sClient(openebsNs)
-	// 2. Brute-force run describe the storage by all cas-type functions
+	// 2. Get the namespace
+	nsMap, _ := k.GetOpenEBSNamespaceMap()
+	if openebsNs == "" {
+		if casType == util.ZFSCasType {
+			// a temporary way to get the zfs-namespace
+			zfs, _, err := k.GetZFSNodes(nil, util.List, "", util.MapOptions{})
+			if err != nil {
+				return fmt.Errorf("please specify --openebs-namespace for ZFS LocalPV")
+			}
+			if zfs != nil && zfs.Items != nil && len(zfs.Items) > 0 {
+				k.Ns = zfs.Items[0].Namespace
+			}
+		} else if val, ok := nsMap[casType]; ok {
+			k.Ns = val
+		}
+	}
+	// 3. Run a specific cas-type function
+	if casType != "" {
+		if work, ok := CasDescribeMap()[casType]; ok {
+			for _, storage := range storages {
+				_ = work(k, storage)
+			}
+			return nil
+		}
+		return fmt.Errorf("cas-type %s unknown", casType)
+	}
+
+	// 4. Brute-force run describe the storage by all cas-type functions
 	for _, storageName := range storages {
 		for _, work := range CasDescribeList() {
 			if err := work(k, storageName); err == nil {
 				continue
 			}
 			// TODO: Should the errors be logged
+			// Should we ask the user to specify a cas-type for a useful error
 		}
 	}
 	return nil
