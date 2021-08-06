@@ -32,9 +32,11 @@ import (
 
 // DebugCstorVolumeClaim is used to debug a cstor volume by calling various modules
 func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
+	// 1. Main Struture Creation which contains all cstor CRs, this structure will be passed accross all modules.
 	var cstorResources util.CstorVolumeResources
 	cstorResources.PVC, _ = k.GetPVC(pvc.Name, "default")
 	cstorResources.PV = pv
+	// 2. Fill in the available CRs
 	if pv != nil {
 		cv, _ := k.GetCV(pv.Name)
 		cstorResources.CV = cv
@@ -46,6 +48,7 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 		cstorResources.CVRs = cvrs
 	}
 	sc, _ := k.GetSC(*pvc.Spec.StorageClassName)
+	// 3. Fill in the Pool and Blockdevice Details
 	if sc != nil {
 		cspc, _ := k.GetCSPC(sc.Parameters["cstorPoolCluster"])
 		cstorResources.CSPC = cspc
@@ -53,7 +56,7 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 			cspis, _ := k.GetCSPIs(nil, "openebs.io/cas-type=cstor,openebs.io/cstor-pool-cluster="+cspc.Name)
 			cstorResources.CSPIs = cspis
 			expectedBlockDevicesInPool := make(map[string]bool)
-
+			// This map contains the list of BDs we specified at the time of Pool Creation
 			for _, pool := range cspc.Spec.Pools {
 				dataRaidGroups := pool.DataRaidGroups
 				for _, dataRaidGroup := range dataRaidGroups {
@@ -62,7 +65,7 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 					}
 				}
 			}
-
+			// This list contains the list of BDs which are actually present in the system.
 			var presentBlockDevicesInPool []string
 			for _, pool := range cspis.Items {
 				raidGroupsInPool := pool.GetAllRaidGroups()
@@ -71,6 +74,7 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 				}
 			}
 
+			// Mark the present BDs are true.
 			cstorResources.PresentBDs, _ = k.GetBDs(presentBlockDevicesInPool, "")
 			for _, item := range cstorResources.PresentBDs.Items {
 				if _, ok := expectedBlockDevicesInPool[item.Name]; ok {
@@ -82,14 +86,17 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 
 		}
 	}
+	// 4. Call the resource showing module
 	_ = resourceStatus(cstorResources)
 	return nil
 }
 
 func resourceStatus(crs util.CstorVolumeResources) error {
+	// 1. Fetch the total and usage details and humanize them
 	var totalCapacity, usedCapacity, availableCapacity string
 	totalCapacity = util.ConvertToIBytes(crs.PVC.Spec.Resources.Requests.Storage().String())
 	usedCapacity = util.ConvertToIBytes(util.GetUsedCapacityFromCVR(crs.CVRs))
+	// 2. Calculate the available capacity and usage percentage is used capacity is available
 	if usedCapacity != "" {
 		availableCapacity = util.GetAvailableCapacity(totalCapacity, usedCapacity)
 		percentage := util.GetUsedPercentage(totalCapacity, usedCapacity)
@@ -99,13 +106,10 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 			availableCapacity = color.HiGreenString(availableCapacity)
 		}
 	}
+	// 3. Display the usage status
 	_, _ = fmt.Fprint(os.Stdout, "Volume Usage Stats:\n-------------------\n")
 
-	util.TablePrinter([]metav1.TableColumnDefinition{
-		{Name: "Total Capacity", Type: "string"},
-		{Name: "Used Capacity", Type: "string"},
-		{Name: "Available Capacity", Type: "string"},
-	}, []metav1.TableRow{{Cells: []interface{}{totalCapacity, usedCapacity, availableCapacity}}}, printers.PrintOptions{})
+	util.TablePrinter(util.VolumeTotalAndUsageDetailColumnDefinitions, []metav1.TableRow{{Cells: []interface{}{totalCapacity, usedCapacity, availableCapacity}}}, printers.PrintOptions{})
 
 	_, _ = fmt.Fprint(os.Stdout, "\nRelated CR Statuses:\n-------------------\n")
 
@@ -115,7 +119,6 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	} else {
 		crStatusRows = append(
 			crStatusRows,
-
 			metav1.TableRow{Cells: []interface{}{"PersistentVolume", "", util.ColorStringOnStatus("Not Found")}},
 		)
 	}
@@ -134,12 +137,8 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	} else {
 		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeAttachment", "", util.ColorStringOnStatus("Volume Not Attached to Application")}})
 	}
-
-	util.TablePrinter([]metav1.TableColumnDefinition{
-		{Name: "Kind", Type: "string"},
-		{Name: "Name", Type: "string"},
-		{Name: "Status", Type: "string"},
-	}, crStatusRows, printers.PrintOptions{})
+	// 4. Display the CRs statuses
+	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
 	_, _ = fmt.Fprint(os.Stdout, "\nReplica Statuses:\n-------------------\n")
 	crStatusRows = []metav1.TableRow{}
@@ -148,12 +147,8 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{item.Kind, item.Name, util.ColorStringOnStatus(string(item.Status.Phase))}})
 		}
 	}
-
-	util.TablePrinter([]metav1.TableColumnDefinition{
-		{Name: "Kind", Type: "string"},
-		{Name: "Name", Type: "string"},
-		{Name: "Status", Type: "string"},
-	}, crStatusRows, printers.PrintOptions{})
+	// 5. Display the CRs statuses
+	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
 	_, _ = fmt.Fprint(os.Stdout, "\nBlockDevice and BlockDeviceClaim Statuses:\n-------------------\n")
 	crStatusRows = []metav1.TableRow{}
@@ -173,12 +168,8 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{item.Kind, item.Name, util.ColorStringOnStatus(string(item.Status.Phase))}})
 		}
 	}
-
-	util.TablePrinter([]metav1.TableColumnDefinition{
-		{Name: "Kind", Type: "string"},
-		{Name: "Name", Type: "string"},
-		{Name: "Status", Type: "string"},
-	}, crStatusRows, printers.PrintOptions{})
+	// 6. Display the BDs and BDCs statuses
+	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
 	_, _ = fmt.Fprint(os.Stdout, "\nPool Instance Statuses:\n-------------------\n")
 	crStatusRows = []metav1.TableRow{}
@@ -187,12 +178,8 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{item.Kind, item.Name, util.ColorStringOnStatus(string(item.Status.Phase))}})
 		}
 	}
-
-	util.TablePrinter([]metav1.TableColumnDefinition{
-		{Name: "Kind", Type: "string"},
-		{Name: "Name", Type: "string"},
-		{Name: "Status", Type: "string"},
-	}, crStatusRows, printers.PrintOptions{})
+	// 7. Display the Pool statuses
+	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
 	return nil
 }

@@ -19,12 +19,6 @@ package util
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 const (
-	// MinWidth used in tabwriter
-	MinWidth = 0
-	// MaxWidth used in tabwriter
-	MaxWidth = 0
-	// Padding used in tabwriter
-	Padding = 4
 	// OpenEBSCasTypeKey present in label of PV
 	OpenEBSCasTypeKey = "openebs.io/cas-type"
 	// Unknown to be retuned when cas type is not known
@@ -193,5 +187,19 @@ var (
 		{Name: "Capacity", Type: "string"},
 		{Name: "Storageclass", Type: "string"},
 		{Name: "Age", Type: "string"},
+	}
+
+	// CstorVolumeCRStatusColumnDefinitions stores the Table headers for Cstor CRs status details
+	CstorVolumeCRStatusColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Kind", Type: "string"},
+		{Name: "Name", Type: "string"},
+		{Name: "Status", Type: "string"},
+	}
+
+	// VolumeTotalAndUsageDetailColumnDefinitions stores the Table headers for volume usage details
+	VolumeTotalAndUsageDetailColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Total Capacity", Type: "string"},
+		{Name: "Used Capacity", Type: "string"},
+		{Name: "Available Capacity", Type: "string"},
 	}
 )

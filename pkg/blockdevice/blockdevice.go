@@ -17,7 +17,7 @@ limitations under the License.
 package blockdevice
 
 import (
-	"github.com/dustin/go-humanize"
+	"github.com/docker/go-units"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -77,7 +77,7 @@ func createTreeByNode(k *client.K8sClient, bdNames []string) error {
 				Cells: []interface{}{
 					prefix + bd.Name,
 					bd.Spec.Path,
-					humanize.IBytes(bd.Spec.Capacity.Storage),
+					units.BytesSize(float64(bd.Spec.Capacity.Storage)),
 					bd.Status.ClaimState,
 					bd.Status.State,
 					bd.Spec.FileSystem.Type,

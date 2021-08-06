@@ -55,7 +55,7 @@ func Debug(pvcs []string, namespace string, openebsNs string) error {
 				k.Ns = val
 			}
 		}
-		// 7. Describe the volume based on its casType
+		// 7. Debug the volume based on its casType
 		if desc, ok := CasDebugMap()[casType]; ok {
 			err = desc(k, &pvc, pv)
 			if err != nil {

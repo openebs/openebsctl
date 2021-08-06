@@ -18,9 +18,9 @@ package storage
 
 import (
 	"fmt"
+	"github.com/docker/go-units"
 	"time"
 
-	"github.com/dustin/go-humanize"
 	"github.com/openebs/api/v2/pkg/apis/types"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -108,7 +108,7 @@ func DescribeCstorPool(c *client.K8sClient, poolName string) error {
 		if err != nil {
 			fmt.Printf("Could not find the blockdevice : %s\n", item)
 		} else {
-			bdRows = append(bdRows, metav1.TableRow{Cells: []interface{}{bd.Name, humanize.IBytes(bd.Spec.Capacity.Storage), bd.Status.State}})
+			bdRows = append(bdRows, metav1.TableRow{Cells: []interface{}{bd.Name, units.BytesSize(float64(bd.Spec.Capacity.Storage)), bd.Status.State}})
 		}
 	}
 	if len(bdRows) != 0 {

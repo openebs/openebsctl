@@ -168,3 +168,47 @@ func TestGetUsedPercentage(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAvailableCapacity(t *testing.T) {
+	type args struct {
+		total string
+		used  string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"Test 1",
+			args{
+				total: "20GiB",
+				used:  "655MiB",
+			},
+			"19.36GiB",
+		},
+		{
+			"Test 2",
+			args{
+				total: "21.66GiB",
+				used:  "12.221GiB",
+			},
+			"9.439GiB",
+		},
+		{
+			"Test 2",
+			args{
+				total: "21.66GiB",
+				used:  "12.221MiB",
+			},
+			"21.65GiB",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetAvailableCapacity(tt.args.total, tt.args.used); got != tt.want {
+				t.Errorf("GetAvailableCapacity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

@@ -28,7 +28,6 @@ import (
 	"github.com/fatih/color"
 
 	"github.com/docker/go-units"
-	"github.com/dustin/go-humanize"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
@@ -50,7 +49,7 @@ func Fatal(msg string) {
 		if !strings.HasSuffix(msg, "\n") {
 			msg += "\n"
 		}
-		fmt.Fprint(os.Stderr, msg)
+		_, _ = fmt.Fprint(os.Stderr, msg)
 	}
 	os.Exit(1)
 }
@@ -121,11 +120,11 @@ func ConvertToIBytes(value string) string {
 	if value == "" {
 		return value
 	}
-	iBytes, err := humanize.ParseBytes(value)
+	iBytes, err := units.RAMInBytes(value)
 	if err != nil {
 		return value
 	}
-	return humanize.IBytes(iBytes)
+	return units.BytesSize(float64(iBytes))
 }
 
 // GetAvailableCapacity returns the available capacity irrespective of units
@@ -133,7 +132,7 @@ func GetAvailableCapacity(total string, used string) string {
 	totalBytes, _ := units.RAMInBytes(total)
 	usedBytes, _ := units.RAMInBytes(used)
 	availableBytes := totalBytes - usedBytes
-	availableCapacity := humanize.IBytes(uint64(availableBytes))
+	availableCapacity := units.BytesSize(float64(availableBytes))
 	return availableCapacity
 }
 
