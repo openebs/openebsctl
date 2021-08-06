@@ -38,6 +38,7 @@ Advanced: Override the auto-detected OPENEBS_NAMESPACE
 
 // NewCmdDescribePVC Displays the pvc describe details
 func NewCmdDescribePVC() *cobra.Command {
+	var debug bool
 	cmd := &cobra.Command{
 		Use:     "pvc",
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
@@ -50,8 +51,14 @@ func NewCmdDescribePVC() *cobra.Command {
 				pvNs = "default"
 			}
 			openebsNamespace, _ = cmd.Flags().GetString("openebs-namespace")
-			util.CheckErr(persistentvolumeclaim.Describe(args, pvNs, openebsNamespace), util.Fatal)
+			if debug {
+				util.CheckErr(persistentvolumeclaim.Debug(args, pvNs, openebsNamespace), util.Fatal)
+			} else {
+				util.CheckErr(persistentvolumeclaim.Describe(args, pvNs, openebsNamespace), util.Fatal)
+			}
+
 		},
 	}
+	cmd.Flags().BoolVar(&debug, "debug", false, "Debug cstor volume")
 	return cmd
 }

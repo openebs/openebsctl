@@ -17,14 +17,16 @@ limitations under the License.
 package persistentvolumeclaim
 
 import (
+	"fmt"
+
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// Describe manages various implementations of PersistentVolumeClaim Describing
-func Describe(pvcs []string, namespace string, openebsNs string) error {
+// Debug manages various implementations of PersistentVolumeClaim Describing
+func Debug(pvcs []string, namespace string, openebsNs string) error {
 	if pvcs == nil {
 		return errors.New("please provide atleast one pvc name to describe")
 	}
@@ -34,7 +36,7 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 	// 1. Get a list of required PersistentVolumeClaims
 	var pvcList *corev1.PersistentVolumeClaimList
 	pvcList, err := k.GetPVCs(namespace, pvcs, "")
-	if err != nil {
+	if len(pvcList.Items) == 0 || err != nil {
 		return errors.New("no pvcs found corresponding to the names")
 	}
 	// 2. Get the namespaces
@@ -52,28 +54,23 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 				k.Ns = val
 			}
 		}
-		// 7. Describe the volume based on its casType
-		if desc, ok := CasDescribeMap()[casType]; ok {
+		// 7. Debug the volume based on its casType
+		if desc, ok := CasDebugMap()[casType]; ok {
 			err = desc(k, &pvc, pv)
 			if err != nil {
 				continue
 			}
 		} else {
-			// Describe volume with some generic stuffs if casType is not understood
-			err := DescribeGenericVolumeClaim(&pvc, pv, casType)
-			if err != nil {
-				continue
-			}
+			fmt.Printf("Debugging is currently not supported for %s Cas Type PVCs\n", casType)
 		}
 	}
 	return nil
 }
 
-// CasDescribeMap returns a map cas-types to functions for persistentvolumeclaim describing
-func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume) error {
+// CasDebugMap returns a map cas-types to functions for persistentvolumeclaim debugging
+func CasDebugMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume) error{
-		util.JivaCasType:  DescribeJivaVolumeClaim,
-		util.CstorCasType: DescribeCstorVolumeClaim,
+		util.CstorCasType: DebugCstorVolumeClaim,
 	}
 }

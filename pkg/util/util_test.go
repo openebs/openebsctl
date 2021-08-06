@@ -138,3 +138,77 @@ func TestConvertToIBytes(t *testing.T) {
 		})
 	}
 }
+
+func TestGetUsedPercentage(t *testing.T) {
+	type args struct {
+		total string
+		used  string
+	}
+	tests := []struct {
+		name string
+		args args
+		want float64
+	}{
+		{
+			"Test with same units",
+			args{total: "12 GiB", used: "1 GiB"},
+			8.333333333333332,
+		},
+		{
+			"Test with different units",
+			args{total: "12 GiB", used: "100 MiB"},
+			0.8138020833333334,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetUsedPercentage(tt.args.total, tt.args.used); got != tt.want {
+				t.Errorf("GetUsedPercentage() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetAvailableCapacity(t *testing.T) {
+	type args struct {
+		total string
+		used  string
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"Test with different units",
+			args{
+				total: "20GiB",
+				used:  "655MiB",
+			},
+			"19.36GiB",
+		},
+		{
+			"Test with same units with mutiple precisions",
+			args{
+				total: "21.66GiB",
+				used:  "12.221GiB",
+			},
+			"9.439GiB",
+		},
+		{
+			"Test with different units with mutiple precisions",
+			args{
+				total: "21.66GiB",
+				used:  "12.221MiB",
+			},
+			"21.65GiB",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetAvailableCapacity(tt.args.total, tt.args.used); got != tt.want {
+				t.Errorf("GetAvailableCapacity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

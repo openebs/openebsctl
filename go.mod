@@ -3,7 +3,8 @@ module github.com/openebs/openebsctl
 go 1.16
 
 require (
-	github.com/dustin/go-humanize v1.0.0
+	github.com/docker/go-units v0.4.0
+	github.com/fatih/color v1.7.0
 	github.com/openebs/api/v2 v2.3.0
 	github.com/openebs/jiva-operator v1.12.2-0.20210607114402-811a3af7c34a
 	github.com/openebs/lvm-localpv v0.6.0

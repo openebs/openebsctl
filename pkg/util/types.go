@@ -208,3 +208,18 @@ const (
 	// Label key if want to make the keys on labels
 	Label Key = "label"
 )
+
+// CstorVolumeResources would contain all the resources needed for debugging a Cstor Volume
+type CstorVolumeResources struct {
+	PV          *corev1.PersistentVolume
+	PVC         *corev1.PersistentVolumeClaim
+	CV          *v1.CStorVolume
+	CVC         *v1.CStorVolumeConfig
+	CVA         *v1.CStorVolumeAttachment
+	CVRs        *v1.CStorVolumeReplicaList
+	PresentBDs  *v1alpha1.BlockDeviceList
+	ExpectedBDs map[string]bool
+	BDCs        *v1alpha1.BlockDeviceClaimList
+	CSPIs       *v1.CStorPoolInstanceList
+	CSPC        *v1.CStorPoolCluster
+}

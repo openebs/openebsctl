@@ -201,4 +201,18 @@ var (
 		{Name: "Storageclass", Type: "string"},
 		{Name: "Age", Type: "string"},
 	}
+
+	// CstorVolumeCRStatusColumnDefinitions stores the Table headers for Cstor CRs status details
+	CstorVolumeCRStatusColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Kind", Type: "string"},
+		{Name: "Name", Type: "string"},
+		{Name: "Status", Type: "string"},
+	}
+
+	// VolumeTotalAndUsageDetailColumnDefinitions stores the Table headers for volume usage details
+	VolumeTotalAndUsageDetailColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Total Capacity", Type: "string"},
+		{Name: "Used Capacity", Type: "string"},
+		{Name: "Available Capacity", Type: "string"},
+	}
 )
