@@ -150,12 +150,12 @@ func TestGetUsedPercentage(t *testing.T) {
 		want float64
 	}{
 		{
-			"Test 1",
+			"Test with same units",
 			args{total: "12 GiB", used: "1 GiB"},
 			8.333333333333332,
 		},
 		{
-			"Test 2",
+			"Test with different units",
 			args{total: "12 GiB", used: "100 MiB"},
 			0.8138020833333334,
 		},
@@ -180,7 +180,7 @@ func TestGetAvailableCapacity(t *testing.T) {
 		want string
 	}{
 		{
-			"Test 1",
+			"Test with different units",
 			args{
 				total: "20GiB",
 				used:  "655MiB",
@@ -188,7 +188,7 @@ func TestGetAvailableCapacity(t *testing.T) {
 			"19.36GiB",
 		},
 		{
-			"Test 2",
+			"Test with same units with mutiple precisions",
 			args{
 				total: "21.66GiB",
 				used:  "12.221GiB",
@@ -196,7 +196,7 @@ func TestGetAvailableCapacity(t *testing.T) {
 			"9.439GiB",
 		},
 		{
-			"Test 2",
+			"Test with different units with mutiple precisions",
 			args{
 				total: "21.66GiB",
 				used:  "12.221MiB",

@@ -34,7 +34,7 @@ import (
 func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
 	// 1. Main Struture Creation which contains all cstor CRs, this structure will be passed accross all modules.
 	var cstorResources util.CstorVolumeResources
-	cstorResources.PVC, _ = k.GetPVC(pvc.Name, "default")
+	cstorResources.PVC = pvc
 	cstorResources.PV = pv
 	// 2. Fill in the available CRs
 	if pv != nil {

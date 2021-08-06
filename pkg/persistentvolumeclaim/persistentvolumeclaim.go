@@ -42,7 +42,6 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 	// 3. Range over the list of PVCs
 	for _, pvc := range pvcList.Items {
 		// 4. Fetch the storage class, used to get the cas-type
-		// TODO: Add cas-type label in every storage engine pv
 		sc, _ := k.GetSC(*pvc.Spec.StorageClassName)
 		pv, _ := k.GetPV(pvc.Spec.VolumeName)
 		// 5. Get cas type
