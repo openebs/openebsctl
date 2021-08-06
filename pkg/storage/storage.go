@@ -93,9 +93,7 @@ func Describe(storages []string, openebsNs, casType string) error {
 	// 4. Brute-force run describe the storage by all cas-type functions
 	for _, storageName := range storages {
 		for _, work := range CasDescribeList() {
-			if err := work(k, storageName); err == nil {
-				continue
-			}
+			_ = work(k, storageName)
 			// TODO: Should the errors be logged
 			// Should we ask the user to specify a cas-type for a useful error
 		}
