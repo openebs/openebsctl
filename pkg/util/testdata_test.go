@@ -54,6 +54,9 @@ var (
 		},
 		Status: corev1.PersistentVolumeStatus{Phase: corev1.VolumeBound},
 	}
+	zfspv = corev1.PersistentVolume{
+		Spec: corev1.PersistentVolumeSpec{
+			PersistentVolumeSource: corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: ZFSCSIDriver}}}}
 
 	cstorSC = v1.StorageClass{
 		ObjectMeta: metav1.ObjectMeta{

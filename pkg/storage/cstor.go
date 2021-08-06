@@ -31,8 +31,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	cStorPoolInstanceInfoTemplate = `
+const cStorPoolInstanceInfoTemplate = `
 {{.Name}} Details :
 ----------------
 NAME             : {{.Name}}
@@ -43,7 +42,6 @@ READ ONLY STATUS : {{.ReadOnlyStatus}}
 STATUS	         : {{.Status}}
 RAID TYPE        : {{.RaidType}}
 `
-)
 
 // GetCstorPools lists the pools
 func GetCstorPools(c *client.K8sClient, pools []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
@@ -72,11 +70,14 @@ func GetCstorPools(c *client.K8sClient, pools []string) ([]metav1.TableColumnDef
 
 // DescribeCstorPool method runs info command and make call to DisplayPoolInfo to display the results
 func DescribeCstorPool(c *client.K8sClient, poolName string) error {
-	poolInfo, err := c.GetCSPI(poolName)
+	pools, err := c.GetCSPIs([]string{poolName}, "")
 	if err != nil {
-		return errors.Wrap(err, "Error getting pool info")
+		return errors.Wrap(err, "error getting pool info")
 	}
-
+	if len(pools.Items) == 0 {
+		return fmt.Errorf("cstor-pool %s not found", poolName)
+	}
+	poolInfo := pools.Items[0]
 	poolDetails := util.PoolInfo{
 		Name:           poolInfo.Name,
 		HostName:       poolInfo.Spec.HostName,

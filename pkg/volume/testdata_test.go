@@ -17,6 +17,8 @@ limitations under the License.
 package volume
 
 import (
+	"time"
+
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
@@ -26,13 +28,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 // Some storage sizes for PVs
 var (
 	fourGigiByte = resource.MustParse("4Gi")
-	blockFS = corev1.PersistentVolumeBlock
+	blockFS      = corev1.PersistentVolumeBlock
 )
 
 /****************
@@ -509,12 +510,15 @@ var zfsVol1 = zfs.ZFSVolume{
 		OwnerNodeID:   "node1",
 		PoolName:      "zfspv",
 		Capacity:      "4Gi",
-		Shared:        "NotShared",
+		RecordSize:    "4k",
+		Compression:   "off",
+		Dedup:         "off",
 		ThinProvision: "No",
+		VolumeType:    "DATASET",
+		FsType:        "zfs",
+		Shared:        "NotShared",
 	},
-	Status: zfs.VolStatus{
-		State: "Ready",
-	},
+	Status: zfs.VolStatus{State: "Ready"},
 }
 
 var zfsPV1 = corev1.PersistentVolume{
@@ -529,10 +533,11 @@ var zfsPV1 = corev1.PersistentVolume{
 	},
 	Spec: corev1.PersistentVolumeSpec{
 		// 4GiB
-		Capacity:                      corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
-		PersistentVolumeSource:        corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.ZFSCSIDriver}},
-		AccessModes:                   []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-		ClaimRef:                      nil,
+		Capacity:               corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
+		PersistentVolumeSource: corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.ZFSCSIDriver}},
+		AccessModes:            []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		ClaimRef: &corev1.ObjectReference{Kind: "PersistentVolumeClaim", Namespace: "pvc-namespace",
+			Name: "zfs-pvc-1", APIVersion: "v1"},
 		PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
 		StorageClassName:              "zfs-sc-1",
 		VolumeMode:                    &blockFS,

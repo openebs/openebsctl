@@ -35,9 +35,8 @@ func Get(pools []string, openebsNS string, casType string) error {
 		header, rows, err := f(k, pools)
 		if err != nil {
 			return err
-		} else {
-			util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
 		}
+		util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
 	} else if casType != "" {
 		return fmt.Errorf("cas-type %s is not supported", casType)
 	}
@@ -64,21 +63,39 @@ func CasList() []func(*client.K8sClient, []string) ([]metav1.TableColumnDefiniti
 func Describe(storages []string, openebsNs, casType string) error {
 	// 1. Create the clientset
 	k, _ := client.NewK8sClient(openebsNs)
-	// 2. Get the namespaces
+	// 2. Get the namespace
 	nsMap, _ := k.GetOpenEBSNamespaceMap()
 	if openebsNs == "" {
-		// TODO: Change this line, currently this overwriting empty flag values as cstor
-		if val, ok := nsMap[util.CstorCasType]; ok {
+		if casType == util.ZFSCasType {
+			// a temporary way to get the zfs-namespace
+			zfs, _, err := k.GetZFSNodes(nil, util.List, "", util.MapOptions{})
+			if err != nil {
+				return fmt.Errorf("please specify --openebs-namespace for ZFS LocalPV")
+			}
+			if zfs != nil && zfs.Items != nil && len(zfs.Items) > 0 {
+				k.Ns = zfs.Items[0].Namespace
+			}
+		} else if val, ok := nsMap[casType]; ok {
 			k.Ns = val
 		}
 	}
-	for _, storageName := range storages {
-		// 3. Describe the storage
-		if list, ok := CasDescribeMap()[util.CstorCasType]; ok {
-			err := list(k, storageName)
-			if err != nil {
-				return err
+	// 3. Run a specific cas-type function
+	if casType != "" {
+		if work, ok := CasDescribeMap()[casType]; ok {
+			for _, storage := range storages {
+				_ = work(k, storage)
 			}
+			return nil
+		}
+		return fmt.Errorf("cas-type %s unknown", casType)
+	}
+
+	// 4. Brute-force run describe the storage by all cas-type functions
+	for _, storageName := range storages {
+		for _, work := range CasDescribeList() {
+			_ = work(k, storageName)
+			// TODO: Should the errors be logged
+			// Should we ask the user to specify a cas-type for a useful error
 		}
 	}
 	return nil
@@ -99,5 +116,11 @@ func CasDescribeMap() map[string]func(*client.K8sClient, string) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, string) error{
 		util.CstorCasType: DescribeCstorPool,
+		util.ZFSCasType:   DescribeZFSNode,
 	}
+}
+
+// CasDescribeList returns a list of functions which describe a Storage i.e. a pool/volume-group
+func CasDescribeList() []func(*client.K8sClient, string) error {
+	return []func(*client.K8sClient, string) error{DescribeCstorPool, DescribeZFSNode}
 }

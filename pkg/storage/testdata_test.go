@@ -247,3 +247,17 @@ var zfsNode2 = zfs.ZFSNode{
 	Pools: []zfs.Pool{{Name: "zfs-pool2", UUID: "15423895941648453428", Free: resource.MustParse("33285828Ki")},
 		{Name: "zfs-pool3", UUID: "15423895941648453426", Free: resource.MustParse("33285828Ki")}},
 }
+
+var zfsNode3 = zfs.ZFSNode{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "ZFSNode",
+		APIVersion: "zfs.openebs.io/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "node3",
+		Namespace: "zfs",
+		// OwnerReference: refers to the K8s-node where the zfs volume is created
+	},
+	Pools: []zfs.Pool{{Name: "zfs-pool1", UUID: "15423895941648453428", Free: resource.MustParse("33285828")},
+		{Name: "zfs-poolX", UUID: "15423895941648453426", Free: resource.MustParse("33285828Ki")}},
+}

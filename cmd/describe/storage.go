@@ -44,6 +44,7 @@ Filter by a fixed OpenEBS namespace
 
 // NewCmdDescribeStorage displays OpenEBS storage related information.
 func NewCmdDescribeStorage() *cobra.Command {
+	var casType string
 	cmd := &cobra.Command{
 		Use:     "storage",
 		Aliases: []string{"storages", "s"},
@@ -57,5 +58,6 @@ func NewCmdDescribeStorage() *cobra.Command {
 			util.CheckErr(storage.Describe(args, openebsNs, casType), util.Fatal)
 		},
 	}
+	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	return cmd
 }

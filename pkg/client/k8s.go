@@ -553,9 +553,11 @@ func (k K8sClient) GetCSPIs(cspiNames []string, labelselector string) (*cstorv1.
 	for _, name := range cspiNames {
 		if pool, ok := poolMap[name]; ok {
 			list = append(list, pool)
-		} else {
-			fmt.Printf("Error from server (NotFound): pool %s not found\n", name)
 		}
+		// else {
+		// This logging might be omitted
+		// fmt.Fprintf(os.Stderr, "Error from server (NotFound): pool %s not found\n", name)
+		//}
 	}
 	return &cstorv1.CStorPoolInstanceList{
 		Items: list,

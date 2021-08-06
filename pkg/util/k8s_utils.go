@@ -68,6 +68,11 @@ func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 				return val
 			}
 		}
+		if v1PV.Spec.CSI != nil {
+			if val, ok := ProvsionerAndCasTypeMap[v1PV.Spec.CSI.Driver]; ok {
+				return val
+			}
+		}
 	}
 	return Unknown
 }

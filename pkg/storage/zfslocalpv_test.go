@@ -84,6 +84,50 @@ func TestGetZFSPools(t *testing.T) {
 	}
 }
 
+func TestDescribeZFSNode(t *testing.T) {
+	type args struct {
+		c       *client.K8sClient
+		zfsfunc func(*client.K8sClient)
+		sName   string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"no ZFS nodes exist",
+			args{c: &client.K8sClient{Ns: "", ZFCS: fakezfsclient.NewSimpleClientset()}, zfsfunc: zfsNodeNotFound, sName: "zfs-pv1"},
+			true,
+		},
+		{
+			"one ZFS node exist",
+			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode1)}, sName: "node1"},
+			false,
+		},
+		{
+			"one ZFS node exist with differing size units",
+			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode3)}, sName: "node3"},
+			false,
+		},
+		{
+			"two ZFS node exist, none asked for",
+			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode1, &zfsNode3)}, sName: "cstor-pool-name"},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.zfsfunc != nil {
+				tt.args.zfsfunc(tt.args.c)
+			}
+			if err := DescribeZFSNode(tt.args.c, tt.args.sName); (err != nil) != tt.wantErr {
+				t.Errorf("DescribeZFSNode() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 // lvnNodeNotFound makes fakelvmClientSet return error
 func zfsNodeNotFound(c *client.K8sClient) {
 	// NOTE: Set the VERB & Resource correctly & make it work for single resources
