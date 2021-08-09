@@ -36,7 +36,10 @@ import (
 	"k8s.io/klog"
 )
 
-const maxTerms = 2
+const (
+	maxTerms                = 2
+	stringsToBeColoredGreen = "healthy bound online active claimed running attached normal"
+)
 
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
@@ -146,7 +149,7 @@ func GetUsedPercentage(total string, used string) float64 {
 
 // ColorStringOnStatus is used for coloring the strings based on statuses
 func ColorStringOnStatus(stringToColor string) string {
-	if stringToColor == "Healthy" || stringToColor == "Bound" || stringToColor == "Active" || stringToColor == "Running" || stringToColor == "Attached" || stringToColor == "ONLINE" {
+	if strings.Contains(stringsToBeColoredGreen, strings.ToLower(stringToColor)) {
 		return color.HiGreenString(stringToColor)
 	} else {
 		return color.HiRedString(stringToColor)

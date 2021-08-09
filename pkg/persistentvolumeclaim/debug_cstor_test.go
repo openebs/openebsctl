@@ -19,6 +19,8 @@ package persistentvolumeclaim
 import (
 	"testing"
 
+	"github.com/openebs/openebsctl/pkg/util"
+
 	"github.com/openebs/openebsctl/pkg/client"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -62,6 +64,56 @@ func TestDebugCstorVolumeClaim(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := DebugCstorVolumeClaim(tt.args.k, tt.args.pvc, tt.args.pv); (err != nil) != tt.wantErr {
 				t.Errorf("DebugCstorVolumeClaim() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_displayPVCEvents(t *testing.T) {
+	k, _ := client.NewK8sClient("openebs")
+	type args struct {
+		k   *client.K8sClient
+		crs util.CstorVolumeResources
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"test 1",
+			args{k: k, crs: util.CstorVolumeResources{}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := displayPVCEvents(*tt.args.k, tt.args.crs); (err != nil) != tt.wantErr {
+				t.Errorf("displayPVCEvents() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceStatus(t *testing.T) {
+	type args struct {
+		crs util.CstorVolumeResources
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"test 1",
+			args{crs: util.CstorVolumeResources{}},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceStatus(tt.args.crs); (err != nil) != tt.wantErr {
+				t.Errorf("resourceStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

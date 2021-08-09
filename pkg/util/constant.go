@@ -41,6 +41,10 @@ const (
 	NotAttached = "N/A"
 	// CVAVolnameKey present in label of CVA
 	CVAVolnameKey = "Volname"
+	// UnicodeCross stores the character representation of U+274C
+	UnicodeCross = "❌"
+	// UnicodeCheck stores the character representation of U+2714
+	UnicodeCheck = "✔"
 )
 
 const (
@@ -214,5 +218,12 @@ var (
 		{Name: "Total Capacity", Type: "string"},
 		{Name: "Used Capacity", Type: "string"},
 		{Name: "Available Capacity", Type: "string"},
+	}
+	// EventsColumnDefinitions stores the Table headers for events details
+	EventsColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Action", Type: "string"},
+		{Name: "Reason", Type: "string"},
+		{Name: "Message", Type: "string"},
+		{Name: "Type", Type: "string"},
 	}
 )

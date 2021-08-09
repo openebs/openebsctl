@@ -18,9 +18,8 @@ package persistentvolumeclaim
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/fatih/color"
+	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -87,7 +86,7 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 		}
 	}
 	// 4. Call the resource showing module
-	_ = resourceStatus(cstorResources)
+	// TODO: Integration of all modules
 	return nil
 }
 
@@ -111,7 +110,7 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 
 	util.TablePrinter(util.VolumeTotalAndUsageDetailColumnDefinitions, []metav1.TableRow{{Cells: []interface{}{totalCapacity, usedCapacity, availableCapacity}}}, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nRelated CR Statuses:\n-------------------\n")
+	_, _ = fmt.Fprint(os.Stdout, "\nRelated CR Statuses:\n--------------------\n")
 
 	var crStatusRows []metav1.TableRow
 	if crs.PV != nil {
@@ -140,7 +139,7 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 4. Display the CRs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nReplica Statuses:\n-------------------\n")
+	_, _ = fmt.Fprint(os.Stdout, "\nReplica Statuses:\n-----------------\n")
 	crStatusRows = []metav1.TableRow{}
 	if crs.CVRs != nil {
 		for _, item := range crs.CVRs.Items {
@@ -150,7 +149,7 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 5. Display the CRs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nBlockDevice and BlockDeviceClaim Statuses:\n-------------------\n")
+	_, _ = fmt.Fprint(os.Stdout, "\nBlockDevice and BlockDeviceClaim Statuses:\n------------------------------------------\n")
 	crStatusRows = []metav1.TableRow{}
 	if crs.PresentBDs != nil {
 		for _, item := range crs.PresentBDs.Items {
@@ -171,7 +170,7 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 6. Display the BDs and BDCs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nPool Instance Statuses:\n-------------------\n")
+	_, _ = fmt.Fprint(os.Stdout, "\nPool Instance Statuses:\n-----------------------\n")
 	crStatusRows = []metav1.TableRow{}
 	if crs.CSPIs != nil {
 		for _, item := range crs.CSPIs.Items {
@@ -182,4 +181,27 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
 	return nil
+}
+
+func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	// 1. Set the namespace of the resource to the client
+	k.Ns = crs.PVC.Namespace
+	// 2. Fetch the events of the concerned PVC
+	events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=PersistentVolumeClaim", crs.PVC.Name))
+	// 3. Display the events
+	if len(events.Items) != 0 && err == nil {
+		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", color.HiRedString(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items))), "-------->\n")
+		var crStatusRows []metav1.TableRow
+		for _, event := range events.Items {
+			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+		}
+		defer util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+		return nil
+	} else if len(events.Items) == 0 && err == nil {
+		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", color.HiGreenString(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items))), "-------->\n")
+		return nil
+	} else {
+		return err
+	}
+
 }
