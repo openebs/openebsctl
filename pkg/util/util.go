@@ -25,8 +25,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
-
 	"github.com/docker/go-units"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,7 +37,25 @@ import (
 const (
 	maxTerms                = 2
 	stringsToBeColoredGreen = "healthy bound online active claimed running attached normal"
+	colorFmt                = "\x1b[%dm%s\x1b[0m"
 )
+
+// Color describes a terminal color.
+type Color int
+
+// Defines basic ANSI colors.
+const (
+	Red   Color = iota + 31 // 31
+	Green                   // 32
+)
+
+// ColorText returns an ASCII colored string based on given color.
+func ColorText(s string, c Color) string {
+	if c == 0 {
+		return s
+	}
+	return fmt.Sprintf(colorFmt, c, s)
+}
 
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
@@ -150,8 +166,8 @@ func GetUsedPercentage(total string, used string) float64 {
 // ColorStringOnStatus is used for coloring the strings based on statuses
 func ColorStringOnStatus(stringToColor string) string {
 	if strings.Contains(stringsToBeColoredGreen, strings.ToLower(stringToColor)) {
-		return color.HiGreenString(stringToColor)
+		return ColorText(stringToColor, Green)
 	} else {
-		return color.HiRedString(stringToColor)
+		return ColorText(stringToColor, Red)
 	}
 }

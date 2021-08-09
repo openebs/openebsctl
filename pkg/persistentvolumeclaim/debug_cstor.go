@@ -18,7 +18,6 @@ package persistentvolumeclaim
 
 import (
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
@@ -100,9 +99,9 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 		availableCapacity = util.GetAvailableCapacity(totalCapacity, usedCapacity)
 		percentage := util.GetUsedPercentage(totalCapacity, usedCapacity)
 		if percentage >= 80.00 {
-			availableCapacity = color.HiRedString(availableCapacity)
+			availableCapacity = util.ColorText(availableCapacity, util.Red)
 		} else {
-			availableCapacity = color.HiGreenString(availableCapacity)
+			availableCapacity = util.ColorText(availableCapacity, util.Green)
 		}
 	}
 	// 3. Display the usage status
@@ -190,7 +189,7 @@ func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 	events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=PersistentVolumeClaim", crs.PVC.Name))
 	// 3. Display the events
 	if len(events.Items) != 0 && err == nil {
-		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", color.HiRedString(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items))), "-------->\n")
+		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->\n")
 		var crStatusRows []metav1.TableRow
 		for _, event := range events.Items {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
@@ -198,10 +197,9 @@ func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 		defer util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 		return nil
 	} else if len(events.Items) == 0 && err == nil {
-		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", color.HiGreenString(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items))), "-------->\n")
+		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->\n")
 		return nil
 	} else {
 		return err
 	}
-
 }
