@@ -45,6 +45,12 @@ const (
 	UnicodeCross = "❌"
 	// UnicodeCheck stores the character representation of U+2714
 	UnicodeCheck = "✔"
+	// NotFound stores the Not Found Status
+	NotFound = "Not Found"
+	// CVANotAttached stores CVA Not Attached status
+	CVANotAttached = "Not Attached to Application"
+	// Attached stores CVA Attached Status
+	Attached = "Attached"
 )
 
 const (

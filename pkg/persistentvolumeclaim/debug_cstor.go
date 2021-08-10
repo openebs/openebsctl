@@ -18,7 +18,6 @@ package persistentvolumeclaim
 
 import (
 	"fmt"
-	"os"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -105,11 +104,14 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 		}
 	}
 	// 3. Display the usage status
-	_, _ = fmt.Fprint(os.Stdout, "Volume Usage Stats:\n-------------------\n")
+	fmt.Println("Volume Usage Stats:")
+	fmt.Println("-------------------")
 
 	util.TablePrinter(util.VolumeTotalAndUsageDetailColumnDefinitions, []metav1.TableRow{{Cells: []interface{}{totalCapacity, usedCapacity, availableCapacity}}}, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nRelated CR Statuses:\n--------------------\n")
+	fmt.Println()
+	fmt.Println("Related CR Statuses:")
+	fmt.Println("--------------------")
 
 	var crStatusRows []metav1.TableRow
 	if crs.PV != nil {
@@ -117,28 +119,30 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	} else {
 		crStatusRows = append(
 			crStatusRows,
-			metav1.TableRow{Cells: []interface{}{"PersistentVolume", "", util.ColorStringOnStatus("Not Found")}},
+			metav1.TableRow{Cells: []interface{}{"PersistentVolume", "", util.ColorStringOnStatus(util.NotFound)}},
 		)
 	}
 	if crs.CV != nil {
 		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolume", crs.CV.Name, util.ColorStringOnStatus(string(crs.CV.Status.Phase))}})
 	} else {
-		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolume", "", util.ColorStringOnStatus("Not Found")}})
+		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolume", "", util.ColorStringOnStatus(util.NotFound)}})
 	}
 	if crs.CVC != nil {
 		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeConfig", crs.CVC.Name, util.ColorStringOnStatus(string(crs.CVC.Status.Phase))}})
 	} else {
-		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeConfig", "", util.ColorStringOnStatus("Not Found")}})
+		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeConfig", "", util.ColorStringOnStatus(util.NotFound)}})
 	}
 	if crs.CVA != nil {
-		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeAttachment", crs.CVA.Name, util.ColorStringOnStatus("Attached")}})
+		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeAttachment", crs.CVA.Name, util.ColorStringOnStatus(util.Attached)}})
 	} else {
-		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeAttachment", "", util.ColorStringOnStatus("Volume Not Attached to Application")}})
+		crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"CstorVolumeAttachment", "", util.ColorStringOnStatus(util.CVANotAttached)}})
 	}
 	// 4. Display the CRs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nReplica Statuses:\n-----------------\n")
+	fmt.Println()
+	fmt.Println("Replica Statuses:")
+	fmt.Println("-----------------")
 	crStatusRows = []metav1.TableRow{}
 	if crs.CVRs != nil {
 		for _, item := range crs.CVRs.Items {
@@ -148,7 +152,9 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 5. Display the CRs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nBlockDevice and BlockDeviceClaim Statuses:\n------------------------------------------\n")
+	fmt.Println()
+	fmt.Println("BlockDevice and BlockDeviceClaim Statuses:")
+	fmt.Println("------------------------------------------")
 	crStatusRows = []metav1.TableRow{}
 	if crs.PresentBDs != nil {
 		for _, item := range crs.PresentBDs.Items {
@@ -156,7 +162,7 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 		}
 		for key, val := range crs.ExpectedBDs {
 			if !val {
-				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"BlockDevice", key, util.ColorStringOnStatus("Not Found")}})
+				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{"BlockDevice", key, util.ColorStringOnStatus(util.NotFound)}})
 			}
 		}
 	}
@@ -169,7 +175,9 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 6. Display the BDs and BDCs statuses
 	util.TablePrinter(util.CstorVolumeCRStatusColumnDefinitions, crStatusRows, printers.PrintOptions{})
 
-	_, _ = fmt.Fprint(os.Stdout, "\nPool Instance Statuses:\n-----------------------\n")
+	fmt.Println()
+	fmt.Println("Pool Instance Statuses:")
+	fmt.Println("-----------------------")
 	crStatusRows = []metav1.TableRow{}
 	if crs.CSPIs != nil {
 		for _, item := range crs.CSPIs.Items {
@@ -185,19 +193,21 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 	// 1. Set the namespace of the resource to the client
 	k.Ns = crs.PVC.Namespace
-	// 2. Fetch the events of the concerned PVC
+	// 2. Fetch the events of the concerned PVC.
+	// The PVCs donot have the Kind filled, thus we have hardcoded here.
 	events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=PersistentVolumeClaim", crs.PVC.Name))
 	// 3. Display the events
-	if len(events.Items) != 0 && err == nil {
-		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->\n")
+	fmt.Println()
+	if err == nil && len(events.Items) == 0 {
+		fmt.Println("Checking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
 		var crStatusRows []metav1.TableRow
 		for _, event := range events.Items {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
 		}
-		defer util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+		util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 		return nil
 	} else if len(events.Items) == 0 && err == nil {
-		_, _ = fmt.Fprint(os.Stdout, "\nChecking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->\n")
+		fmt.Println("Checking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->")
 		return nil
 	} else {
 		return err
