@@ -17,6 +17,9 @@ package volume
 
 import (
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakelvm "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset/typed/lvm/v1alpha1/fake"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -25,8 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	k8sfake "k8s.io/client-go/kubernetes/fake"
 	k8stest "k8s.io/client-go/testing"
-	"reflect"
-	"testing"
 )
 
 func TestGetLVMLocalPV(t *testing.T) {
@@ -72,7 +73,7 @@ func TestGetLVMLocalPV(t *testing.T) {
 			wantErr: false,
 			want: []metav1.TableRow{
 				{
-					Cells: []interface{}{"lvmlocalpv", "pvc-1", "Ready", "1.9.0", "4.0 GiB", "lvm-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
+					Cells: []interface{}{"lvmlocalpv", "pvc-1", "Ready", "1.9.0", "4GiB", "lvm-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
 				},
 			},
 		},
@@ -88,7 +89,7 @@ func TestGetLVMLocalPV(t *testing.T) {
 				openebsNS: "lvmlocalpv",
 			},
 			wantErr: false,
-			want: nil,
+			want:    nil,
 		},
 		{
 			name: "only one lvm volume present, namespace conflicts",
@@ -124,12 +125,66 @@ func TestGetLVMLocalPV(t *testing.T) {
 				t.Errorf("GetLVMLocalPV() returned %d elements, wanted %d elements", gotLen, expectedLen)
 			}
 			for i, gotLine := range got {
-				if len(gotLine.Cells) != len(tt.want[i].Cells){
+				if len(gotLine.Cells) != len(tt.want[i].Cells) {
 					t.Errorf("Line#%d in output had %d elements, wanted %d elements", i+1, len(gotLine.Cells), len(tt.want[i].Cells))
 				}
 				if !reflect.DeepEqual(tt.want[i].Cells, gotLine.Cells) {
 					t.Errorf("GetLVMLocalPV() line#%d got = %v, want %v", i+1, got, tt.want)
 				}
+			}
+		})
+	}
+}
+
+func TestDescribeLVMLocalPVs(t *testing.T) {
+	type args struct {
+		c       *client.K8sClient
+		lvmfunc func(sClient *client.K8sClient)
+		vol     *corev1.PersistentVolume
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"no lvm volume present",
+			args{c: &client.K8sClient{Ns: "lvm", K8sCS: k8sfake.NewSimpleClientset(), LVMCS: fake.NewSimpleClientset()},
+				vol:     nil,
+				lvmfunc: lvmVolNotExists,
+			},
+			true,
+		},
+		{"one lvm volume present and asked for and lvm-controller absent",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(&lvmVol1), K8sCS: k8sfake.NewSimpleClientset()},
+				vol: &lvmPV1},
+			false,
+		},
+		{"one lvm volume present and asked for and lvm-controller present",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv",
+				K8sCS: k8sfake.NewSimpleClientset(&localpvCSICtrlSTS),
+				LVMCS: fake.NewSimpleClientset(&lvmVol1)},
+				vol: &lvmPV1},
+			false,
+		},
+		{"one lvm volume present and asked for but namespace wrong",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(&lvmVol1)},
+				vol: &lvmPV1, lvmfunc: lvmVolNotExists},
+			true,
+		},
+		{"one lvm volume present and some other volume asked for",
+			args{c: &client.K8sClient{Ns: "lvm", K8sCS: k8sfake.NewSimpleClientset(&lvmPV1), LVMCS: fake.NewSimpleClientset(&lvmVol1)},
+				vol:     &cstorPV2,
+				lvmfunc: lvmVolNotExists},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.lvmfunc != nil {
+				tt.args.lvmfunc(tt.args.c)
+			}
+			if err := DescribeLVMLocalPVs(tt.args.c, tt.args.vol); (err != nil) != tt.wantErr {
+				t.Errorf("DescribeLVMLocalPVs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -17,14 +17,15 @@ limitations under the License.
 package volume
 
 import (
+	"reflect"
+	"testing"
+
 	openebsFakeClientset "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"reflect"
-	"testing"
 )
 
 func TestDescribeCstorVolume(t *testing.T) {
@@ -82,7 +83,7 @@ func TestDescribeCstorVolume(t *testing.T) {
 				c: &client.K8sClient{
 					Ns:        "cstor",
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
-					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2,&cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
+					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2, &cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
 				vol: &cstorPV1,
 			},
@@ -94,7 +95,7 @@ func TestDescribeCstorVolume(t *testing.T) {
 				c: &client.K8sClient{
 					Ns:        "cstor",
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
-					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2,&cvc1, &cvc2,&cvr4, &cbkp, &ccbkp, &crestore),
+					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2, &cvc1, &cvc2, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
 				vol: &cstorPV1,
 			},
@@ -106,7 +107,7 @@ func TestDescribeCstorVolume(t *testing.T) {
 				c: &client.K8sClient{
 					Ns:        "cstor",
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
-					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cvRep, &cv2, &cva2,&cvc1, &cvc2,&cvr4, &cbkp, &ccbkp, &crestore),
+					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cvRep, &cv2, &cva2, &cvc1, &cvc2, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
 				vol: &cstorPV1,
 			},
@@ -146,9 +147,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -164,7 +165,7 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}},
 			wantErr: false,
 		},
@@ -180,9 +181,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, ""},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, ""},
 			}},
 			wantErr: false,
 		},
@@ -198,9 +199,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -216,9 +217,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -234,9 +235,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0 GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -251,7 +252,7 @@ func TestGetCStor(t *testing.T) {
 				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{cstorPV1}},
 				openebsNS: "cstor",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 		{
@@ -265,7 +266,7 @@ func TestGetCStor(t *testing.T) {
 				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{cstorPV1}},
 				openebsNS: "cstor",
 			},
-			want: nil,
+			want:    nil,
 			wantErr: true,
 		},
 	}
