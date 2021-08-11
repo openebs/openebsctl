@@ -185,7 +185,7 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 		ns := pod.Namespace
 		cas, ok := util.ComponentNameToCasTypeMap[pod.Labels["openebs.io/component-name"]]
 		if ok {
-			NSmap[cas] = ns
+			NSmap[util.NormalizeCas(cas)] = ns
 		}
 	}
 	return NSmap, nil

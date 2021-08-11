@@ -39,12 +39,12 @@ func GetUsedCapacityFromCVR(cvrList *cstorv1.CStorVolumeReplicaList) string {
 func GetCasType(v1PV *corev1.PersistentVolume, v1SC *v1.StorageClass) string {
 	if v1PV != nil {
 		if val := GetCasTypeFromPV(v1PV); val != Unknown {
-			return val
+			return NormalizeCas(val)
 		}
 	}
 	if v1SC != nil {
 		if val := GetCasTypeFromSC(v1SC); val != Unknown {
-			return val
+			return NormalizeCas(val)
 		}
 	}
 	return Unknown
@@ -55,22 +55,22 @@ func GetCasTypeFromPV(v1PV *corev1.PersistentVolume) string {
 	if v1PV != nil {
 		if v1PV.ObjectMeta.Labels != nil {
 			if val, ok := v1PV.ObjectMeta.Labels[OpenEBSCasTypeKey]; ok {
-				return val
+				return NormalizeCas(val)
 			}
 		}
 		if v1PV.ObjectMeta.Annotations != nil {
 			if val, ok := v1PV.ObjectMeta.Annotations[OpenEBSCasTypeKey]; ok {
-				return val
+				return NormalizeCas(val)
 			}
 		}
 		if v1PV.Spec.CSI != nil && v1PV.Spec.CSI.VolumeAttributes != nil {
 			if val, ok := v1PV.Spec.CSI.VolumeAttributes[OpenEBSCasTypeKey]; ok {
-				return val
+				return NormalizeCas(val)
 			}
 		}
 		if v1PV.Spec.CSI != nil {
 			if val, ok := ProvsionerAndCasTypeMap[v1PV.Spec.CSI.Driver]; ok {
-				return val
+				return NormalizeCas(val)
 			}
 		}
 	}
@@ -82,11 +82,11 @@ func GetCasTypeFromSC(v1SC *v1.StorageClass) string {
 	if v1SC != nil {
 		if v1SC.Parameters != nil {
 			if val, ok := v1SC.Parameters[OpenEBSCasTypeKeySc]; ok {
-				return val
+				return NormalizeCas(val)
 			}
 		}
 		if val, ok := ProvsionerAndCasTypeMap[v1SC.Provisioner]; ok {
-			return val
+			return NormalizeCas(val)
 		}
 	}
 	return Unknown

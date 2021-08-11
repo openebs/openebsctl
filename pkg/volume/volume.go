@@ -94,20 +94,8 @@ func Describe(vols []string, openebsNs string) error {
 		if openebsNs == "" {
 			if val, ok := nsMap[casType]; ok {
 				k.Ns = val
-			} else if casType == util.ZFSCasType {
-				// edge case: ZFS LocalPV resources are not created in kube-system
-				// namespace where the ZFS CSI STS is scheduled
-				zfs, _, err := k.GetZFSVols(nil, util.List, "", util.MapOptions{})
-				if err != nil {
-					return errors.New("please specify --openebs-namespace for ZFS LocalPV")
-				}
-				if zfs != nil && zfs.Items != nil && len(zfs.Items) > 0 {
-					k.Ns = zfs.Items[0].Namespace
-				}
-				if err != nil {
-					return err
-				}
-			} else {
+			} else if casType != util.ZFSCasType && casType != util.LVMCasType{
+				// The reason for above condition is that, newer lvm has cas ty
 				return errors.New("could not determine the underlying storage engine ns, please provide using '--openebs-namespace' flag")
 			}
 		}
@@ -135,7 +123,7 @@ func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeLis
 		util.JivaCasType:  GetJiva,
 		util.CstorCasType: GetCStor,
 		util.ZFSCasType:   GetZFSLocalPVs,
-		util.LVMLocalPV:   GetLVMLocalPV,
+		util.LVMCasType:   GetLVMLocalPV,
 	}
 }
 
@@ -146,5 +134,6 @@ func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolum
 		util.JivaCasType:  DescribeJivaVolume,
 		util.CstorCasType: DescribeCstorVolume,
 		util.ZFSCasType:   DescribeZFSLocalPVs,
+		util.LVMCasType:   DescribeLVMLocalPVs,
 	}
 }

@@ -26,11 +26,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const lvmVolInfo = `
+{{.Name}} Details :
+------------------
+Name            : {{.Name}}
+Namespace       : {{.Namespace}}
+AccessMode      : {{.AccessMode}}
+CSIDriver       : {{.CSIDriver}}
+Capacity        : {{.Capacity}}
+PVC             : {{.PVC}}
+VolumePhase     : {{.VolumePhase}}
+StorageClass    : {{.StorageClass}}
+Version         : {{.Version}}
+Status          : {{.Status}}
+VolumeGroup     : {{.VolumeGroup}}
+Shared          : {{.Shared}}
+ThinProvisioned : {{.ThinProvisioned}}
+NodeID          : {{.NodeID}}   
+`
+
 // GetLVMLocalPV returns a list of LVM-LocalPV volumes
 func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	var rows []metav1.TableRow
 	var version string
-	if CSIctrl, err := c.GetCSIControllerSTS("openebs-lvm-controller"); err == nil {
+	if CSIctrl, err := c.GetCSIControllerSTS(util.LVMLocalPVcsiControllerLabelValue); err == nil {
 		version = CSIctrl.Labels["openebs.io/version"]
 	}
 	if version == "" {
@@ -62,4 +81,45 @@ func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, ope
 		}
 	}
 	return rows, nil
+}
+
+// DescribeLVMLocalPVs describes a single lvm-localpv volume
+func DescribeLVMLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) error {
+	if vol == nil {
+		return fmt.Errorf("LVM volume nil")
+	}
+	lVols, _, err := c.GetLVMvol([]string{vol.Name}, util.List, "", util.MapOptions{})
+	if err != nil {
+		return err
+	}
+	lVol := lVols.Items[0]
+	var version string
+	if CSIctrl, err := c.GetCSIControllerSTS(util.LVMLocalPVcsiControllerLabelValue); err == nil {
+		version = CSIctrl.Labels["openebs.io/version"]
+	}
+	if version == "" {
+		version = "N/A"
+	}
+	// TODO: Can NDM mark a lvm-localpv used volume as Claimed
+	// 1. Show some LVM-pools
+	v := util.LVMVolDesc{
+		AccessMode: util.AccessModeToString(vol.Spec.AccessModes),
+		Capacity:   vol.Spec.Capacity.Storage().String(),
+		CSIDriver:  vol.Spec.CSI.Driver,
+		Name:       vol.Name,
+		Namespace:  lVol.Namespace,
+		// assuming that LVMPVs aren't static-ally provisioned
+		PVC:          vol.Spec.ClaimRef.Name,
+		VolumePhase:  vol.Status.Phase,
+		StorageClass: vol.Spec.StorageClassName,
+		Version:      version,
+		// fix the duplicate entry
+		Status:          lVol.Status.State,
+		VolumeGroup:     lVol.Spec.VolGroup,
+		Shared:          lVol.Spec.Shared,
+		ThinProvisioned: lVol.Spec.ThinProvision,
+		NodeID:          lVol.Spec.OwnerNodeID,
+	}
+	_ = util.PrintByTemplate("volume", lvmVolInfo, v)
+	return nil
 }

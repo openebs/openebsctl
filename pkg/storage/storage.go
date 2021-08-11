@@ -107,7 +107,7 @@ func CasListMap() map[string]func(*client.K8sClient, []string) ([]metav1.TableCo
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error){
 		util.CstorCasType: GetCstorPools,
-		util.LVMLocalPV:   GetVolumeGroups,
+		util.LVMCasType:   GetVolumeGroups,
 		util.ZFSCasType:   GetZFSPools,
 	}
 }
