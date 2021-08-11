@@ -17,6 +17,7 @@ limitations under the License.
 package persistentvolumeclaim
 
 import (
+	"errors"
 	"fmt"
 
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
@@ -84,7 +85,12 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 		}
 	}
 	// 4. Call the resource showing module
-	// TODO: Integration of all modules
+	_ = resourceStatus(cstorResources)
+	_ = displayPVCEvents(*k, cstorResources)
+	_ = displayBDCEvents(*k, cstorResources)
+	_ = displayCVCEvents(*k, cstorResources)
+	_ = displayCSPCEvents(*k, cstorResources)
+	_ = displayCSPIEvents(*k, cstorResources)
 	return nil
 }
 
@@ -198,18 +204,129 @@ func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 	events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=PersistentVolumeClaim", crs.PVC.Name))
 	// 3. Display the events
 	fmt.Println()
-	if err == nil && len(events.Items) == 0 {
+	if err == nil && len(events.Items) != 0 {
 		fmt.Println("Checking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
 		var crStatusRows []metav1.TableRow
 		for _, event := range events.Items {
-			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
 		}
 		util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 		return nil
-	} else if len(events.Items) == 0 && err == nil {
+	} else if err == nil && len(events.Items) == 0 {
 		fmt.Println("Checking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->")
 		return nil
 	} else {
 		return err
 	}
+}
+
+func displayBDCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	if crs.BDCs != nil && len(crs.BDCs.Items) != 0 {
+		// 1. Set the namespace of the resource to the client
+		k.Ns = crs.BDCs.Items[0].Namespace
+		// 2. Fetch the events of the concerned BDC
+		fmt.Println()
+		var crStatusRows []metav1.TableRow
+		for _, BDC := range crs.BDCs.Items {
+			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=BlockDeviceClaim", BDC.Name))
+			// 3. Display the events
+			if err == nil && len(events.Items) != 0 {
+				for _, event := range events.Items {
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+				}
+			}
+		}
+		if len(crStatusRows) == 0 {
+			fmt.Println("Checking BDC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(crStatusRows)), util.Green), "-------->")
+			return nil
+		} else {
+			fmt.Println("Checking BDC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(crStatusRows)), util.Red), "-------->")
+			util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+			return nil
+		}
+	}
+	return errors.New("no BDC present to display events")
+}
+
+func displayCVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	if crs.CVC != nil {
+		// 1. Set the namespace of the resource to the client
+		k.Ns = crs.CVC.Namespace
+		// 2. Fetch the events of the concerned CVC
+		events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorVolumeConfig", crs.CVC.Name))
+		// 3. Display the events
+		fmt.Println()
+		if err == nil && len(events.Items) != 0 {
+			fmt.Println("Checking CVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
+			var crStatusRows []metav1.TableRow
+			for _, event := range events.Items {
+				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+			}
+			defer util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+			return nil
+		} else if err == nil && len(events.Items) == 0 {
+			fmt.Println("Checking CVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->")
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return errors.New("no CVC present to display events")
+	}
+}
+
+func displayCSPCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	if crs.CSPC != nil {
+		// 1. Set the namespace of the resource to the client
+		k.Ns = crs.PVC.Namespace
+		// 2. Fetch the events of the concerned PVC.
+		// The PVCs donot have the Kind filled, thus we have hardcoded here.
+		events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorPoolCluster", crs.PVC.Name))
+		// 3. Display the events
+		fmt.Println()
+		if err == nil && len(events.Items) != 0 {
+			fmt.Println("Checking CSPC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
+			var crStatusRows []metav1.TableRow
+			for _, event := range events.Items {
+				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+			}
+			util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+			return nil
+		} else if err == nil && len(events.Items) == 0 {
+			fmt.Println("Checking CSPC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(events.Items)), util.Green), "-------->")
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return errors.New("no CSPC present to display events")
+	}
+}
+
+func displayCSPIEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	if crs.CSPIs != nil && len(crs.CSPIs.Items) != 0 {
+		// 1. Set the namespace of the resource to the client
+		k.Ns = crs.CSPIs.Items[0].Namespace
+		// 2. Fetch the events of the concerned CSPIs
+		fmt.Println()
+		var crStatusRows []metav1.TableRow
+		for _, CSPI := range crs.CSPIs.Items {
+			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorPoolInstance", CSPI.Name))
+			// 3. Display the events
+			if err == nil && len(events.Items) != 0 {
+				for _, event := range events.Items {
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+				}
+			}
+		}
+		if len(crStatusRows) == 0 {
+			fmt.Println("Checking CSPI Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(crStatusRows)), util.Green), "-------->")
+			return nil
+		} else {
+			fmt.Println("Checking CSPI Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(crStatusRows)), util.Red), "-------->")
+			util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+			return nil
+		}
+	}
+	return errors.New("no CSPIs present to display events")
 }

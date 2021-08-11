@@ -227,6 +227,7 @@ var (
 	}
 	// EventsColumnDefinitions stores the Table headers for events details
 	EventsColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Name", Type: "string"},
 		{Name: "Action", Type: "string"},
 		{Name: "Reason", Type: "string"},
 		{Name: "Message", Type: "string"},
