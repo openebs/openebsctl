@@ -223,3 +223,42 @@ type CstorVolumeResources struct {
 	CSPIs       *v1.CStorPoolInstanceList
 	CSPC        *v1.CStorPoolCluster
 }
+
+// ZFSVolDesc is the output helper for ZfsVolDesc
+type ZFSVolDesc struct {
+	Name         string
+	Namespace    string
+	AccessMode   string
+	CSIDriver    string
+	Capacity     string
+	PVC          string
+	VolumePhase  corev1.PersistentVolumePhase
+	StorageClass string
+	Version      string
+	Status       string
+	VolumeType   string
+	PoolName     string
+	FileSystem   string
+	Compression  string
+	Dedup        string
+	NodeID       string
+	Recordsize   string
+}
+
+// LVMVolDesc is the output helper for LVMVolDesc
+type LVMVolDesc struct {
+	Name            string
+	Namespace       string
+	AccessMode      string
+	CSIDriver       string
+	Capacity        string
+	PVC             string
+	VolumePhase     corev1.PersistentVolumePhase
+	StorageClass    string
+	Version         string
+	Status          string
+	VolumeGroup     string
+	Shared          string
+	ThinProvisioned string
+	NodeID          string
+}

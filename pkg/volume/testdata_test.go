@@ -452,10 +452,11 @@ var lvmPV1 = corev1.PersistentVolume{
 	},
 	Spec: corev1.PersistentVolumeSpec{
 		// 4GiB
-		Capacity:                      corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
-		PersistentVolumeSource:        corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.LocalPVLVMCSIDriver}},
-		AccessModes:                   []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
-		ClaimRef:                      nil,
+		Capacity:               corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
+		PersistentVolumeSource: corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.LocalPVLVMCSIDriver}},
+		AccessModes:            []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		ClaimRef: &corev1.ObjectReference{Kind: "PersistentVolumeClaim", Namespace: "pvc-namespace",
+			Name: "lvm-pvc-1", APIVersion: "v1"},
 		PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
 		StorageClassName:              "lvm-sc-1",
 		VolumeMode:                    &blockFS,

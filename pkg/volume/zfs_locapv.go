@@ -48,27 +48,6 @@ NodeID        : {{.NodeID}}
 Recordsize    : {{.Recordsize}}
 `
 
-// ZFSVolDesc is the output helper for ZfsVolDesc
-type ZFSVolDesc struct {
-	Name         string
-	Namespace    string
-	AccessMode   string
-	CSIDriver    string
-	Capacity     string
-	PVC          string
-	VolumePhase  corev1.PersistentVolumePhase
-	StorageClass string
-	Version      string
-	Status       string
-	VolumeType   string
-	PoolName     string
-	FileSystem   string
-	Compression  string
-	Dedup        string
-	NodeID       string
-	Recordsize   string
-}
-
 // GetZFSLocalPVs returns a list of ZFSVolumes
 func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	// 1. Fetch all relevant volume CRs without worrying about openebsNS
@@ -138,7 +117,7 @@ func DescribeZFSLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 	// TODO: Can NDM mark a zfs-localpv used volume as Claimed
 	// 1. Show some ZFS-pools
-	v := ZFSVolDesc{
+	v := util.ZFSVolDesc{
 		AccessMode: util.AccessModeToString(vol.Spec.AccessModes),
 		Capacity:   vol.Spec.Capacity.Storage().String(),
 		CSIDriver:  vol.Spec.CSI.Driver,
