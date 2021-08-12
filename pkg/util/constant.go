@@ -28,11 +28,11 @@ const (
 	// CstorCasType cas type name
 	CstorCasType = "cstor"
 	// ZFSCasType cas type name
-	ZFSCasType = "zfslocalpv"
+	ZFSCasType = "localpv-zfs"
 	// JivaCasType is the cas type name for Jiva
 	JivaCasType = "jiva"
 	// LVMCasType cas type name
-	LVMCasType = "lvmlocalpv"
+	LVMCasType = "localpv-lvm"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -84,13 +84,15 @@ var (
 		CstorCasType: CStorCSIControllerLabelValue,
 		JivaCasType:  JivaCSIControllerLabelValue,
 		LVMCasType:   LVMLocalPVcsiControllerLabelValue,
+		ZFSCasType:   ZFSLocalPVcsiControllerLabelValue,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
 	ComponentNameToCasTypeMap = map[string]string{
-		"openebs-cstor-csi-controller": CstorCasType,
-		"openebs-jiva-csi-controller":  JivaCasType,
-		"openebs-lvm-controller":       LVMCasType,
+		CStorCSIControllerLabelValue:      CstorCasType,
+		JivaCSIControllerLabelValue:       JivaCasType,
+		LVMLocalPVcsiControllerLabelValue: LVMCasType,
+		ZFSLocalPVcsiControllerLabelValue: ZFSCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{

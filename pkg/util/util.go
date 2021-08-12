@@ -171,14 +171,3 @@ func ColorStringOnStatus(stringToColor string) string {
 		return ColorText(stringToColor, Red)
 	}
 }
-
-// NormalizeCas is used to maintain one version of cas name
-func NormalizeCas(casType string) string {
-	if casType == "localpv-lvm" {
-		return LVMCasType
-	} else if casType == "localpv-zfs" {
-		return ZFSCasType
-	} else {
-		return casType
-	}
-}
