@@ -82,37 +82,37 @@ func TestConvertToIBytes(t *testing.T) {
 		{
 			"Test with GB values",
 			args{value: "1.65GB"},
-			"1.5 GiB",
+			"1.5GiB",
 		},
 		{
 			"Test with MB values",
 			args{value: "1.65MB"},
-			"1.6 MiB",
+			"1.6MiB",
 		},
 		{
 			"Test with KB values",
 			args{value: "1.65KB"},
-			"1.6 KiB",
+			"1.6KiB",
 		},
 		{
 			"Test with K values",
 			args{value: "1.65K"},
-			"1.6 KiB",
+			"1.6KiB",
 		},
 		{
 			"Test with M values",
 			args{value: "1.65M"},
-			"1.6 MiB",
+			"1.6MiB",
 		},
 		{
 			"Test with MiB values",
 			args{value: "1.65MiB"},
-			"1.6 MiB",
+			"1.6MiB",
 		},
 		{
 			"Test with Mi values",
 			args{value: "1.65Mi"},
-			"1.6 MiB",
+			"1.6MiB",
 		},
 		{
 			"Test with invalid",
@@ -122,7 +122,7 @@ func TestConvertToIBytes(t *testing.T) {
 		{
 			"Test with only numeric value",
 			args{value: "1766215"},
-			"1.7 MiB",
+			"1.7MiB",
 		},
 		{
 			"Test with only invalid unit",
@@ -133,7 +133,7 @@ func TestConvertToIBytes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := ConvertToIBytes(tt.args.value); got != tt.want {
-				t.Errorf("Duration() = %v, want %v", got, tt.want)
+				t.Errorf("ConvertToIBytes() = %v, want %v", got, tt.want)
 			}
 		})
 	}

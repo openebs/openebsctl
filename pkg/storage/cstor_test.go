@@ -58,8 +58,8 @@ func TestGetCstorPool(t *testing.T) {
 			},
 			nil,
 			[]metav1.TableRow{
-				{Cells: []interface{}{"pool-1", "node1", "174 GiB", "188 GiB", false, int32(2), int32(2), "ONLINE"}},
-				{Cells: []interface{}{"pool-2", "node2", "174 GiB", "188 GiB", false, int32(2), int32(2), "ONLINE"}}},
+				{Cells: []interface{}{"pool-1", "node1", "174.0GiB", "188.1GiB", false, int32(2), int32(2), "ONLINE"}},
+				{Cells: []interface{}{"pool-2", "node2", "174.0GiB", "188.1GiB", false, int32(2), int32(2), "ONLINE"}}},
 
 			false,
 		},

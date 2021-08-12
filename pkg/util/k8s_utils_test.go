@@ -148,7 +148,7 @@ func TestGetCasTypeFromPV(t *testing.T) {
 		{
 			"zfs pv, from CSI driver",
 			args{v1PV: &zfspv},
-			"zfslocalpv",
+			"localpv-zfs",
 		},
 	}
 	for _, tt := range tests {

@@ -147,9 +147,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -165,7 +165,7 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}},
 			wantErr: false,
 		},
@@ -181,9 +181,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, ""},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, ""},
 			}},
 			wantErr: false,
 		},
@@ -199,9 +199,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -217,9 +217,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
@@ -235,9 +235,9 @@ func TestGetCStor(t *testing.T) {
 				openebsNS: "cstor",
 			},
 			want: []metav1.TableRow{{Cells: []interface{}{
-				"cstor", "pvc-1", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
+				"cstor", "pvc-1", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-1"},
 			}, {Cells: []interface{}{
-				"cstor", "pvc-2", util.Healthy, "2.11.0", "4GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
+				"cstor", "pvc-2", util.Healthy, "2.11.0", "4.0GiB", "cstor-sc", corev1.VolumeBound, corev1.ReadWriteOnce, "node-2"},
 			}},
 			wantErr: false,
 		},
