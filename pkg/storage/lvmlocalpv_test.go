@@ -104,3 +104,47 @@ func lvnNodeNotFound(c *client.K8sClient) {
 		return true, nil, fmt.Errorf("failed to list LVMVolumes")
 	})
 }
+
+func TestDescribeLVMvg(t *testing.T) {
+	type args struct {
+		c       *client.K8sClient
+		lvmFunc func(sClient *client.K8sClient)
+		vg      string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"no LVM vgs exist",
+			args{c: &client.K8sClient{Ns: "", LVMCS: fakelvmclient.NewSimpleClientset()}, lvmFunc: lvnNodeNotFound, vg: "cstor-pv1"},
+			true,
+		},
+		{
+			"one LVM node exist and asked for",
+			args{c: &client.K8sClient{Ns: "lvm", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1)}, vg: "node1"},
+			false,
+		},
+		{
+			"one ZFS node exist with differing namespace",
+			args{c: &client.K8sClient{Ns: "zfs", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1)}, vg: "node1"},
+			false,
+		},
+		{
+			"two ZFS node exist, none asked for",
+			args{c: &client.K8sClient{Ns: "zfs", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1, &lvmNode2)}, vg: ""},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.lvmFunc != nil {
+				tt.args.lvmFunc(tt.args.c)
+			}
+			if err := DescribeLVMvg(tt.args.c, tt.args.vg); (err != nil) != tt.wantErr {
+				t.Errorf("DescribeLVMvg() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

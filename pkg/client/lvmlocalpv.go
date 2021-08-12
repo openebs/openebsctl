@@ -92,7 +92,49 @@ func (k K8sClient) GetLVMvol(lVols []string, rType util.ReturnType, labelSelecto
 	return nil, nil, errors.New("invalid return type")
 }
 
-// GetLVMNodes return a list of LVMNodes
-func (k K8sClient) GetLVMNodes() (*lvm.LVMNodeList, error) {
-	return k.LVMCS.LocalV1alpha1().LVMNodes("").List(context.TODO(), v1.ListOptions{})
+// GetLVMNodes return a list or map of LVMNodes or an error
+func (k K8sClient) GetLVMNodes(lVols []string, rType util.ReturnType, labelSelector string, options util.MapOptions) (*lvm.LVMNodeList, map[string]lvm.LVMNode, error) {
+	lvs, err := k.LVMCS.LocalV1alpha1().LVMNodes("").List(context.TODO(), v1.ListOptions{})
+	if err != nil {
+		return nil, nil, err
+	}
+	var list []lvm.LVMNode
+	if len(lVols) == 0 {
+		list = lvs.Items
+	} else {
+		lvsMap := make(map[string]lvm.LVMNode)
+		for _, lv := range lvs.Items {
+			lvsMap[lv.Name] = lv
+		}
+		for _, name := range lVols {
+			if lv, ok := lvsMap[name]; ok {
+				list = append(list, lv)
+			} else {
+				fmt.Printf("Error from server (NotFound): lvmvolume %s not found\n", name)
+			}
+		}
+	}
+	if rType == util.List {
+		return &lvm.LVMNodeList{Items: list}, nil, nil
+	}
+	if rType == util.Map {
+		lvMap := make(map[string]lvm.LVMNode)
+		switch options.Key {
+		case util.Label:
+			for _, lv := range list {
+				if val, ok := lv.Labels[options.LabelKey]; ok {
+					lvMap[val] = lv
+				}
+			}
+			return nil, lvMap, nil
+		case util.Name:
+			for _, lv := range list {
+				lvMap[lv.Name] = lv
+			}
+			return nil, lvMap, nil
+		default:
+			return nil, nil, errors.New("invalid map options")
+		}
+	}
+	return nil, nil, errors.New("invalid return type")
 }
