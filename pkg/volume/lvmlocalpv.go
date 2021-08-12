@@ -89,7 +89,7 @@ func DescribeLVMLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 		return fmt.Errorf("LVM volume nil")
 	}
 	lVols, _, err := c.GetLVMvol([]string{vol.Name}, util.List, "", util.MapOptions{})
-	if err != nil {
+	if err != nil && len(lVols.Items) == 0 {
 		return err
 	}
 	lVol := lVols.Items[0]
