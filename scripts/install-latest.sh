@@ -63,8 +63,6 @@ tar -xvf openebsctl.tar.gz
 
 echo -e "\n\nExtracted Latest Release ----->"
 
-cd "kubectl-openebs_""$LATEST_TAG""_"$UNAME"_""$XC_ARCH"
-
 sudo cp kubectl-openebs /usr/local/bin
 
 echo -e "\n\nCopied Latest Release to usr/local/bin ----->"
