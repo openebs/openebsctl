@@ -1,6 +1,6 @@
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
-## OpenEBSCTL
+# OpenEBSCTL
 
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/openebs/openebsctl?)](https://goreportcard.com/report/github.com/openebs/openebsctl)
@@ -15,12 +15,12 @@
 OpenEBSCTL is a kubectl plugin to manage OpenEBS storage components.
 
 
-### Project Status
+## Project Status
 
 **Alpha**. Under active development and seeking [contributions from the community](#contributing).
 The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS` Cas-Engines.
 
-### Table of Contents
+## Table of Contents
 * [Installation](#installation)
 * [Build](#build)
 * [Flags](#flags)
@@ -46,33 +46,29 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
 * [Contributing](#contributing)
 
 
-### Installation
+## Installation
 
 OpenEBSCTL is available on Linux, macOS and Windows platforms.
 
-* Binaries for Linux, Mac and Windows are available as tarballs and zip in the [release](https://github.com/openebs/openebsctl/releases) page.
-* For Linux, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
-   ```shell
-   tar -xvf kubectl-openebs_v0.2.0_Linux_x86_64.tar.gz
-   cd kubectl-openebs_v0.2.0_Linux_x86_64
-   sudo mv kubectl-openebs /usr/local/bin/
-   ```
-  Or, download the `debian` package from the [release](https://github.com/openebs/openebsctl/releases) page and double click it launch the installer if using GUI.<br/><br/>
-  Or, we can also use script to install the latest version :-
-   ```shell
-   wget https://raw.githubusercontent.com/openebs/openebsctl/develop/scripts/install-latest.sh -O - | bash
-   ```
-* For Mac, download the respective tarball from [release](https://github.com/openebs/openebsctl/releases) page and :-
-  ```shell
-   tar -xzvf kubectl-openebs_v0.2.0_Darwin_x86_64.tar.gz
-   cd kubectl-openebs_v0.2.0_Darwin_x86_64
-   sudo mv kubectl-openebs /usr/local/bin/
-   ```
-* For Windows, download the respective zip from [release](https://github.com/openebs/openebsctl/releases) page and :-
-    - Extract the zip, copy the `path` of the folder the contents are in.
-    - Add the `path` to the `PATH` environment variable.
+* (**Recommended**) The latest binary can be installed via `krew`
+```bash
+$ kubectl krew install openebs
+...
+...
+$ kubectl krew list
+PLUGIN    VERSION
+openebs    v0.2.0
+...
+...
+# to update the openebs plugin
+$ kubectl krew upgrade openebs
+...
+...
+```
 
-### Build
+* Binaries for Linux, Mac and Windows are available as tarballs and zip in the [release](https://github.com/openebs/openebsctl/releases) page.
+
+## Build
 
 - Clone this repo to your system. `git clone https://github.com/openebs/openebsctl`
 - `cd openebsctl`
@@ -223,11 +219,50 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     $ kubectl openebs get storage --cas-type=lvmlocalpv
     NAME         FREESIZE   TOTALSIZE
     worker-sh1              
-    └─lvmvg      1018 GiB   1024 GiB
+    └─lvmvg      1020 GiB   1024 GiB
     
     worker-sh2              
     └─lvmvg-1    46.7 GiB   50 GiB
     ```
+  * #### Describe `LocalPV-LV` volumeGroups
+   ```bash
+   $ kubectl openebs describe storage worker-sh1
+    worker-sh1 Details :
+
+    HOSTNAME        : worker-sh1
+    NAMESPACE       : openebs
+    NUMBER OF POOLS : 1
+    TOTAL CAPACITY  : 1024.0GiB
+    TOTAL FREE      : 1020.0GiB
+    TOTAL LVs       : 1
+    TOTAL PVs       : 1
+
+    Volume group details
+    ---------------------
+    NAME    UUID                                     LV COUNT   PV COUNT   USED PERCENTAGE
+    lvmvg   IgnC8K-OJaA-WBx6-JLYz-HQU3-W8kb-0LHbXy   1          1          0.4%
+   ```
+  * #### Describe `LocalPV-LV` volume
+  ```bash
+  $ kubectl openebs describe vol pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
+
+    pvc-9999274f-ad01-48bc-9b21-7c51b47a870c Details :
+    ------------------
+    Name            : pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
+    Namespace       : openebs
+    AccessMode      : ReadWriteOnce
+    CSIDriver       : local.csi.openebs.io
+    Capacity        : 4Gi
+    PVC             : csi-lvmpv
+    VolumePhase     : Bound
+    StorageClass    : openebs-lvmpv
+    Version         : ci
+    Status          : Ready
+    VolumeGroup     : lvmvg
+    Shared          : no
+    ThinProvisioned : no
+    NodeID          : worker-sh1
+  ```
 * #### `LocalPV-ZFS`
   * #### Get `LocalPV-ZFS` volumes
     ```bash
@@ -245,6 +280,41 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     
     node2         
     └─zfs-test-pool   36 GiB
+    ```
+  * #### Describe `LocalPV-ZFS volumes`
+    ```bash
+    $ kubectl openebs describe vol pvc-43fcbc72-a45a-49d5-9ec3-e383fcb91452
+
+    pvc-43fcbc72-a45a-49d5-9ec3-e383fcb91452 Details :
+    -----------------
+    Name          : pvc-43fcbc72-a45a-49d5-9ec3-e383fcb91452
+    Namespace     : openebs
+    AccessMode    : ReadWriteOnce
+    CSIDriver     : zfs.csi.openebs.io
+    Capacity      : 4Gi
+    PVC           : csi-zfspv
+    VolumePhase   : Bound
+    StorageClass  : openebs-zfspv
+    Version       : N/A
+    Status        : Ready
+    VolumeType    : DATASET
+    PoolName      : zfspv-pool
+    FileSystem    : zfs
+    Compression   : off
+    Deduplication : off
+    NodeID        : worker-sh1
+    Recordsize    : 4k
+    ```
+  * #### Describe `LocalPV-ZFS pools`
+    ```bash
+    $ kubectl openebs describe storage node2
+  
+     node2 Details :
+  
+     HOSTNAME        : node2
+     NAMESPACE       : openebs
+     NUMBER OF POOLS : 1
+     TOTAL FREE      : 32 GiB
     ```
 * #### `BlockDevice`
   * #### Get `BlockDevices` by Nodes
@@ -302,6 +372,9 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     VERSION       : 2.1.0
     UPGRADING     : true
     ```
+  * #### Degbugging
+
+    ![img.png](docs/img.png)
 
 ### Contributing
 
