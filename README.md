@@ -36,13 +36,18 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
   * [LocalPV-LVM](#localpv-lvm)
     * [Get LocalPV-LVM volumes](#get-localpv-lvm-volumes)
     * [Get LocalPV-LVM VolumeGroups](#get-localpv-lvm-volumegroups)
+    * [Describe LocalPV-LVM volumeGroups](#describe-localpv-lvm-volumeGroups)
+    * [Describe LocalPV-LVM volumes](#describe-localpv-lvm-volumes)
   * [LocalPV-ZFS](#localpv-zfs)
     * [Get LocalPV-ZFS volumes](#get-localpv-zfs-volumes)
     * [Get LocalPV-ZFS Pools](#get-localpv-zfs-pools)
+    * [Describe LocalPV-ZFS volumes](#describe-localpv-zfs-volumes)
+    * [Describe LocalPV-ZFS pools](#describe-localpv-zfs-pools)
   * [BlockDevice](#blockdevice)
     * [Get BlockDevices by Nodes](#get-blockdevices-by-nodes)
   * [PersistentVolumeClaims](#persistentvolumeclaims)
     * [Describe pvcs](#describe-pvcs)
+    * [Debugging pvcs](#debugging-pvcs)
 * [Contributing](#contributing)
 
 
@@ -103,7 +108,7 @@ $ kubectl krew upgrade openebs
   * #### Describe `cStor` volumes
     ```bash
     $ kubectl openebs describe volume pvc-193844d7-3bef-45a3-8b7d-ed3991391b45
-  
+
     pvc-193844d7-3bef-45a3-8b7d-ed3991391b45 Details :
     -----------------
     NAME            : pvc-193844d7-3bef-45a3-8b7d-ed3991391b45
@@ -224,7 +229,7 @@ $ kubectl krew upgrade openebs
     worker-sh2              
     └─lvmvg-1    46.7 GiB   50 GiB
     ```
-  * #### Describe `LocalPV-LV` volumeGroups
+  * #### Describe `LocalPV-LVM` volumeGroups
    ```bash
    $ kubectl openebs describe storage worker-sh1
     worker-sh1 Details :
@@ -242,7 +247,7 @@ $ kubectl krew upgrade openebs
     NAME    UUID                                     LV COUNT   PV COUNT   USED PERCENTAGE
     lvmvg   IgnC8K-OJaA-WBx6-JLYz-HQU3-W8kb-0LHbXy   1          1          0.4%
    ```
-  * #### Describe `LocalPV-LV` volume
+  * #### Describe `LocalPV-LVM` volume
   ```bash
   $ kubectl openebs describe vol pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
 
@@ -372,8 +377,10 @@ $ kubectl krew upgrade openebs
     VERSION       : 2.1.0
     UPGRADING     : true
     ```
-  * #### Degbugging
-
+  * #### Debugging pvcs
+    ```bash
+    $ kubectl openebs describe pvc mongo --openebs-namespace=openebs --debug
+    ```
     ![img.png](docs/img.png)
 
 ### Contributing
