@@ -1,3 +1,37 @@
+# Release v0.3.0
+<img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
+
+## Notes
+Users are encouraged to install this tool, use it and help us know what can be better.<br/>
+Thank you to all that contributed with flushing out issues with OpenEBS-CTL!<br/>
+You can checkout the [documentation](https://github.com/openebs/openebsctl#readme) for more information.<br/>
+
+## Notable Changes
+We have added more features for `cStor`, `LocalPV-LVM`, `LocalPV-ZFS` storage engine.<br/>
+* LocalPV-LVM `volume` and `volumegroups` describing commands.
+* LocalPV-ZFS `volume` and `pools` describing commands.
+* Debugging a `cStor` volume, for understanding what has broken.
+* Distribution using `krew`.
+
+
+## What's Next
+* Adding support for MayaStor
+* Adding support for upgrading pool and volumes.
+* Support for moving the pool to new nodes, if the disks are already moved to new node.
+* Ability to generate raise GitHub issues with required troubleshooting information.
+* Adding support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilised pools.
+  
+## Resolved Bugs
+
++ [[Issue 72]](https://github.com/openebs/openebsctl/issues/72) Make OpenEBS CLI easier to install via krew.
++ [[Issue 51]](https://github.com/openebs/openebsctl/issues/51) Add go linting tools to CI.
++ [[Issue 49]](https://github.com/openebs/openebsctl/issues/49), [[Issue 63]](https://github.com/openebs/openebsctl/issues/63) Unit testing for all packages.
++ [[Issue 42]](https://github.com/openebs/openebsctl/issues/42) Can the described pvc help to determine, why a cStor Volume is not ready?
++ [[Issue 37]](https://github.com/openebs/openebsctl/issues/37) Add support for zfs-localPV.
++ [[Issue 33]](https://github.com/openebs/openebsctl/issues/33) Add support for LVM LocalPV.
+
+---
+
 # Release v0.2.0
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
