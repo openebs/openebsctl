@@ -378,6 +378,7 @@ $ kubectl krew upgrade openebs
     UPGRADING     : true
     ```
   * #### Debugging pvcs
+    _currently supported only for cstor_
     ```bash
     $ kubectl openebs describe pvc mongo --openebs-namespace=openebs --debug
     ```
