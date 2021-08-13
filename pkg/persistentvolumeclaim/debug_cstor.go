@@ -329,7 +329,7 @@ func displayCSPIEvents(k client.K8sClient, crs util.CstorVolumeResources) error 
 			return nil
 		}
 	}
-	return errors.New("no CVRs present to display events")
+	return errors.New("no CSPIs present to display events")
 }
 
 func displayCVREvents(k client.K8sClient, crs util.CstorVolumeResources) error {
