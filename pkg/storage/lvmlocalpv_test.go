@@ -64,12 +64,12 @@ func TestGetVolumeGroup(t *testing.T) {
 			},
 			want: []metav1.TableRow{
 				{Cells: []interface{}{"node1", "", "", ""}},
-				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0 GiB", "5.0 GiB"}},
-				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0 GiB", "5.0 GiB"}},
+				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0GiB", "5.0GiB"}},
+				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0GiB", "5.0GiB"}},
 				{Cells: []interface{}{"", "", ""}},
 				{Cells: []interface{}{"node2", "", "", ""}},
-				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0 GiB", "5.0 GiB"}},
-				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0 GiB", "5.0 GiB"}},
+				{Cells: []interface{}{firstElemPrefix + "lvmvg", "4.0GiB", "5.0GiB"}},
+				{Cells: []interface{}{lastElemPrefix + "lvmvg2", "4.0GiB", "5.0GiB"}},
 				{Cells: []interface{}{"", "", ""}},
 			},
 			wantErr: false,
@@ -103,4 +103,48 @@ func lvnNodeNotFound(c *client.K8sClient) {
 	c.LVMCS.LocalV1alpha1().(*fakelvm.FakeLocalV1alpha1).Fake.PrependReactor("*", "*", func(action k8stest.Action) (handled bool, ret runtime.Object, err error) {
 		return true, nil, fmt.Errorf("failed to list LVMVolumes")
 	})
+}
+
+func TestDescribeLVMvg(t *testing.T) {
+	type args struct {
+		c       *client.K8sClient
+		lvmFunc func(sClient *client.K8sClient)
+		vg      string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"no LVM vgs exist",
+			args{c: &client.K8sClient{Ns: "", LVMCS: fakelvmclient.NewSimpleClientset()}, lvmFunc: lvnNodeNotFound, vg: "cstor-pv1"},
+			true,
+		},
+		{
+			"one LVM node exist and asked for",
+			args{c: &client.K8sClient{Ns: "lvm", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1)}, vg: "node1"},
+			false,
+		},
+		{
+			"one ZFS node exist with differing namespace",
+			args{c: &client.K8sClient{Ns: "zfs", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1)}, vg: "node1"},
+			false,
+		},
+		{
+			"two ZFS node exist, none asked for",
+			args{c: &client.K8sClient{Ns: "zfs", LVMCS: fakelvmclient.NewSimpleClientset(&lvmNode1, &lvmNode2)}, vg: ""},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.lvmFunc != nil {
+				tt.args.lvmFunc(tt.args.c)
+			}
+			if err := DescribeLVMvg(tt.args.c, tt.args.vg); (err != nil) != tt.wantErr {
+				t.Errorf("DescribeLVMvg() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
 }

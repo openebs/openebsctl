@@ -74,7 +74,7 @@ func TestGetZFSLocalPVs(t *testing.T) {
 			wantErr: false,
 			want: []metav1.TableRow{
 				{
-					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", "1.9.0", "4GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
+					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", "1.9.0", "4.0GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
 				},
 			},
 		},
@@ -120,7 +120,7 @@ func TestGetZFSLocalPVs(t *testing.T) {
 			wantErr: false,
 			want: []metav1.TableRow{
 				{
-					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", "N/A", "4GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
+					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", "N/A", "4.0GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
 				},
 			},
 		},

@@ -118,10 +118,11 @@ func CasDescribeMap() map[string]func(*client.K8sClient, string) error {
 	return map[string]func(*client.K8sClient, string) error{
 		util.CstorCasType: DescribeCstorPool,
 		util.ZFSCasType:   DescribeZFSNode,
+		util.LVMCasType:   DescribeLVMvg,
 	}
 }
 
 // CasDescribeList returns a list of functions which describe a Storage i.e. a pool/volume-group
 func CasDescribeList() []func(*client.K8sClient, string) error {
-	return []func(*client.K8sClient, string) error{DescribeCstorPool, DescribeZFSNode}
+	return []func(*client.K8sClient, string) error{DescribeCstorPool, DescribeZFSNode, DescribeLVMvg}
 }

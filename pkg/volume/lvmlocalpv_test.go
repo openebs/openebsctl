@@ -73,7 +73,7 @@ func TestGetLVMLocalPV(t *testing.T) {
 			wantErr: false,
 			want: []metav1.TableRow{
 				{
-					Cells: []interface{}{"lvmlocalpv", "pvc-1", "Ready", "1.9.0", "4GiB", "lvm-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
+					Cells: []interface{}{"lvmlocalpv", "pvc-1", "Ready", "1.9.0", "4.0GiB", "lvm-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
 				},
 			},
 		},

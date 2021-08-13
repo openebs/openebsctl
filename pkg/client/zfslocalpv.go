@@ -58,8 +58,6 @@ func (k K8sClient) GetZFSVols(volNames []string, rType util.ReturnType, labelSel
 		for _, name := range volNames {
 			if zv, ok := zvsMap[name]; ok {
 				list = append(list, zv)
-			} else {
-				fmt.Printf("Error from server (NotFound): zfsVolume %s not found\n", name)
 			}
 		}
 	}
@@ -107,9 +105,6 @@ func (k K8sClient) GetZFSNodes(volNames []string, rType util.ReturnType, labelSe
 		for _, name := range volNames {
 			if zv, ok := zvsMap[name]; ok {
 				list = append(list, zv)
-			} else {
-				// This might be omitted
-				fmt.Printf("Error from server (NotFound): zfsVolume %s not found\n", name)
 			}
 		}
 	}

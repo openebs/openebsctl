@@ -139,11 +139,18 @@ func ConvertToIBytes(value string) string {
 	if value == "" {
 		return value
 	}
-	iBytes, err := units.RAMInBytes(value)
+	var bytes int64
+	var err error
+	if strings.Contains(value, "i") {
+		bytes, err = units.RAMInBytes(value)
+	} else {
+		bytes, err = units.FromHumanSize(value)
+	}
+	// should error be also returned?
 	if err != nil {
 		return value
 	}
-	return units.BytesSize(float64(iBytes))
+	return units.CustomSize("%.1f%s", float64(bytes), 1024.0, []string{"B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"})
 }
 
 // GetAvailableCapacity returns the available capacity irrespective of units
