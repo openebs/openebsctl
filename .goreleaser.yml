@@ -29,6 +29,7 @@ archives:
     wrap_in_directory: true
     files:
       - README.md
+      - LICENSE
     replacements:
       darwin: Darwin
       linux: Linux

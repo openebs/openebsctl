@@ -26,6 +26,9 @@ import (
 	"github.com/pkg/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
+
+	// required for auth, see: https://github.com/kubernetes/client-go/tree/v0.17.3/plugin/pkg/client/auth
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 )
 
 // getLVMClient returns OpenEBS clientset by taking kubeconfig as an
