@@ -26,7 +26,7 @@ archives:
       - goos: 'windows'
         format: 'zip'
 
-    wrap_in_directory: true
+    wrap_in_directory: false
     files:
       - README.md
       - LICENSE
