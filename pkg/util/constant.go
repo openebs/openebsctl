@@ -41,7 +41,7 @@ const (
 	NotAttached = "N/A"
 	// CVAVolnameKey present in label of CVA
 	CVAVolnameKey = "Volname"
-	// UnicodeCross stores the character representation of U+274C
+	// UnicodeCross stores the character representation of U+2718
 	UnicodeCross = "✘"
 	// UnicodeCheck stores the character representation of U+2714
 	UnicodeCheck = "✔"
