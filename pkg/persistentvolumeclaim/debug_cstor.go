@@ -87,10 +87,11 @@ func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClai
 	// 4. Call the resource showing module
 	_ = resourceStatus(cstorResources)
 	_ = displayPVCEvents(*k, cstorResources)
-	_ = displayBDCEvents(*k, cstorResources)
 	_ = displayCVCEvents(*k, cstorResources)
-	_ = displayCSPCEvents(*k, cstorResources)
+	_ = displayCVREvents(*k, cstorResources)
 	_ = displayCSPIEvents(*k, cstorResources)
+	_ = displayCSPCEvents(*k, cstorResources)
+	_ = displayBDCEvents(*k, cstorResources)
 	return nil
 }
 
@@ -329,4 +330,32 @@ func displayCSPIEvents(k client.K8sClient, crs util.CstorVolumeResources) error 
 		}
 	}
 	return errors.New("no CSPIs present to display events")
+}
+
+func displayCVREvents(k client.K8sClient, crs util.CstorVolumeResources) error {
+	if crs.CVRs != nil && len(crs.CVRs.Items) != 0 {
+		// 1. Set the namespace of the resource to the client
+		k.Ns = crs.CVRs.Items[0].Namespace
+		// 2. Fetch the events of the concerned CVRs
+		fmt.Println()
+		var crStatusRows []metav1.TableRow
+		for _, CVR := range crs.CVRs.Items {
+			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorVolumeReplica", CVR.Name))
+			// 3. Display the events
+			if err == nil && len(events.Items) != 0 {
+				for _, event := range events.Items {
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+				}
+			}
+		}
+		if len(crStatusRows) == 0 {
+			fmt.Println("Checking CVR Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCheck, len(crStatusRows)), util.Green), "-------->")
+			return nil
+		} else {
+			fmt.Println("Checking CVR Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(crStatusRows)), util.Red), "-------->")
+			util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
+			return nil
+		}
+	}
+	return errors.New("no CVRs present to display events")
 }
