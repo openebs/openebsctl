@@ -186,8 +186,8 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	fmt.Println("Pool Instance Statuses:")
 	fmt.Println("-----------------------")
 	crStatusRows = []metav1.TableRow{}
-	if crs.CVRs != nil {
-		for _, item := range crs.CVRs.Items {
+	if crs.CSPIs != nil {
+		for _, item := range crs.CSPIs.Items {
 			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{item.Kind, item.Name, util.ColorStringOnStatus(string(item.Status.Phase))}})
 		}
 	}
