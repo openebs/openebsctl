@@ -56,22 +56,25 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
 OpenEBSCTL is available on Linux, macOS and Windows platforms.
 
 * (**Recommended**) The latest binary can be installed via `krew`
-```bash
-$ kubectl krew install openebs
-...
-...
-$ kubectl krew list
-PLUGIN    VERSION
-openebs    v0.2.0
-...
-...
-# to update the openebs plugin
-$ kubectl krew upgrade openebs
-...
-...
-```
+  ```bash
+  $ kubectl krew install openebs
+  ...
+  ...
+  $ kubectl krew list
+  PLUGIN    VERSION
+  openebs    v0.2.0
+  ...
+  ...
+  # to update the openebs plugin
+  $ kubectl krew upgrade openebs
+  ...
+  ...
+  ```
 
 * Binaries for Linux, Mac and Windows are available as tarballs and zip in the [release](https://github.com/openebs/openebsctl/releases) page.
+* Or, if you don't want to setup krew, you run the following to get latest version :-
+   ```shell
+   wget https://raw.githubusercontent.com/openebs/openebsctl/develop/scripts/install-latest.sh -O - | bash
 
 ## Build
 
