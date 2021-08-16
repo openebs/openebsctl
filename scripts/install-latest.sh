@@ -69,6 +69,6 @@ echo -e "\n\nCopied Latest Release to usr/local/bin ----->"
 
 echo -e "\n\nCleaning things ----->"
 
-cd .. && rm openebsctl.tar.gz && rm -rf "kubectl-openebs_""$LATEST_TAG""_"$UNAME"_""$XC_ARCH"
+rm openebsctl.tar.gz && rm LICENSE && rm kubectl-openebs && rm README.md
 
 echo -e "\n\nDone"
