@@ -18,6 +18,7 @@ package persistentvolumeclaim
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -51,7 +52,7 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 	// 1. Get the JivaVolume Corresponding to the pvc name
 	jv, err := c.GetJV(pvc.Spec.VolumeName)
 	if err != nil {
-		fmt.Printf("failed to get JivaVolume for %s", pvc.Spec.VolumeName)
+		_, _ = fmt.Fprintf(os.Stderr, "failed to get JivaVolume for %s", pvc.Spec.VolumeName)
 		fmt.Println()
 	}
 	// 2. Fill in Jiva Volume Claim related details
@@ -74,7 +75,7 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		_ = util.PrintByTemplate("jivaPvcInfo", jivaPvcInfoTemplate, jivaPvcInfo)
 	} else {
 		_ = util.PrintByTemplate("jivaPvcInfo", jivaPvcInfoTemplate, jivaPvcInfo)
-		fmt.Printf("PersistentVolume %s, doesnot exist", pvc.Spec.VolumeName)
+		_, _ = fmt.Fprintf(os.Stderr, "PersistentVolume %s, doesnot exist", pvc.Spec.VolumeName)
 		fmt.Println()
 		return nil
 	}
