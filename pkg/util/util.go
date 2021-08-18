@@ -131,7 +131,7 @@ func TemplatePrinter(template string, obj runtime.Object) {
 	p.AllowMissingKeys(true)
 	buffer := &bytes.Buffer{}
 	_ = p.PrintObj(obj, buffer)
-	fmt.Println(buffer)
+	fmt.Print(buffer)
 }
 
 // ConvertToIBytes humanizes all the passed units to IBytes format
