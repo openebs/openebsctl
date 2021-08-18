@@ -120,6 +120,17 @@ var (
 		{Name: "IP", Type: "string"},
 		{Name: "Node", Type: "string"},
 	}
+	// JivaPodDetailsColumnDefinations stores the Table headers for Jiva Pod Details
+	JivaPodDetailsColumnDefinations = []metav1.TableColumnDefinition{
+		{Name: "Namespace", Type: "string"},
+		{Name: "Name", Type: "string"},
+		{Name: "Mode", Type: "string"},
+		{Name: "Node", Type: "string"},
+		{Name: "Status", Type: "string"},
+		{Name: "IP", Type: "string"},
+		{Name: "Ready", Type: "string"},
+		{Name: "Age", Type: "string"},
+	}
 	// VolumeListColumnDefinations stores the Table headers for Volume Details
 	VolumeListColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Namespace", Type: "string"},
