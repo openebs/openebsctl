@@ -51,7 +51,8 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 	// 1. Get the JivaVolume Corresponding to the pvc name
 	jv, err := c.GetJV(pvc.Spec.VolumeName)
 	if err != nil {
-		fmt.Println(fmt.Sprintf("failed to get JivaVolume for %s", pvc.Spec.VolumeName))
+		fmt.Printf("failed to get JivaVolume for %s", pvc.Spec.VolumeName)
+		fmt.Println()
 	}
 	// 2. Fill in Jiva Volume Claim related details
 	jivaPvcInfo := util.JivaPVCInfo{
@@ -73,11 +74,13 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		_ = util.PrintByTemplate("jivaPvcInfo", jivaPvcInfoTemplate, jivaPvcInfo)
 	} else {
 		_ = util.PrintByTemplate("jivaPvcInfo", jivaPvcInfoTemplate, jivaPvcInfo)
-		fmt.Println(fmt.Sprintf("PersistentVolume %s, doesnot exist", pvc.Spec.VolumeName))
+		fmt.Printf("PersistentVolume %s, doesnot exist", pvc.Spec.VolumeName)
+		fmt.Println()
 		return nil
 	}
 	// 4. Print the Portal Information
 	replicaPodIPAndModeMap := make(map[string]string)
+	jvStatus := ""
 	if jv != nil {
 		util.TemplatePrinter(volume.JivaPortalTemplate, jv)
 		// Create Replica IP to Mode Map
@@ -86,6 +89,9 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 				replicaPodIPAndModeMap[strings.Split(replicaStatus.Address, ":")[1][2:]] = replicaStatus.Mode
 			}
 		}
+		jvStatus = jv.Status.Status
+	} else {
+		fmt.Println()
 	}
 	// 5. Fetch the Jiva controller and replica pod details
 	podList, err := c.GetJVTargetPod(vol.Name)
@@ -94,20 +100,23 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		fmt.Println("-----------------------------------")
 		var rows []metav1.TableRow
 		for _, pod := range podList.Items {
-			if strings.Contains(pod.Name, "-ctrl-") {
+			if !strings.Contains(pod.Name, "-ctrl-") {
+				mode := ""
+				// If the IP doesnot exist, keep the mode as empty
+				if val, ok := replicaPodIPAndModeMap[pod.Status.PodIP]; ok {
+					mode = val
+				}
 				rows = append(rows, metav1.TableRow{Cells: []interface{}{
-					pod.Namespace, pod.Name, jv.Status.Status,
+					pod.Namespace, pod.Name, mode,
 					pod.Spec.NodeName, pod.Status.Phase, pod.Status.PodIP,
 					util.GetReadyContainers(pod.Status.ContainerStatuses),
 					util.Duration(time.Since(pod.ObjectMeta.CreationTimestamp.Time))}})
 			} else {
-				if val, ok := replicaPodIPAndModeMap[pod.Status.PodIP]; ok {
-					rows = append(rows, metav1.TableRow{Cells: []interface{}{
-						pod.Namespace, pod.Name, val,
-						pod.Spec.NodeName, pod.Status.Phase, pod.Status.PodIP,
-						util.GetReadyContainers(pod.Status.ContainerStatuses),
-						util.Duration(time.Since(pod.ObjectMeta.CreationTimestamp.Time))}})
-				}
+				rows = append(rows, metav1.TableRow{Cells: []interface{}{
+					pod.Namespace, pod.Name, jvStatus,
+					pod.Spec.NodeName, pod.Status.Phase, pod.Status.PodIP,
+					util.GetReadyContainers(pod.Status.ContainerStatuses),
+					util.Duration(time.Since(pod.ObjectMeta.CreationTimestamp.Time))}})
 			}
 		}
 		util.TablePrinter(util.JivaPodDetailsColumnDefinations, rows, printers.PrintOptions{Wide: true})
@@ -118,7 +127,7 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 	}
 	// 6. Fetch the replica PVCs and create rows for cli-runtime
 	var rows []metav1.TableRow
-	pvcList, err := c.GetPVCs(c.Ns, nil, "openebs.io/component=jiva-replica,openebs.io/persistent-volume="+jv.Name)
+	pvcList, err := c.GetPVCs(c.Ns, nil, "openebs.io/component=jiva-replica,openebs.io/persistent-volume="+vol.Name)
 	if err != nil || len(pvcList.Items) == 0 {
 		fmt.Printf("No replicas found for the JivaVolume %s", vol.Name)
 		return nil
