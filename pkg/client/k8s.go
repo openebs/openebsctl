@@ -24,8 +24,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	event "k8s.io/api/events/v1"
-
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -698,8 +696,8 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 	}
 }
 
-func (k K8sClient) GetEvents(fieldSelector string) (*event.EventList, error) {
-	events, err := k.K8sCS.EventsV1().Events("").List(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector})
+func (k K8sClient) GetEvents(fieldSelector string) (*corev1.EventList, error) {
+	events, err := k.K8sCS.CoreV1().Events("").List(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector})
 	if err != nil {
 		return nil, fmt.Errorf("error getting events for the resource : %v", err)
 	}
