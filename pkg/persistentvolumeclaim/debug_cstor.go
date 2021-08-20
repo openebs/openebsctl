@@ -202,14 +202,14 @@ func displayPVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 	k.Ns = crs.PVC.Namespace
 	// 2. Fetch the events of the concerned PVC.
 	// The PVCs donot have the Kind filled, thus we have hardcoded here.
-	events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=PersistentVolumeClaim", crs.PVC.Name))
+	events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=PersistentVolumeClaim", crs.PVC.Name))
 	// 3. Display the events
 	fmt.Println()
 	if err == nil && len(events.Items) != 0 {
 		fmt.Println("Checking PVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
 		var crStatusRows []metav1.TableRow
 		for _, event := range events.Items {
-			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+			crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 		}
 		util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 		return nil
@@ -229,11 +229,11 @@ func displayBDCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 		fmt.Println()
 		var crStatusRows []metav1.TableRow
 		for _, BDC := range crs.BDCs.Items {
-			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=BlockDeviceClaim", BDC.Name))
+			events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=BlockDeviceClaim", BDC.Name))
 			// 3. Display the events
 			if err == nil && len(events.Items) != 0 {
 				for _, event := range events.Items {
-					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 				}
 			}
 		}
@@ -254,14 +254,14 @@ func displayCVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 		// 1. Set the namespace of the resource to the client
 		k.Ns = crs.CVC.Namespace
 		// 2. Fetch the events of the concerned CVC
-		events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorVolumeConfig", crs.CVC.Name))
+		events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorVolumeConfig", crs.CVC.Name))
 		// 3. Display the events
 		fmt.Println()
 		if err == nil && len(events.Items) != 0 {
 			fmt.Println("Checking CVC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
 			var crStatusRows []metav1.TableRow
 			for _, event := range events.Items {
-				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 			}
 			defer util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 			return nil
@@ -282,14 +282,14 @@ func displayCSPCEvents(k client.K8sClient, crs util.CstorVolumeResources) error 
 		k.Ns = crs.PVC.Namespace
 		// 2. Fetch the events of the concerned PVC.
 		// The PVCs donot have the Kind filled, thus we have hardcoded here.
-		events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorPoolCluster", crs.PVC.Name))
+		events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorPoolCluster", crs.PVC.Name))
 		// 3. Display the events
 		fmt.Println()
 		if err == nil && len(events.Items) != 0 {
 			fmt.Println("Checking CSPC Events:", util.ColorText(fmt.Sprintf(" %s %d! ", util.UnicodeCross, len(events.Items)), util.Red), "-------->")
 			var crStatusRows []metav1.TableRow
 			for _, event := range events.Items {
-				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+				crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 			}
 			util.TablePrinter(util.EventsColumnDefinitions, crStatusRows, printers.PrintOptions{})
 			return nil
@@ -312,11 +312,11 @@ func displayCSPIEvents(k client.K8sClient, crs util.CstorVolumeResources) error 
 		fmt.Println()
 		var crStatusRows []metav1.TableRow
 		for _, CSPI := range crs.CSPIs.Items {
-			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorPoolInstance", CSPI.Name))
+			events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorPoolInstance", CSPI.Name))
 			// 3. Display the events
 			if err == nil && len(events.Items) != 0 {
 				for _, event := range events.Items {
-					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 				}
 			}
 		}
@@ -340,11 +340,11 @@ func displayCVREvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 		fmt.Println()
 		var crStatusRows []metav1.TableRow
 		for _, CVR := range crs.CVRs.Items {
-			events, err := k.GetEvents(fmt.Sprintf("regarding.name=%s,regarding.kind=CStorVolumeReplica", CVR.Name))
+			events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorVolumeReplica", CVR.Name))
 			// 3. Display the events
 			if err == nil && len(events.Items) != 0 {
 				for _, event := range events.Items {
-					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.Regarding.Name, event.Action, event.Reason, event.Note, util.ColorStringOnStatus(event.Type)}})
+					crStatusRows = append(crStatusRows, metav1.TableRow{Cells: []interface{}{event.InvolvedObject.Name, event.Action, event.Reason, event.Message, util.ColorStringOnStatus(event.Type)}})
 				}
 			}
 		}
