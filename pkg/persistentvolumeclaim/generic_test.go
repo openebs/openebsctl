@@ -17,8 +17,9 @@ limitations under the License.
 package persistentvolumeclaim
 
 import (
-	corev1 "k8s.io/api/core/v1"
 	"testing"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestDescribeGenericVolumeClaim(t *testing.T) {
@@ -35,8 +36,8 @@ func TestDescribeGenericVolumeClaim(t *testing.T) {
 		{
 			name: "All Valid Values",
 			args: args{
-				pv: &cstorPV1,
-				pvc: &cstorPVC1,
+				pv:      &cstorPV1,
+				pvc:     &cstorPVC1,
 				casType: "some-cas",
 			},
 			wantErr: false,
@@ -44,8 +45,8 @@ func TestDescribeGenericVolumeClaim(t *testing.T) {
 		{
 			name: "PV missing",
 			args: args{
-				pv: nil,
-				pvc: &cstorPVC1,
+				pv:      nil,
+				pvc:     &cstorPVC1,
 				casType: "some-cas",
 			},
 			wantErr: false,
