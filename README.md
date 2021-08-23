@@ -123,8 +123,7 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     CSPC            : cstor-storage
     SIZE            : 5.0 GiB
     STATUS          : Init
-    REPLICA COUNT	  : 1
-    
+    REPLICA COUNT	: 1
     
     Portal Details :
     ------------------
@@ -133,7 +132,6 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     TARGET NODE NAME :  node1-virtual-machine
     PORTAL           :  10.106.27.10:3260
     TARGET IP        :  10.106.27.10
-    
     
     Replica Details :
     -----------------
@@ -184,34 +182,35 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
   * #### Describe `Jiva` volumes
     ```bash
-    $ kubectl openebs describe volume pvc-478a8329-f02d-47e5-8288-0c28b582be25
-
-    pvc-478a8329-f02d-47e5-8288-0c28b582be25 Details :
+    $ kubectl openebs describe volume pvc-d6349231-a863-4d01-962e-24a4b372050d
+      
+    pvc-d6349231-a863-4d01-962e-24a4b372050d Details :
     -----------------
-    NAME            : pvc-478a8329-f02d-47e5-8288-0c28b582be25
+    NAME            : pvc-d6349231-a863-4d01-962e-24a4b372050d
     ACCESS MODE     : ReadWriteOnce
     CSI DRIVER      : jiva.csi.openebs.io
     STORAGE CLASS   : openebs-jiva-csi-sc
-    VOLUME PHASE    : Released
-    VERSION         : 2.9.0
+    VOLUME PHASE    : Bound
+    VERSION         : 2.11.0
     JVP             : jivavolumepolicy
-    SIZE            : 4.0 GiB
+    SIZE            : 4.0GiB
     STATUS          : RW
-    REPLICA COUNT	: 1
-      
+    REPLICA COUNT	: 2
+  
     Portal Details :
     ------------------
-    IQN              :  iqn.2016-09.com.openebs.jiva:pvc-478a8329-f02d-47e5-8288-0c28b582be25
-    VOLUME NAME      :  pvc-478a8329-f02d-47e5-8288-0c28b582be25
+    IQN              :  iqn.2016-09.com.openebs.jiva:pvc-d6349231-a863-4d01-962e-24a4b372050d
+    VOLUME NAME      :  pvc-d6349231-a863-4d01-962e-24a4b372050d
     TARGET NODE NAME :  node2-virtual-machine
-    PORTAL           :  10.101.211.252:3260
+    PORTAL           :  10.106.182.76:3260
   
     Replica Details :
     -----------------
     NAME                                                          STATUS   VOLUME                                     CAPACITY   STORAGECLASS       AGE
-    openebs-pvc-478a8329-f02d-47e5-8288-0c28b582be25-jiva-rep-0   Lost     pvc-d94c2500-6ed4-44c2-ba5d-bc6aecd5cff7   4.0 GiB    openebs-hostpath   8d21h
-
+    openebs-pvc-d6349231-a863-4d01-962e-24a4b372050d-jiva-rep-0   Bound    pvc-19af6af5-34e1-4ab4-8401-07269c4084fa   4.0GiB     openebs-hostpath   6d5h
+    openebs-pvc-d6349231-a863-4d01-962e-24a4b372050d-jiva-rep-1   Bound    pvc-50a75a4d-a809-45e0-8b48-167e8e5a2c17   4.0GiB     openebs-hostpath   6d5h
     ```
+      
 * #### `LocalPV-LVM`
   * #### Get `LocalPV-LVM` volumes
     ```bash
@@ -233,10 +232,10 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     └─lvmvg-1    46.7 GiB   50 GiB
     ```
   * #### Describe `LocalPV-LVM` volumeGroups
-   ```bash
-   $ kubectl openebs describe storage worker-sh1
+    ```bash
+    $ kubectl openebs describe storage worker-sh1
     worker-sh1 Details :
-
+  
     HOSTNAME        : worker-sh1
     NAMESPACE       : openebs
     NUMBER OF POOLS : 1
@@ -244,15 +243,15 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     TOTAL FREE      : 1020.0GiB
     TOTAL LVs       : 1
     TOTAL PVs       : 1
-
+  
     Volume group details
     ---------------------
     NAME    UUID                                     LV COUNT   PV COUNT   USED PERCENTAGE
     lvmvg   IgnC8K-OJaA-WBx6-JLYz-HQU3-W8kb-0LHbXy   1          1          0.4%
-   ```
+    ```
   * #### Describe `LocalPV-LVM` volume
-  ```bash
-  $ kubectl openebs describe vol pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
+    ```bash
+    $ kubectl openebs describe vol pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
 
     pvc-9999274f-ad01-48bc-9b21-7c51b47a870c Details :
     ------------------
@@ -270,7 +269,7 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
     Shared          : no
     ThinProvisioned : no
     NodeID          : worker-sh1
-  ```
+    ```
 * #### `LocalPV-ZFS`
   * #### Get `LocalPV-ZFS` volumes
     ```bash
