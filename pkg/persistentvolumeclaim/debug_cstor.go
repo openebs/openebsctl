@@ -99,7 +99,9 @@ func resourceStatus(crs util.CstorVolumeResources) error {
 	// 1. Fetch the total and usage details and humanize them
 	var totalCapacity, usedCapacity, availableCapacity string
 	totalCapacity = util.ConvertToIBytes(crs.PVC.Spec.Resources.Requests.Storage().String())
-	usedCapacity = util.ConvertToIBytes(util.GetUsedCapacityFromCVR(crs.CVRs))
+	if crs.CVRs != nil {
+		usedCapacity = util.ConvertToIBytes(util.GetUsedCapacityFromCVR(crs.CVRs))
+	}
 	// 2. Calculate the available capacity and usage percentage is used capacity is available
 	if usedCapacity != "" {
 		availableCapacity = util.GetAvailableCapacity(totalCapacity, usedCapacity)
@@ -279,10 +281,10 @@ func displayCVCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 func displayCSPCEvents(k client.K8sClient, crs util.CstorVolumeResources) error {
 	if crs.CSPC != nil {
 		// 1. Set the namespace of the resource to the client
-		k.Ns = crs.PVC.Namespace
+		k.Ns = crs.CSPC.Namespace
 		// 2. Fetch the events of the concerned PVC.
 		// The PVCs donot have the Kind filled, thus we have hardcoded here.
-		events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorPoolCluster", crs.PVC.Name))
+		events, err := k.GetEvents(fmt.Sprintf("involvedObject.name=%s,involvedObject.kind=CStorPoolCluster", crs.CSPC.Name))
 		// 3. Display the events
 		fmt.Println()
 		if err == nil && len(events.Items) != 0 {

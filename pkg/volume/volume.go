@@ -94,7 +94,7 @@ func Describe(vols []string, openebsNs string) error {
 		if openebsNs == "" {
 			if val, ok := nsMap[casType]; ok {
 				k.Ns = val
-			} else if casType != util.ZFSCasType && casType != util.LVMCasType{
+			} else if casType != util.ZFSCasType && casType != util.LVMCasType {
 				// The reason for above condition is that, newer lvm has cas ty
 				return errors.New("could not determine the underlying storage engine ns, please provide using '--openebs-namespace' flag")
 			}

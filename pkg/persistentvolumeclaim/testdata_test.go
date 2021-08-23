@@ -17,13 +17,16 @@ limitations under the License.
 package persistentvolumeclaim
 
 import (
+	"time"
+
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
+	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
 	"github.com/openebs/openebsctl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	v12 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"time"
 )
 
 var (
@@ -256,6 +259,17 @@ var cvr4 = v1.CStorVolumeReplica{
 	},
 }
 
+var cvrList = v1.CStorVolumeReplicaList{Items: []v1.CStorVolumeReplica{cvr1, cvr2}}
+
+var cstorSc = v12.StorageClass{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "cstor-sc",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+	},
+	Provisioner: "cstor.csi.openebs.io",
+	Parameters:  map[string]string{"cstorPoolCluster": "cspc"},
+}
+
 var (
 	cstorScName     = "cstor-sc"
 	cstorVolumeMode = corev1.PersistentVolumeFilesystem
@@ -412,4 +426,346 @@ var cstorTargetPod = corev1.Pod{
 	},
 	Spec:   corev1.PodSpec{NodeName: "node-1"},
 	Status: corev1.PodStatus{ContainerStatuses: []corev1.ContainerStatus{{Ready: true}, {Ready: true}, {Ready: true}}, PodIP: "10.2.2.2", Phase: "Running"},
+}
+
+var cspc = v1.CStorPoolCluster{
+	TypeMeta: metav1.TypeMeta{},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "cspc",
+		Namespace:         "cstor",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+	},
+	Spec: v1.CStorPoolClusterSpec{
+		Pools: []v1.PoolSpec{{
+			DataRaidGroups: []v1.RaidGroup{
+				{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-1"}}},
+				{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-2"}}},
+				{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-3"}}},
+			},
+		}},
+	},
+}
+
+var cspi1 = v1.CStorPoolInstance{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "cspc-1",
+		Namespace:         "cstor",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+		Labels: map[string]string{
+			"openebs.io/cstor-pool-cluster": "cspc",
+			"openebs.io/cas-type":           "cstor",
+		},
+	},
+	Spec: v1.CStorPoolInstanceSpec{
+		DataRaidGroups: []v1.RaidGroup{
+			{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-1"}}},
+		},
+	},
+	Status: v1.CStorPoolInstanceStatus{Phase: "ONLINE"},
+}
+
+var cspi2 = v1.CStorPoolInstance{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "cspc-2",
+		Namespace:         "cstor",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+		Labels: map[string]string{
+			"openebs.io/cstor-pool-cluster": "cspc",
+			"openebs.io/cas-type":           "cstor",
+		},
+	},
+	Spec: v1.CStorPoolInstanceSpec{
+		DataRaidGroups: []v1.RaidGroup{
+			{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd-2"}}},
+		},
+	},
+	Status: v1.CStorPoolInstanceStatus{Phase: "ONLINE"},
+}
+
+var cspiList = v1.CStorPoolInstanceList{Items: []v1.CStorPoolInstance{cspi1, cspi2}}
+
+/****************
+* BDC & BDCs
+ ****************/
+
+var bd1 = v1alpha1.BlockDevice{
+	TypeMeta:   metav1.TypeMeta{},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd-1", Namespace: "cstor"},
+	Spec: v1alpha1.DeviceSpec{
+		Path:     "/dev/sdb",
+		Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
+		FileSystem: v1alpha1.FileSystemInfo{
+			Type:       "zfs_member",
+			Mountpoint: "/var/some-fake-point",
+		},
+		NodeAttributes: v1alpha1.NodeAttribute{
+			NodeName: "fake-node-1",
+		},
+	},
+	Status: v1alpha1.DeviceStatus{
+		ClaimState: "Claimed",
+		State:      "Active",
+	},
+}
+var bd2 = v1alpha1.BlockDevice{
+	TypeMeta:   metav1.TypeMeta{},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd-2", Namespace: "cstor"},
+	Spec: v1alpha1.DeviceSpec{
+		Path:     "/dev/sdb",
+		Capacity: v1alpha1.DeviceCapacity{Storage: uint64(132131321)},
+		FileSystem: v1alpha1.FileSystemInfo{
+			Type:       "zfs_member",
+			Mountpoint: "/var/some-fake-point",
+		},
+		NodeAttributes: v1alpha1.NodeAttribute{
+			NodeName: "fake-node-1",
+		},
+	},
+	Status: v1alpha1.DeviceStatus{
+		ClaimState: "Claimed",
+		State:      "Active",
+	},
+}
+
+var bdList = v1alpha1.BlockDeviceList{
+	Items: []v1alpha1.BlockDevice{bd1, bd2},
+}
+
+var bdc1 = v1alpha1.BlockDeviceClaim{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "bdc-1",
+		Namespace:         "cstor",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+	},
+	Status: v1alpha1.DeviceClaimStatus{Phase: "Bound"},
+}
+
+var bdc2 = v1alpha1.BlockDeviceClaim{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "bdc-2",
+		Namespace:         "cstor",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+	},
+	Status: v1alpha1.DeviceClaimStatus{Phase: "Bound"},
+}
+
+var bdcList = v1alpha1.BlockDeviceClaimList{Items: []v1alpha1.BlockDeviceClaim{bdc1, bdc2}}
+
+var expectedBDs = map[string]bool{
+	"bdc-1": true,
+	"bdc-2": true,
+	"bdc-3": false,
+}
+
+/****************
+* EVENTS
+****************/
+
+var pvcEvent1 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "cstor-pvc-1.time1",
+		Namespace: "default",
+		UID:       "some-random-event-uuid-1",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "PersistentVolumeClaim",
+		Namespace: "default",
+		Name:      "cstor-pvc-1",
+		UID:       "some-random-pvc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var pvcEvent2 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "cstor-pvc-1.time2",
+		Namespace: "default",
+		UID:       "some-random-event-uuid-2",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "PersistentVolumeClaim",
+		Namespace: "default",
+		Name:      "cstor-pvc-1",
+		UID:       "some-random-pvc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cvcEvent1 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "pvc-1.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-3",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorVolumeConfig",
+		Namespace: "cstor",
+		Name:      "pvc-1",
+		UID:       "some-random-cvc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cvcEvent2 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "pvc-1.time2",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-4",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorVolumeConfig",
+		Namespace: "cstor",
+		Name:      "pvc-1",
+		UID:       "some-random-cvc-uuid-2",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var bdcEvent1 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "bdc-1.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-5",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "BlockDeviceClaim",
+		Namespace: "cstor",
+		Name:      "bdc-1",
+		UID:       "some-random-bdc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var bdcEvent2 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "bdc-2.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-6",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "BlockDeviceClaim",
+		Namespace: "cstor",
+		Name:      "bdc-2",
+		UID:       "some-random-bdc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cspiEvent1 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "cspc-1.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-7",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorPoolInstance",
+		Namespace: "cstor",
+		Name:      "cspc-1",
+		UID:       "some-random-cspi-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cspiEvent2 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "cspc-2.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-8",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorPoolInstance",
+		Namespace: "cstor",
+		Name:      "cspc-2",
+		UID:       "some-random-cspi-uuid-2",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cspcEvent = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "cspc.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-9",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorPoolCluster",
+		Namespace: "cstor",
+		Name:      "cspc",
+		UID:       "some-random-cspc-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cvrEvent1 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "pvc-1-rep-1.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-10",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorVolumeReplica",
+		Namespace: "cstor",
+		Name:      "pvc-1-rep-1",
+		UID:       "some-random-cvr-uuid-1",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
+}
+
+var cvrEvent2 = corev1.Event{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "pvc-1-rep-2.time1",
+		Namespace: "cstor",
+		UID:       "some-random-event-uuid-11",
+	},
+	InvolvedObject: corev1.ObjectReference{
+		Kind:      "CStorVolumeReplica",
+		Namespace: "cstor",
+		Name:      "pvc-1-rep-2",
+		UID:       "some-random-cvr-uuid-2",
+	},
+	Reason:  "some-fake-reason",
+	Message: "some-fake-message",
+	Count:   1,
+	Type:    "Warning",
+	Action:  "some-fake-action",
 }

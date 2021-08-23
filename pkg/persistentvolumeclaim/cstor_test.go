@@ -17,11 +17,12 @@ limitations under the License.
 package persistentvolumeclaim
 
 import (
+	"testing"
+
 	openebsFakeClientset "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/fake"
-	"testing"
 )
 
 func TestDescribeCstorVolumeClaim(t *testing.T) {
@@ -43,7 +44,7 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor, &cstorTargetPod),
 					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva1, &cva2, &cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: &cstorPV1,
+				pv:  &cstorPV1,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
@@ -56,7 +57,7 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
 					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva1, &cva2, &cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: nil,
+				pv:  nil,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
@@ -69,7 +70,7 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
 					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv2, &cva1, &cva2, &cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: &cstorPV1,
+				pv:  &cstorPV1,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
@@ -82,7 +83,7 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
 					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva1, &cva2, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: &cstorPV1,
+				pv:  &cstorPV1,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
@@ -95,7 +96,7 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
 					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2, &cvc1, &cvc2, &cvr1, &cvr2, &cvr3, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: &cstorPV1,
+				pv:  &cstorPV1,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
@@ -106,9 +107,9 @@ func TestDescribeCstorVolumeClaim(t *testing.T) {
 				c: &client.K8sClient{
 					Ns:        "cstor",
 					K8sCS:     fake.NewSimpleClientset(&cstorPV1, &cstorPV2, &cstorPVC1, &cstorPVC2, &nsCstor),
-					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2, &cvc1,&cvr4, &cbkp, &ccbkp, &crestore),
+					OpenebsCS: openebsFakeClientset.NewSimpleClientset(&cv1, &cv2, &cva2, &cvc1, &cvr4, &cbkp, &ccbkp, &crestore),
 				},
-				pv: &cstorPV1,
+				pv:  &cstorPV1,
 				pvc: &cstorPVC1,
 			},
 			wantErr: false,
