@@ -216,7 +216,7 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
-// Get Versions of different components running in K8s
+// GetVersionMapOfComponents returns of different components running in K8s mapped to version
 func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
 	for _, v := range util.CasTypeAndComponentNameMap {
@@ -249,6 +249,7 @@ func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 /**
 CORE RESOURCES
 */
+
 // GetPods returns the corev1 Pods based on the label and field selectors
 func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace string) (*corev1.PodList, error) {
 	pods, err := k.K8sCS.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector, FieldSelector: fieldSelector})
@@ -521,4 +522,9 @@ func (k K8sClient) GetNodes(nodes []string, label, field string) (*corev1.NodeLi
 	return &corev1.NodeList{
 		Items: items,
 	}, nil
+}
+
+// GetNode returns the node with the name node
+func (k K8sClient) GetNode(node string) (*corev1.Node, error) {
+	return k.K8sCS.CoreV1().Nodes().Get(context.TODO(), node, metav1.GetOptions{})
 }

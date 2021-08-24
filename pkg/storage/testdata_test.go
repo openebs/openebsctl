@@ -30,6 +30,30 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var (
+	cspc = cstorv1.CStorPoolCluster{
+		TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
+		ObjectMeta: metav1.ObjectMeta{Name: "cassandra-pool", Namespace: "openebs"},
+		Spec: v1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{{
+			NodeSelector: map[string]string{"kubernetes.io/node-name": "bad-node"},
+			DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{
+				{BlockDeviceName: "bd-1", Capacity: 1234, DevLink: "/dev/bd-1"}}}},
+			WriteCacheRaidGroups: nil,
+			PoolConfig:           v1.PoolConfig{DataRaidGroupType: "stripe"},
+		},
+			{
+				NodeSelector: map[string]string{"kubernetes.io/node-name": "good-node"},
+				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{
+					{BlockDeviceName: "bd-2", Capacity: 1234, DevLink: "/dev/bd-2"}}}},
+				WriteCacheRaidGroups: nil,
+				PoolConfig:           v1.PoolConfig{DataRaidGroupType: "stripe"},
+			}},
+		},
+		Status:         v1.CStorPoolClusterStatus{},
+		VersionDetails: v1.VersionDetails{},
+	}
+)
+
 var cspi1 = cstorv1.CStorPoolInstance{
 	TypeMeta: metav1.TypeMeta{Kind: "CStorPoolInstance", APIVersion: "cstor.openebs.io/v1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "pool-1", Namespace: "openebs",
