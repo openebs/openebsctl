@@ -47,7 +47,7 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
     * [Get BlockDevices by Nodes](docs/cstor/README.md#get-blockdevices-by-nodes)
   * [PersistentVolumeClaims](docs/cstor/README.md#persistentvolumeclaims)
     * [Describe pvcs](docs/cstor/README.md#describe-pvcs)
-    * [Debugging pvcs](docs/cstor/README.md#debugging-pvcs)
+    * [Debugging pvcs](docs/cstor#debugging-pvcs)
 * [Contributing](#contributing)
 
 ## Installation
