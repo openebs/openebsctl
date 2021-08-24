@@ -30,7 +30,7 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
     * [Get cStor pools](docs/cstor/README.md#get-cstor-pools)
     * [Describe cStor volumes](docs/cstor/README.md#describe-cstor-volumes)
     * [Describe cStor pool](docs/cstor/README.md#describe-cstor-pool)
-    * [Describe cStor PVCs](docs/cstor/README.md#describe-pvcs)
+    * [Describe cStor PVCs](docs/cstor/README.md#describe-cstor-pvcs)
     * [Debugging cStor Volumes](docs/cstor/README.md#debugging-cstor-volumes)
   * [Jiva](docs/jiva/README.md#jiva)
     * [Get Jiva volumes](docs/jiva/README.md#get-jiva-volumes)
