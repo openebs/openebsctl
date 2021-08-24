@@ -30,9 +30,12 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
     * [Get cStor pools](docs/cstor/README.md#get-cstor-pools)
     * [Describe cStor volumes](docs/cstor/README.md#describe-cstor-volumes)
     * [Describe cStor pool](docs/cstor/README.md#describe-cstor-pool)
+    * [Describe cStor PVCs](docs/cstor/README.md#describe-pvcs)
+    * [Debugging cStor Volumes](docs/cstor/README.md##debugging-cstor-volumes)
   * [Jiva](docs/jiva/README.md#jiva)
     * [Get Jiva volumes](docs/jiva/README.md#get-jiva-volumes)
     * [Describe Jiva volumes](docs/jiva/README.md#describe-jiva-volumes)
+    * [Describe Jiva PVCs](docs/jiva/README.md#describe-jiva-pvcs)
   * [LocalPV-LVM](docs/localpv-lvm/README.md#localpv-lvm)
     * [Get LocalPV-LVM volumes](docs/localpv-lvm/README.md#get-localpv-lvm-volumes)
     * [Get LocalPV-LVM VolumeGroups](docs/localpv-lvm/README.md#get-localpv-lvm-volumegroups)
@@ -45,9 +48,6 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
     * [Describe LocalPV-ZFS pools](docs/localpv-zfs/README.md#describe-localpv-zfs-pools)
   * [BlockDevice](docs/cstor/README.md#blockdevice)
     * [Get BlockDevices by Nodes](docs/cstor/README.md#get-blockdevices-by-nodes)
-  * [PersistentVolumeClaims](docs/cstor/README.md#persistentvolumeclaims)
-    * [Describe pvcs](docs/cstor/README.md#describe-pvcs)
-    * [Debugging pvcs](docs/cstor#debugging-pvcs)
 * [Contributing](#contributing)
 
 ## Installation

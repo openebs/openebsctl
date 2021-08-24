@@ -8,11 +8,10 @@
     * [Get cStor pools](#get-cstor-pools)
     * [Describe cStor volumes](#describe-cstor-volumes)
     * [Describe cStor pool](#describe-cstor-pool)
+    * [Describe cStor PVCs](#describe-cstor-pvcs)
+    * [Debugging cStor Volumes](#debugging-cstor-volumes)
 * [BlockDevice](#blockdevice)
     * [Get BlockDevices by Nodes](#get-blockdevices-by-nodes)
-* [PersistentVolumeClaims](#persistentvolumeclaims)
-    * [Describe pvcs](#describe-pvcs)
-    * [Debugging pvcs](#debugging-pvcs)  
 
 * #### `cStor`
     * #### Get `cStor` volumes
@@ -96,25 +95,7 @@
       NAME                                                               PVC NAME   SIZE      STATE
       pvc-b84f60ae-3f26-4110-a85d-bce7ec00dacc-default-cstor-disk-fp6v   mongo      992 MiB   Healthy
       ```
-* #### `BlockDevice`
-    * #### Get `BlockDevices` by Nodes
-      ```bash
-      $ kubectl openebs get bd
-      NAME                                             PATH            SIZE      CLAIMSTATE   STATUS     FSTYPE       MOUNTPOINT
-      minikube-2                                                                                                      
-      ├─blockdevice-94312c16fb24476c3a155c34f0c211c3   /dev/sdb1       50 GiB    Unclaimed    Inactive   ext4         /var/lib/kubelet/mntpt
-      └─blockdevice-94312c16fb24476c3a155c34f0c2143c   /dev/sdb1       50 GiB    Claimed      Active
-      
-      minikube-1                                                                                                      
-      ├─blockdevice-94312c16fb24476c3a155c34f0c6153a   /dev/sdb1       50 GiB    Claimed      Inactive   zfs_member   /var/openebs/zfsvol
-      ├─blockdevice-8a5b69d8a2b23276f8daeac3c8179f9d   /dev/nvme2n1    100 GiB   Claimed      Active                  
-      └─blockdevice-e5a1c3c1b66c864588a66d0a7ff8ca58   /dev/nvme10n1   100 GiB   Claimed      Active
-      
-      minikube-3                                                                                                      
-      └─blockdevice-94312c16fb24476c3a155c34f0c6199k   /dev/sdb1       50 GiB    Claimed      Active               
-      ```
-* #### `PersistentVolumeClaims`
-    * #### Describe pvcs
+    * #### Describe `cstor` pvcs
       Describe any PVC using this command, it will determine the cas engine and show details accordingly.
       ```bash
       $ kubectl openebs describe pvc mongo
@@ -152,9 +133,28 @@
       VERSION       : 2.1.0
       UPGRADING     : true
       ```
-    * #### Debugging pvcs
-      _currently supported only for cstor_
+    * #### Debugging `cstor` volumes
+      _NOTE: Currently supported only for cstor_
       ```bash
       $ kubectl openebs describe pvc mongo --openebs-namespace=openebs --debug
       ```
       ![img.png](img.png)
+
+* #### `BlockDevice`
+    * #### Get `BlockDevices` by Nodes
+      ```bash
+      $ kubectl openebs get bd
+      NAME                                             PATH            SIZE      CLAIMSTATE   STATUS     FSTYPE       MOUNTPOINT
+      minikube-2                                                                                                      
+      ├─blockdevice-94312c16fb24476c3a155c34f0c211c3   /dev/sdb1       50 GiB    Unclaimed    Inactive   ext4         /var/lib/kubelet/mntpt
+      └─blockdevice-94312c16fb24476c3a155c34f0c2143c   /dev/sdb1       50 GiB    Claimed      Active
+      
+      minikube-1                                                                                                      
+      ├─blockdevice-94312c16fb24476c3a155c34f0c6153a   /dev/sdb1       50 GiB    Claimed      Inactive   zfs_member   /var/openebs/zfsvol
+      ├─blockdevice-8a5b69d8a2b23276f8daeac3c8179f9d   /dev/nvme2n1    100 GiB   Claimed      Active                  
+      └─blockdevice-e5a1c3c1b66c864588a66d0a7ff8ca58   /dev/nvme10n1   100 GiB   Claimed      Active
+      
+      minikube-3                                                                                                      
+      └─blockdevice-94312c16fb24476c3a155c34f0c6199k   /dev/sdb1       50 GiB    Claimed      Active               
+      ```
+    
