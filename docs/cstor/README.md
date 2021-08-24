@@ -111,7 +111,7 @@
       STORAGE CLASS    : common-storageclass
       SIZE             : 20 GiB
       USED             : 1.1 GiB
-      PV STATUS	       : Healthy
+      PV STATUS	 : Healthy
       
       Target Details :
       ----------------

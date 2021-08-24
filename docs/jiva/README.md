@@ -55,6 +55,8 @@
       
     * #### Describe `Jiva` PVCs
       ```bash
+      $ kubectl openebs describe pvc jiva-csi-pvc
+      
       jiva-csi-pvc Details  :
       -------------------
       NAME               : jiva-csi-pvc
