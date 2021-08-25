@@ -27,7 +27,7 @@ import (
 const (
 	completionUsage = `
 To load completion to current bash shell,
-. <(openebs completion bash)
+. <(kubectl openebs completion bash)
 
 To configure your bash shell to load completions for each session add to your bashrc
 # ~/.bashrc or ~/.profile
