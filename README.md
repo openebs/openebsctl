@@ -23,31 +23,7 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
 ## Table of Contents
 * [Installation](#installation)
 * [Build](#build)
-* [Flags](#flags)
 * [Usage](#usage)
-  * [cStor](docs/cstor/README.md#cstor)
-    * [Get cStor volumes](docs/cstor/README.md#get-cstor-volumes)
-    * [Get cStor pools](docs/cstor/README.md#get-cstor-pools)
-    * [Describe cStor volumes](docs/cstor/README.md#describe-cstor-volumes)
-    * [Describe cStor pool](docs/cstor/README.md#describe-cstor-pool)
-    * [Describe cStor PVCs](docs/cstor/README.md#describe-cstor-pvcs)
-    * [Debugging cStor Volumes](docs/cstor/README.md#debugging-cstor-volumes)
-  * [Jiva](docs/jiva/README.md#jiva)
-    * [Get Jiva volumes](docs/jiva/README.md#get-jiva-volumes)
-    * [Describe Jiva volumes](docs/jiva/README.md#describe-jiva-volumes)
-    * [Describe Jiva PVCs](docs/jiva/README.md#describe-jiva-pvcs)
-  * [LocalPV-LVM](docs/localpv-lvm/README.md#localpv-lvm)
-    * [Get LocalPV-LVM volumes](docs/localpv-lvm/README.md#get-localpv-lvm-volumes)
-    * [Get LocalPV-LVM VolumeGroups](docs/localpv-lvm/README.md#get-localpv-lvm-volumegroups)
-    * [Describe LocalPV-LVM volumeGroups](docs/localpv-lvm/README.md#describe-localpv-lvm-volumeGroups)
-    * [Describe LocalPV-LVM volumes](docs/localpv-lvm/README.md#describe-localpv-lvm-volumes)
-  * [LocalPV-ZFS](docs/localpv-zfs/README.md#localpv-zfs)
-    * [Get LocalPV-ZFS volumes](docs/localpv-zfs/README.md#get-localpv-zfs-volumes)
-    * [Get LocalPV-ZFS Pools](docs/localpv-zfs/README.md#get-localpv-zfs-pools)
-    * [Describe LocalPV-ZFS volumes](docs/localpv-zfs/README.md#describe-localpv-zfs-volumes)
-    * [Describe LocalPV-ZFS pools](docs/localpv-zfs/README.md#describe-localpv-zfs-pools)
-  * [BlockDevice](docs/cstor/README.md#blockdevice)
-    * [Get BlockDevices by Nodes](docs/cstor/README.md#get-blockdevices-by-nodes)
 * [Contributing](#contributing)
 
 ## Installation
@@ -80,15 +56,43 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
 - Clone this repo to your system. `git clone https://github.com/openebs/openebsctl`
 - `cd openebsctl`
 - Run `make openebsctl`
-- Run `kubectl openebs [get|describe] [resource]` to use the plugin
 
-### Flags
+## Usage
 
-* `--openebs-namespace` :- to override the determination of `namespace` where storage engine is installed with the provided value.
-* `--namespace, -n` :- to pass the namespace, if the resource is namespaced, like `pvc` etc.
-* `--cas-type` :- to pass the cas-type, like cstor, jiva, localpv-lvm, localpv-zfs.
+* ```bash
+  $ kubectl openebs
+  openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
+  Find out more about OpenEBS on https://openebs.io/
+  
+  Usage:
+  kubectl openebs [command] [resource] [...names] [flags]
+  
+  Available Commands:
+  completion  Outputs shell completion code for the specified shell (bash or zsh)
+  describe    Provide detailed information about an OpenEBS resource
+  get         Provides fetching operations related to a Volume/Pool
+  help        Help about any command
+  version     Shows openebs kubectl plugin's version
+  
+  Flags:
+  -h, --help                           help for openebs
+  -n, --namespace string               If present, the namespace scope for this CLI request
+  --openebs-namespace string       to read the openebs namespace from user.
+  If not provided it is determined from components.
+  --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+  ex- cstor, jiva, localpv-lvm, localpv-zfs.
+  --debug                          to launch the debugging mode for cstor pvcs.
+  
+  Use "kubectl openebs command --help" for more information about a command.
+  ```
 
-### Contributing
+* To know more about various engine specific commands check these:-
+  * [cStor](docs/cstor/README.md)
+  * [Jiva](docs/jiva/README.md)
+  * [LocalPV-LVM](docs/localpv-lvm/README.md)
+  * [LocalPV-ZFS](docs/localpv-zfs/README.md)
+  
+## Contributing
 
 OpenEBS welcomes your feedback and contributions in any form possible.
 

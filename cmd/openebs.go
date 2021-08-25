@@ -29,6 +29,30 @@ import (
 	v "github.com/openebs/openebsctl/cmd/version"
 )
 
+const (
+	usageTemplate = `Usage:
+  kubectl openebs [command] [resource] [...names] [flags]
+
+Available Commands:
+  completion  Outputs shell completion code for the specified shell (bash or zsh)
+  describe    Provide detailed information about an OpenEBS resource
+  get         Provides fetching operations related to a Volume/Pool
+  help        Help about any command
+  version     Shows openebs kubectl plugin's version
+
+Flags:
+  -h, --help                           help for openebs
+  -n, --namespace string               If present, the namespace scope for this CLI request
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
+      --debug                          to launch the debugging mode for cstor pvcs.
+
+Use "kubectl openebs command --help" for more information about a command.
+`
+)
+
 // Version is the version of the openebsctl binary, info filled by go-releaser
 var Version = "dev"
 
@@ -36,14 +60,15 @@ var Version = "dev"
 func NewOpenebsCommand() *cobra.Command {
 	var openebsNs string
 	cmd := &cobra.Command{
-		Use:       "kubectl openebs $OPERATION $RESOURCE",
+		Use:       "openebs",
 		ValidArgs: []string{"get", "describe", "completion"},
 		Short:     "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
-		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components such as
-storage(pools, volumegroups), volumes, blockdevices, pvcs.
-Find out more about OpenEBS on https://docs.openebs.io/`,
+		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
+Find out more about OpenEBS on https://openebs.io/`,
 		Version: Version,
+		TraverseChildren: true,
 	}
+	cmd.SetUsageTemplate(usageTemplate)
 	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
 	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
 	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())

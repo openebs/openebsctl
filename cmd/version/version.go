@@ -22,14 +22,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	versionCmdHelp = `Usage:
+  kubectl openebs version
+
+Flags:
+  -h, --help                           help for openebs get command
+`
+)
+
 // NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Show client version",
+		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Client Version: " + rootCmd.Version)
 		},
 	}
+	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
 }
