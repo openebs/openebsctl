@@ -141,3 +141,17 @@ func CasDescribeMap() map[string]func(*client.K8sClient, string) error {
 func CasDescribeList() []func(*client.K8sClient, string) error {
 	return []func(*client.K8sClient, string) error{DescribeCstorPool, DescribeZFSNode, DescribeLVMvg}
 }
+
+// Update is the entrypoint to manage the Update of storage resources of a particular cas-type
+func Update(namespace, storageName, initial, final string) error {
+	// 1. Currently only Cstor's node patch is supported
+	k, _ := client.NewK8sClient(namespace)
+	if namespace == "" {
+		ns, err := k.GetOpenEBSNamespace(util.CstorCasType)
+		k.Ns = ns
+	if err != nil {
+			return fmt.Errorf("unable to detect cstor, please specify cstor's --openebs-namespace")
+	}
+	}
+	return CSPCnodeChange(k, storageName, initial, final)
+}

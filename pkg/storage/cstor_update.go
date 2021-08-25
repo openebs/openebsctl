@@ -14,9 +14,6 @@ import (
 
 // CSPCnodeChange helps patch the CSPC for older nodes
 func CSPCnodeChange(k *client.K8sClient, poolName, oldNode, newNode string) error {
-	if k == nil {
-		k, _ = client.NewK8sClient("openebs")
-	}
 	cspc, err := k.GetCSPC(poolName)
 	if err != nil {
 		return fmt.Errorf("CStor pool cluster %s not found", poolName)

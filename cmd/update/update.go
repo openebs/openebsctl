@@ -59,7 +59,8 @@ func NewCmdCSPCNodePatch() *cobra.Command {
 		Long:    updateCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 3 {
-				util.CheckErr(storage.CSPCnodeChange(nil, args[0], args[1], args[2]), util.Fatal)
+				ns, _ := cmd.Flags().GetString("openebs-namespace")
+				util.CheckErr(storage.Update(ns, args[0], args[1], args[2]), util.Fatal)
 			} else {
 				fmt.Println(cspcPatchHelp)
 			}
