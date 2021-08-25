@@ -65,7 +65,7 @@ func NewOpenebsCommand() *cobra.Command {
 		Short:     "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
 Find out more about OpenEBS on https://openebs.io/`,
-		Version: Version,
+		Version:          Version,
 		TraverseChildren: true,
 	}
 	cmd.SetUsageTemplate(usageTemplate)

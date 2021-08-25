@@ -43,6 +43,7 @@ To configure your zsh shell to load completions for each session add to your zsh
 Do similar steps for fish & powershell
 `
 )
+
 // NewCmdCompletion creates the completion command
 func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
