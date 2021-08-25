@@ -29,7 +29,7 @@ Usage:
 Describe a Volume:
   kubectl openebs describe volume [...names] [flags]
 
-Describe PVCs present in the default namespace:
+Describe PVCs present in the same namespace:
   kubectl openebs describe pvc [...names] [flags]
 
 Describe a Storage :

@@ -12,7 +12,7 @@
 * #### `LocalPV-ZFS`
     * #### Get `LocalPV-ZFS` volumes
       ```bash
-      $ kubectl openebs get volumes --cas-type=zfslocalpv
+      $ kubectl openebs get volumes --cas-type=localpv-zfs
       NAMESPACE   NAME                                       STATUS   VERSION   CAPACITY   STORAGE CLASS   ATTACHED   ACCESS MODE     ATTACHED NODE
       openebs     pvc-43fcbc72-a45a-49d5-9ec3-e383fcb91452   Ready    1.9.0     4Gi        openebs-zfspv   Bound      ReadWriteOnce   worker-sh1
       ```
