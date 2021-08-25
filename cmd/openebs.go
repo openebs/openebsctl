@@ -19,7 +19,6 @@ package cmd
 import (
 	"flag"
 
-	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -87,7 +86,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		cluster_info.NewCmdClusterInfo(cmd),
 		upgrade.NewCmdVolumeUpgrade(cmd),
 		generate.NewCmdGenerate(),
-		update.NewCmdUpdate(cmd),
+		update.NewCmdUpdate(),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.PersistentFlags().StringVarP(&util.Kubeconfig, "kubeconfig", "c", "", "path to config file")

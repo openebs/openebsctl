@@ -71,36 +71,33 @@ func TestCSPCnodeChange(t *testing.T) {
 			k: &client.K8sClient{
 				Ns:        "openebs",
 				K8sCS:     fake.NewSimpleClientset(&node2),
-				OpenebsCS: fakecstor.NewSimpleClientset(),
+				OpenebsCS: fakecstor.NewSimpleClientset(&cspc),
 			},
-			poolName: "fake-pool",
-			oldNode:  "node1",
-			newNode:  "node2",
-		},
-		true},
+			poolName: "cassandra-pool", oldNode:  "node1",	newNode:  "node2"},true},
 		{"CSPC found, but newNode does not exist", args{
 			k: &client.K8sClient{
 				Ns:        "openebs",
 				K8sCS:     fake.NewSimpleClientset(&goodNode),
-				OpenebsCS: fakecstor.NewSimpleClientset(),
+				OpenebsCS: fakecstor.NewSimpleClientset(&cspc),
 			},
-			poolName: "fake-pool",
-			oldNode:  "node3",
-			newNode:  "node-456",
-		},
-		true},
+			poolName: "cassandra-pool",	oldNode: "node3", newNode: "node-456"},true},
 		{
-			"CSPC found, newNode exists and is ready", args{
+			"CSPC found, newNode exists and is ready but old-node name does not match", args{
 				k: &client.K8sClient{
 					Ns: "openebs",
 					K8sCS: fake.NewSimpleClientset(&goodNode),
 					OpenebsCS: fakecstor.NewSimpleClientset(&cspc),
 				},
-				poolName: "cassandra-pool",
-				oldNode: "bad-node",
-				newNode: "node1",
+				poolName: "cassandra-pool",	oldNode: "bad-node",newNode: "node1"},false,
 		},
-		false,
+		{
+			"CSPC found, newNode exists and is ready, old-node name matches", args{
+			k: &client.K8sClient{
+				Ns: "openebs",
+				K8sCS: fake.NewSimpleClientset(&goodNode),
+				OpenebsCS: fakecstor.NewSimpleClientset(&cspc),
+			},
+			poolName: "cassandra-pool",	oldNode: "bad-node",newNode: "node1"},false,
 		},
 	}
 	for _, tt := range tests {

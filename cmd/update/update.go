@@ -29,10 +29,12 @@ const (
 
 $ kubectl openebs update [resource-type] [resource-names]  [arguments...] [options...]
 `
+	cspcPatchHelp = `Update CSPC to move pools from an old node to the newer
+node after the blockdevices have moved to the newer node.`
 )
 
 // NewCmdUpdate provides options for managing OpenEBS resources
-func NewCmdUpdate(rootCmd *cobra.Command) *cobra.Command {
+func NewCmdUpdate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "update",
 		Short:     "Provides update operations related to an OpenEBS resource",
@@ -48,6 +50,7 @@ func NewCmdUpdate(rootCmd *cobra.Command) *cobra.Command {
 	return cmd
 }
 
+// NewCmdCSPCNodePatch provides option to patch CStor CSPC
 func NewCmdCSPCNodePatch() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "storage",
@@ -55,15 +58,12 @@ func NewCmdCSPCNodePatch() *cobra.Command {
 		Short:   "Updates information about a storage",
 		Long:    updateCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			// openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			if len(args) == 3 {
 				util.CheckErr(storage.CSPCnodeChange(nil, args[0], args[1], args[2]), util.Fatal)
 			} else {
-				fmt.Println(updateCmdHelp)
+				fmt.Println(cspcPatchHelp)
 			}
 		},
 	}
 	return cmd
 }
-
-

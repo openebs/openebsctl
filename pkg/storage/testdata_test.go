@@ -35,14 +35,14 @@ var (
 		TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
 		ObjectMeta: metav1.ObjectMeta{Name: "cassandra-pool", Namespace: "openebs"},
 		Spec: v1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{{
-			NodeSelector: map[string]string{"kubernetes.io/node-name": "bad-node"},
+			NodeSelector: map[string]string{"kubernetes.io/hostname": "bad-node"},
 			DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{
 				{BlockDeviceName: "bd-1", Capacity: 1234, DevLink: "/dev/bd-1"}}}},
 			WriteCacheRaidGroups: nil,
 			PoolConfig:           v1.PoolConfig{DataRaidGroupType: "stripe"},
 		},
 			{
-				NodeSelector: map[string]string{"kubernetes.io/node-name": "good-node"},
+				NodeSelector: map[string]string{"kubernetes.io/hostname": "good-node"},
 				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: []v1.CStorPoolInstanceBlockDevice{
 					{BlockDeviceName: "bd-2", Capacity: 1234, DevLink: "/dev/bd-2"}}}},
 				WriteCacheRaidGroups: nil,
