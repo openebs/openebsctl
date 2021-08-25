@@ -19,6 +19,8 @@ package util
 import (
 	"testing"
 	"time"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 func TestDuration(t *testing.T) {
@@ -208,6 +210,31 @@ func TestGetAvailableCapacity(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetAvailableCapacity(tt.args.total, tt.args.used); got != tt.want {
 				t.Errorf("GetAvailableCapacity() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsNodeReady(t *testing.T) {
+	type args struct {
+		node *corev1.Node
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"node is ready", args{&corev1.Node{Status: corev1.NodeStatus{
+			Conditions: []corev1.NodeCondition{{Type:   corev1.NodeReady, Status: corev1.ConditionTrue}}} }}, true},
+		{"node is not ready", args{&corev1.Node{Status: corev1.NodeStatus{
+			Conditions: []corev1.NodeCondition{{Type:   corev1.NodeReady, Status: corev1.ConditionFalse}}} }}, false},
+		{"node has PID pressure, Ready status not known", args{&corev1.Node{Status: corev1.NodeStatus{
+			Conditions: []corev1.NodeCondition{{Type:   corev1.NodePIDPressure, Status: corev1.ConditionTrue}}} }}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsNodeReady(tt.args.node); got != tt.want {
+				t.Errorf("IsNodeReady() = %v, want %v", got, tt.want)
 			}
 		})
 	}

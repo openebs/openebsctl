@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/strategicpatch"
@@ -21,25 +21,30 @@ func CSPCnodeChange(k *client.K8sClient, poolName, oldNode, newNode string) erro
 	if err != nil {
 		return fmt.Errorf("CStor pool cluster %s not found", poolName)
 	}
-	var newPool cstorv1.CStorPoolCluster
-	_, err = k.GetNode(newNode)
+	node, err := k.GetNode(newNode)
 	if err != nil {
 		return fmt.Errorf("node %s not found", newNode)
+	} else if !util.IsNodeReady(node) {
+		return fmt.Errorf("node %s is not ready", newNode)
 	}
-	// TODO: Find a good way to figure out if the newer node is more suitable for the disk-replacement
+	// TODO: Find a good way to figure out if the newer node is more suitable
+	// for the disk-replacement, i.e. doesn't have PID pressure, scheduling is
+	// not possible, etc
 	//return fmt.Errorf("node %s not in a good state", newNode)
-	cspc.DeepCopyInto(&newPool)
-	for _, pi := range cspc.Spec.Pools {
+	newPool := cspc.DeepCopy()
+	for _, pi := range newPool.Spec.Pools {
 		if pi.NodeSelector["kubernetes.io/hostname"] == oldNode {
 			pi.NodeSelector["kubernetes.io/hostname"] = newNode
 		}
 	}
-
-	// cspis, _ := k.GetCSPIs(nil, "openebs.io/cas-type=cstor,openebs.io/cstor-pool-cluster="+cspc.Name)
+	// Patch the CSPC
 	oldCSPC, _ := json.Marshal(cspc)
 	newCSPC, _ := json.Marshal(newPool)
 	data, err := strategicpatch.CreateTwoWayMergePatch(oldCSPC, newCSPC, cspc)
+	if err != nil {
+		return err
+	}
 	_, err = k.OpenebsCS.CstorV1().CStorPoolClusters(k.Ns).Patch(context.TODO(), poolName,
-		types.StrategicMergePatchType, data, metav1.PatchOptions{}, []string{}...)
+		types.MergePatchType, data, metav1.PatchOptions{}, []string{}...)
 	return err
 }
