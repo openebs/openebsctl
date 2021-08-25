@@ -21,7 +21,7 @@
       Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
     * #### Get `LocalPV-LVM` VolumeGroups
       ```bash
-      $ kubectl openebs get storage --cas-type=lvmlocalpv
+      $ kubectl openebs get storage --cas-type=localpv-lvm
       NAME         FREESIZE   TOTALSIZE
       worker-sh1              
       └─lvmvg      1020 GiB   1024 GiB
