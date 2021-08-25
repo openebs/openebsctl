@@ -77,11 +77,11 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
   Flags:
   -h, --help                           help for openebs
   -n, --namespace string               If present, the namespace scope for this CLI request
-  --openebs-namespace string       to read the openebs namespace from user.
-  If not provided it is determined from components.
-  --cas-type                       to specify the cas-type of the engine, for engine based filtering.
-  ex- cstor, jiva, localpv-lvm, localpv-zfs.
-  --debug                          to launch the debugging mode for cstor pvcs.
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
+      --debug                          to launch the debugging mode for cstor pvcs.
   
   Use "kubectl openebs command --help" for more information about a command.
   ```
