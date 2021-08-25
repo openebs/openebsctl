@@ -19,7 +19,7 @@
       Note: For volumes not attached to any application, the `ATTACH NODE` would be shown as `N/A`.
     * #### Get `LocalPV-ZFS` Pools
       ```bash
-      $ kubectl openebs get storage --cas-type=zfslocalpv
+      $ kubectl openebs get storage --cas-type=localpv-zfs
       NAME              FREESIZE
       node1         
       └─zfs-test-pool   32 GiB
