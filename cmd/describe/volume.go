@@ -23,14 +23,17 @@ import (
 )
 
 var (
-	volumeInfoCommandHelpText = `
-This command fetches information and status of the various
+	volumeInfoCommandHelpText = `This command fetches information and status of the various
 aspects of a cStor Volume such as ISCSI, Controller, and Replica.
 
-$ kubectl openebs describe volume [name]
-Options:
-Advanced: Override the auto-detected OPENEBS_NAMESPACE
---openebs-namespace=[...]
+Usage:
+  kubectl openebs describe volume [...names] [flags]
+
+Flags:
+  -h, --help                           help for openebs
+  -n, --namespace string               to read the namespace for the pvc.
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
 `
 )
 
@@ -40,13 +43,12 @@ func NewCmdDescribeVolume() *cobra.Command {
 		Use:     "volume",
 		Aliases: []string{"volumes", "vol", "v"},
 		Short:   "Displays Openebs information",
-		Long:    volumeInfoCommandHelpText,
-		Example: `kubectl openebs describe volume [vol]`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Get this from flags, pflag, etc
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			util.CheckErr(volume.Describe(args, openebsNS), util.Fatal)
 		},
 	}
+	cmd.SetUsageTemplate(volumeInfoCommandHelpText)
 	return cmd
 }

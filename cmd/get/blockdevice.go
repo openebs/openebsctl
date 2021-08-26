@@ -23,14 +23,14 @@ import (
 )
 
 var (
-	bdListCommandHelpText = `
-This command displays status of available OpenEBS BlockDevice(s).
+	bdListCommandHelpText = `This command displays status of available OpenEBS BlockDevice(s).
 
-Usage: kubectl openebs get bd [options]
+Usage: 
+  kubectl openebs get bd [flags]
 
-Advanced:
-Filter by a fixed OpenEBS namespace
---openebs-namespace=[...]
+Flags:
+  -h, --help                           help for openebs get bd command
+      --openebs-namespace string       filter by a fixed OpenEBS namespace.
 `
 )
 
@@ -40,12 +40,12 @@ func NewCmdGetBD() *cobra.Command {
 		Use:     "bd",
 		Aliases: []string{"bds", "blockdevice", "blockdevices"},
 		Short:   "Displays status information about BlockDevice(s)",
-		Long:    bdListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Should this method create the k8sClient object
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			util.CheckErr(blockdevice.Get(args, openebsNS), util.Fatal)
 		},
 	}
+	cmd.SetUsageTemplate(bdListCommandHelpText)
 	return cmd
 }

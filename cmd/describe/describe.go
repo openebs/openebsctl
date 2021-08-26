@@ -17,27 +17,32 @@ limitations under the License.
 package describe
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 const (
-	volumeCommandHelpText = `# Show detail of a specific OpenEBS resource:
-$ kubectl openebs describe [volumes|storage|pvc] [name]
+	volumeCommandHelpText = `Show detailed description of a specific OpenEBS resource:
 
-# Describe a Volume:
-$ kubectl openebs describe volume pvc-abcd -n [namespace] [options]
+Usage:
+  kubectl openebs describe [volume|storage|pvc] [...names] [flags]
 
-# Describe PVCs present in the same namespace:
-$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace] [options]
+Describe a Volume:
+  kubectl openebs describe volume [...names] [flags]
 
-# Describe a Storage :
-$ kubectl openebs describe storage [name1] [name2] ... [nameN] [options]
+Describe PVCs present in the same namespace:
+  kubectl openebs describe pvc [...names] [flags]
 
-Options:
-Advanced: Override the auto-detected OPENEBS_NAMESPACE
---openebs-namespace=[...] [options]
+Describe a Storage :
+  kubectl openebs describe storage [...names] [flags]
+
+Flags:
+  -h, --help                           help for openebs
+  -n, --namespace string               to read the namespace for the pvc.
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
+      --debug                          to launch the debugging mode for cstor pvcs.
 `
 )
 
@@ -47,16 +52,12 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 		Use:       "describe",
 		ValidArgs: []string{"pool", "volume", "pvc"},
 		Short:     "Provide detailed information about an OpenEBS resource",
-		Long:      volumeCommandHelpText,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(volumeCommandHelpText)
-		},
 	}
 	cmd.AddCommand(
 		NewCmdDescribeVolume(),
 		NewCmdDescribePVC(),
 		NewCmdDescribeStorage(),
 	)
-
+	cmd.SetUsageTemplate(volumeCommandHelpText)
 	return cmd
 }

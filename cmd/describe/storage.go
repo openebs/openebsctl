@@ -25,20 +25,18 @@ import (
 )
 
 var (
-	storageInfoCommandHelpText = `
-This command fetches information and status of the various aspects 
+	storageInfoCommandHelpText = `This command fetches information and status of the various aspects 
 of the openebs storage and its underlying related resources in the openebs namespace.
 
-$ kubectl openebs describe storage [storage-name-1...n] [options]
+Usage:
+  kubectl openebs describe storage [...names] [flags]
 
-Options:
---------
-Filter volumes by cas-type
---cas-type=[cstor]
-
-Advanced:
-Filter by a fixed OpenEBS namespace
---openebs-namespace=[...]
+Flags:
+  -h, --help                           help for openebs
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
 `
 )
 
@@ -49,8 +47,6 @@ func NewCmdDescribeStorage() *cobra.Command {
 		Use:     "storage",
 		Aliases: []string{"storages", "s"},
 		Short:   "Displays storage related information",
-		Long:    storageInfoCommandHelpText,
-		Example: `kubectl openebs describe storage storage-1`,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
@@ -58,6 +54,7 @@ func NewCmdDescribeStorage() *cobra.Command {
 			util.CheckErr(storage.Describe(args, openebsNs, casType), util.Fatal)
 		},
 	}
+	cmd.SetUsageTemplate(storageInfoCommandHelpText)
 	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	return cmd
 }
