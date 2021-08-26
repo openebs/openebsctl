@@ -149,9 +149,9 @@ func Update(namespace, storageName, initial, final string) error {
 	if namespace == "" {
 		ns, err := k.GetOpenEBSNamespace(util.CstorCasType)
 		k.Ns = ns
-	if err != nil {
+		if err != nil {
 			return fmt.Errorf("unable to detect cstor, please specify cstor's --openebs-namespace")
-	}
+		}
 	}
 	return CSPCnodeChange(k, storageName, initial, final)
 }

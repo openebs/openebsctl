@@ -225,11 +225,11 @@ func TestIsNodeReady(t *testing.T) {
 		want bool
 	}{
 		{"node is ready", args{&corev1.Node{Status: corev1.NodeStatus{
-			Conditions: []corev1.NodeCondition{{Type:   corev1.NodeReady, Status: corev1.ConditionTrue}}} }}, true},
+			Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady, Status: corev1.ConditionTrue}}}}}, true},
 		{"node is not ready", args{&corev1.Node{Status: corev1.NodeStatus{
-			Conditions: []corev1.NodeCondition{{Type:   corev1.NodeReady, Status: corev1.ConditionFalse}}} }}, false},
+			Conditions: []corev1.NodeCondition{{Type: corev1.NodeReady, Status: corev1.ConditionFalse}}}}}, false},
 		{"node has PID pressure, Ready status not known", args{&corev1.Node{Status: corev1.NodeStatus{
-			Conditions: []corev1.NodeCondition{{Type:   corev1.NodePIDPressure, Status: corev1.ConditionTrue}}} }}, false},
+			Conditions: []corev1.NodeCondition{{Type: corev1.NodePIDPressure, Status: corev1.ConditionTrue}}}}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
