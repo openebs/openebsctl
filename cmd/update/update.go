@@ -30,7 +30,10 @@ const (
 $ kubectl openebs update [resource-type] [resource-names]  [arguments...] [options...]
 `
 	cspcPatchHelp = `Update CSPC to move pools from an old node to the newer
-node after the blockdevices have moved to the newer node.`
+node after the blockdevices have moved to the newer node.
+
+$ kubectl openebs update storage [pool-name] --from-node=old-node --to-node=new-node
+`
 )
 
 // NewCmdUpdate provides options for managing OpenEBS resources
@@ -58,13 +61,19 @@ func NewCmdCSPCNodePatch() *cobra.Command {
 		Short:   "Updates information about a storage",
 		Long:    updateCmdHelp,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 3 {
+			if len(args) == 1 {
 				ns, _ := cmd.Flags().GetString("openebs-namespace")
-				util.CheckErr(storage.Update(ns, args[0], args[1], args[2]), util.Fatal)
+				fromNode, _ := cmd.Flags().GetString("from-node")
+				toNode, _ := cmd.Flags().GetString("to-node")
+				util.CheckErr(storage.Update(ns, args[0], fromNode, toNode), util.Fatal)
 			} else {
 				fmt.Println(cspcPatchHelp)
 			}
 		},
 	}
+	var toNode, fromNode string
+	cmd.PersistentFlags().StringVarP(&toNode, "to-node", "", "", "--to-node flag has the name of the new node")
+	cmd.PersistentFlags().StringVarP(&fromNode, "from-node", "", "",
+		"--from-node has the name of the old/unhealthy node")
 	return cmd
 }

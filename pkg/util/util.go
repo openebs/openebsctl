@@ -177,9 +177,8 @@ func GetUsedPercentage(total string, used string) float64 {
 func ColorStringOnStatus(stringToColor string) string {
 	if strings.Contains(stringsToBeColoredGreen, strings.ToLower(stringToColor)) {
 		return ColorText(stringToColor, Green)
-	} else {
-		return ColorText(stringToColor, Red)
 	}
+	return ColorText(stringToColor, Red)
 }
 
 // PromptToStartAgain opens prompt and waits for the user for response

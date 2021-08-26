@@ -95,6 +95,11 @@
       NAME                                                               PVC NAME   SIZE      STATE
       pvc-b84f60ae-3f26-4110-a85d-bce7ec00dacc-default-cstor-disk-fp6v   mongo      992 MiB   Healthy
       ```
+    * #### Update a pool after disks have moved
+      ```bash
+      $ kubectl openebs update storage default-cstor-disk --from-node=node1-virtual-machine --to-node=node1-failover
+      # the relevant node selectors get updated
+      ```
     * #### Describe `cstor` pvcs
       Describe any PVC using this command, it will determine the cas engine and show details accordingly.
       ```bash
