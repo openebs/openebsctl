@@ -19,8 +19,18 @@ package get
 import (
 	"fmt"
 
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
+
+func getValidVersions(version string) string {
+	if version != "" {
+		return version
+	}
+
+	return "Not Installed"
+}
 
 // NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
@@ -28,7 +38,25 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 		Use:   "version",
 		Short: "Show client version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Client Version: " + rootCmd.Version)
+			k, _ := client.NewK8sClient("openebs")
+			nsMap, err := k.GetVersionMapOfComponents()
+
+			if err != nil {
+				fmt.Println("Client Version: " + rootCmd.Version)
+				fmt.Println("\nError getting Components Version")
+				return
+			}
+
+			header := []string{"Components", "Version"}
+			rows := [][]string{
+				{"Client", rootCmd.Version},
+				{"OpenEBS", getValidVersions(nsMap[util.OpenEBSProvisioner])},
+				{"OpenEBS CStor", getValidVersions(nsMap[util.CstorCasType])},
+				{"OpenEBS Jiva", getValidVersions(nsMap[util.JivaCasType])},
+				{"OpenEBS ZFS LocalPV", getValidVersions(nsMap[util.ZFSCasType])},
+			}
+
+			util.PrintToTable(header, rows)
 		},
 	}
 	return cmd

@@ -30,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"k8s.io/klog"
 )
@@ -132,6 +133,24 @@ func TemplatePrinter(template string, obj runtime.Object) {
 	buffer := &bytes.Buffer{}
 	_ = p.PrintObj(obj, buffer)
 	fmt.Print(buffer)
+}
+
+func PrintToTable(header []string, data [][]string) {
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(header) // The header of the table
+	table.SetHeaderColor(tablewriter.Colors{tablewriter.FgGreenColor}, tablewriter.Colors{tablewriter.FgGreenColor})
+	table.SetAutoFormatHeaders(true)
+	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
+	table.SetAlignment(tablewriter.ALIGN_LEFT)
+	table.SetCenterSeparator("")
+	table.SetColumnSeparator("")
+	table.SetRowSeparator("")
+	table.SetHeaderLine(false)
+	table.SetBorder(false)
+	table.SetTablePadding("\t")
+	table.SetNoWhiteSpace(true)
+	table.AppendBulk(data) // The data in the table
+	table.Render()         // Render the table
 }
 
 // ConvertToIBytes humanizes all the passed units to IBytes format

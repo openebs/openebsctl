@@ -189,6 +189,41 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
+func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
+	label := "openebs.io/component-name in ("
+	for _, v := range util.CasTypeAndComponentNameMap {
+		label = label + v + ","
+	}
+	// Adding openebs provisioner is label selector to get openebs version
+	for _, v := range util.ResourceTypeMapToComponentName {
+		label = label + v + ","
+	}
+	label += ")"
+
+	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: label})
+
+	if err != nil {
+		return nil, err
+	}
+
+	versionMap := make(map[string]string)
+
+	for _, pod := range pods.Items {
+		podLabels := pod.ObjectMeta.Labels
+		labelName := podLabels["openebs.io/component-name"]
+		version := podLabels["openebs.io/version"]
+		cas, okCas := util.ComponentNameToCasTypeMap[labelName]
+		res, okRes := util.ComponentNameToResourceTypeMap[labelName]
+		if okCas {
+			versionMap[cas] = version
+		} else if okRes {
+			versionMap[res] = version
+		}
+	}
+
+	return versionMap, nil
+}
+
 /*
 	NATIVE RESOURCE FETCHING METHODS
 */
