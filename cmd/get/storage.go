@@ -23,20 +23,17 @@ import (
 )
 
 var (
-	storageListCommandHelpText = `
-This command lists of all/specific known storages in the Cluster.
+	storageListCommandHelpText = `This command lists of all/specific known storages in the Cluster.
 
 Usage:
-$ kubectl openebs get storage [options]
+  kubectl openebs get storage [flags]
 
-Options:
---------
-Filter storages by cas-type
---cas-type=[cstor]
-
-Advanced:
-Filter by a fixed OpenEBS namespace
---openebs-namespace=[...]
+Flags:
+  -h, --help                           help for openebs get command
+      --openebs-namespace string       filter by a fixed OpenEBS namespace
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
 `
 )
 
@@ -46,12 +43,12 @@ func NewCmdGetStorage() *cobra.Command {
 		Use:     "storage",
 		Aliases: []string{"storages", "s"},
 		Short:   "Displays status information about Storage(s)",
-		Long:    storageListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
 			util.CheckErr(storage.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
+	cmd.SetUsageTemplate(storageListCommandHelpText)
 	return cmd
 }

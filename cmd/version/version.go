@@ -32,11 +32,20 @@ func getValidVersions(version string) string {
 	return "Not Installed"
 }
 
+const (
+	versionCmdHelp = `Usage:
+  kubectl openebs version
+
+Flags:
+  -h, --help                           help for openebs get command
+`
+)
+
 // NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Show client version",
+		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
 			k, _ := client.NewK8sClient("openebs")
 			nsMap, err := k.GetVersionMapOfComponents()
@@ -59,5 +68,6 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			util.PrintToTable(header, rows)
 		},
 	}
+	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
 }
