@@ -47,7 +47,7 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 		Use:   "version",
 		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
-			k, _ := client.NewK8sClient("openebs")
+			k, _ := client.NewK8sClient("")
 			nsMap, err := k.GetVersionMapOfComponents()
 
 			if err != nil {
