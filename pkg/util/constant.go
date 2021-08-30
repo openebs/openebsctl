@@ -33,6 +33,10 @@ const (
 	JivaCasType = "jiva"
 	// LVMCasType cas type name
 	LVMCasType = "localpv-lvm"
+	// LocalHostpathCasType cas type name
+	LocalHostpathCasType = "localpv-hostpath"
+	// LocalDeviceCasType cas type name
+	LocalDeviceCasType = "localpv-device"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -77,6 +81,21 @@ const (
 	ZFSLocalPVcsiControllerLabelValue = "openebs-zfs-controller"
 )
 
+const (
+	// CstorComponentNames for the cstor control plane components
+	CstorComponentNames    = "cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
+	// NDMComponentNames for the ndm components
+	NDMComponentNames      = "openebs-ndm-operator,ndm"
+	// JivaComponentNames for the jiva control plane components
+	JivaComponentNames     = "openebs-jiva-csi-node,openebs-jiva-csi-controller,openebs-localpv-provisioner,jiva-operator"
+	// LVMComponentNames for the lvm control plane components
+	LVMComponentNames      = "openebs-lvm-controller,openebs-lvm-node"
+	// ZFSComponentNames for the zfs control plane components
+	ZFSComponentNames      = "openebs-zfs-controller,openebs-zfs-node"
+	// HostpathComponentNames for the hostpath control plane components
+	HostpathComponentNames = "openebs-localpv-provisioner"
+)
+
 var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
@@ -102,6 +121,18 @@ var (
 		LocalPVLVMCSIDriver: LVMCasType,
 		ZFSCSIDriver:        ZFSCasType,
 	}
+
+	// CasTypeToComponentNamesMap stores the names of the control-plane components of each cas-types.
+	// To show statuses of new CasTypes, please update this map.
+	CasTypeToComponentNamesMap = map[string]string{
+		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
+		JivaCasType:          JivaComponentNames,
+		LocalHostpathCasType: HostpathComponentNames,
+		LocalDeviceCasType:   HostpathComponentNames + "," + NDMComponentNames,
+		ZFSCasType:           ZFSComponentNames,
+		LVMCasType:           LVMComponentNames,
+	}
+
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
 	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
@@ -245,5 +276,13 @@ var (
 		{Name: "Reason", Type: "string"},
 		{Name: "Message", Type: "string"},
 		{Name: "Type", Type: "string"},
+	}
+	// ClusterInfoColumnDefinitions stores the Table headers for Cluster-Info details
+	ClusterInfoColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Cas-Type", Type: "string"},
+		{Name: "Namespace", Type: "string"},
+		{Name: "Version", Type: "string"},
+		{Name: "Working", Type: "string"},
+		{Name: "Status", Type: "string"},
 	}
 )
