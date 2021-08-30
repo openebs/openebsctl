@@ -696,6 +696,7 @@ func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error)
 	}
 }
 
+// GetEvents returns the corev1 events based on the fieldSelectors
 func (k K8sClient) GetEvents(fieldSelector string) (*corev1.EventList, error) {
 	events, err := k.K8sCS.CoreV1().Events("").List(context.TODO(), metav1.ListOptions{FieldSelector: fieldSelector})
 	if err != nil {
@@ -704,6 +705,7 @@ func (k K8sClient) GetEvents(fieldSelector string) (*corev1.EventList, error) {
 	return events, nil
 }
 
+// GetPods returns the corev1 Pods based on the label and field selectors
 func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace string) (*corev1.PodList, error) {
 	pods, err := k.K8sCS.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector, FieldSelector: fieldSelector})
 	if err != nil {

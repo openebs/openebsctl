@@ -53,7 +53,7 @@ func ShowClusterInfo() error {
 		}
 	}
 	if len(clusterInfoRows) == 0 {
-		fmt.Println("None Of the OpenEBS Storage Engines are installed in this cluster")
+		return fmt.Errorf("none Of the OpenEBS Storage Engines are installed in this cluster")
 	} else {
 		util.TablePrinter(util.ClusterInfoColumnDefinitions, clusterInfoRows, printers.PrintOptions{})
 	}
