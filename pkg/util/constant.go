@@ -116,6 +116,8 @@ var (
 		ZFSCSIDriver:        ZFSCasType,
 	}
 
+	// CasTypeToComponentNamesMap stores the names of the control-plane components of each cas-types.
+	// To show statuses of new CasTypes, please update this map.
 	CasTypeToComponentNamesMap = map[string]string{
 		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
 		JivaCasType:          JivaComponentNames,
@@ -276,6 +278,5 @@ var (
 		{Name: "Version", Type: "string"},
 		{Name: "Working", Type: "string"},
 		{Name: "Status", Type: "string"},
-
 	}
 )

@@ -18,12 +18,13 @@ package cluster_info
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
-	"strings"
 )
 
 // ShowClusterInfo shows the openebs components and their status and versions
@@ -67,6 +68,7 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 	if len(podList.Items) != 0 {
 		for _, item := range podList.Items {
 			if val, ok := componentDataMap[item.Labels["openebs.io/component-name"]]; ok {
+				// Update only if the status of the component is not running.
 				if val.Status != "Running" {
 					componentDataMap[item.Labels["openebs.io/component-name"]] = util.ComponentData{
 						Namespace: item.Namespace,
@@ -121,7 +123,7 @@ func getLocalPVDeviceStatus(componentDataMap map[string]util.ComponentData) (str
 
 func getVersion(componentDataMap map[string]util.ComponentData) string {
 	for key, val := range componentDataMap {
-		if !strings.Contains(util.NDMComponentNames, key) && val.Version != "" {
+		if !strings.Contains(util.NDMComponentNames, key) && val.Version != "" && val.Status == "Running"{
 			return val.Version
 		}
 	}
