@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"flag"
+	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -78,6 +79,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
+		cluster_info.NewCmdClusterInfo(cmd),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)

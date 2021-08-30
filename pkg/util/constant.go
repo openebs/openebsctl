@@ -33,6 +33,10 @@ const (
 	JivaCasType = "jiva"
 	// LVMCasType cas type name
 	LVMCasType = "localpv-lvm"
+	// LocalHostpathCasType cas type name
+	LocalHostpathCasType = "localpv-hostpath"
+	// LocalDeviceCasType cas type name
+	LocalDeviceCasType = "localpv-device"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -77,6 +81,15 @@ const (
 	ZFSLocalPVcsiControllerLabelValue = "openebs-zfs-controller"
 )
 
+const (
+	CstorComponentNames    = "cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
+	NDMComponentNames      = "openebs-ndm-operator,ndm"
+	JivaComponentNames     = "openebs-jiva-csi-node,openebs-jiva-csi-controller,openebs-localpv-provisioner,jiva-operator"
+	LVMComponentNames      = "openebs-lvm-controller,openebs-lvm-node"
+	ZFSComponentNames      = "openebs-zfs-controller,openebs-zfs-node"
+	HostpathComponentNames = "openebs-localpv-provisioner"
+)
+
 var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
@@ -102,6 +115,16 @@ var (
 		LocalPVLVMCSIDriver: LVMCasType,
 		ZFSCSIDriver:        ZFSCasType,
 	}
+
+	CasTypeToComponentNamesMap = map[string]string{
+		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
+		JivaCasType:          JivaComponentNames,
+		LocalHostpathCasType: HostpathComponentNames,
+		LocalDeviceCasType:   HostpathComponentNames + "," + NDMComponentNames,
+		ZFSCasType:           ZFSComponentNames,
+		LVMCasType:           LVMComponentNames,
+	}
+
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
 	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
@@ -245,5 +268,14 @@ var (
 		{Name: "Reason", Type: "string"},
 		{Name: "Message", Type: "string"},
 		{Name: "Type", Type: "string"},
+	}
+	// ClusterInfoColumnDefinitions stores the Table headers for Cluster-Info details
+	ClusterInfoColumnDefinitions = []metav1.TableColumnDefinition{
+		{Name: "Cas-Type", Type: "string"},
+		{Name: "Namespace", Type: "string"},
+		{Name: "Version", Type: "string"},
+		{Name: "Working", Type: "string"},
+		{Name: "Status", Type: "string"},
+
 	}
 )

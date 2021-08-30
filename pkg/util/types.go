@@ -262,3 +262,10 @@ type LVMVolDesc struct {
 	ThinProvisioned string
 	NodeID          string
 }
+
+type ComponentData struct {
+	Namespace string
+	Status string
+	Version string
+	CasType string
+}

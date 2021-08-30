@@ -703,3 +703,11 @@ func (k K8sClient) GetEvents(fieldSelector string) (*corev1.EventList, error) {
 	}
 	return events, nil
 }
+
+func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace string) (*corev1.PodList, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{LabelSelector: labelSelector, FieldSelector: fieldSelector})
+	if err != nil {
+		return nil, fmt.Errorf("error getting pods : %v", err)
+	}
+	return pods, nil
+}

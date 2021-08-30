@@ -14,31 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package get
+package cluster_info
 
 import (
-	"fmt"
-
+	cluster_info "github.com/openebs/openebsctl/pkg/cluster-info"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-const (
-	versionCmdHelp = `Usage:
-  kubectl openebs version
-Flags:
-  -h, --help                           help for openebs get command
-`
-)
-
-// NewCmdVersion shows OpenEBSCTL version
-func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
+// NewCmdClusterInfo shows OpenEBSCTL cluster-info
+func NewCmdClusterInfo(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "version",
-		Short: "Shows openebs kubectl plugin's version",
+		Use:   "cluster-info",
+		Short: "Show client version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Client Version: " + rootCmd.Version)
+			util.CheckErr(cluster_info.ShowClusterInfo(), util.Fatal)
 		},
 	}
-	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
 }
