@@ -9,7 +9,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mum4k/termdash/blob/master/LICENSE)
 [![Releases](https://img.shields.io/github/downloads/openebs/openebsctl/total.svg)](https://github.com//openebs/openebsctl/releases)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fopenebs%2Fopenebsctl.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fopenebs%2Fopenebsctl?ref=badge_shield)
-
+[![codecov.io](https://codecov.io/github/openebs/openebsctl/coverage.svg?branch=develop)](https://codecov.io/github/openebs/openebsctl?branch=develop)
 
 
 OpenEBSCTL is a kubectl plugin to manage OpenEBS storage components.
