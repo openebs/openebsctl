@@ -35,11 +35,12 @@ const (
   kubectl openebs [command] [resource] [...names] [flags]
 
 Available Commands:
-  completion  Outputs shell completion code for the specified shell (bash or zsh)
-  describe    Provide detailed information about an OpenEBS resource
-  get         Provides fetching operations related to a Volume/Pool
-  help        Help about any command
-  version     Shows openebs kubectl plugin's version
+  completion    Outputs shell completion code for the specified shell (bash or zsh)
+  describe      Provide detailed information about an OpenEBS resource
+  get           Provides fetching operations related to a Volume/Pool
+  help          Help about any command
+  version       Shows openebs kubectl plugin's version
+  cluster-info  Show component version, status and running components for each installed engine
 
 Flags:
   -h, --help                           help for openebs

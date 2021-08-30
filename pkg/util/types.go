@@ -263,6 +263,7 @@ type LVMVolDesc struct {
 	NodeID          string
 }
 
+// ComponentData stores the data for each component of an engine
 type ComponentData struct {
 	Namespace string
 	Status string
