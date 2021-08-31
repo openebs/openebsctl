@@ -18,13 +18,16 @@ package get
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
-func getValidVersions(version string) string {
+func getValidVersion(version string) string {
 	if version != "" {
 		return version
 	}
@@ -42,21 +45,30 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			nsMap, err := k.GetVersionMapOfComponents()
 
 			if err != nil {
-				fmt.Println("Client Version: " + rootCmd.Version)
-				fmt.Println("\nError getting Components Version")
+				fmt.Println("Client Version: " + getValidVersion(rootCmd.Version))
+				fmt.Fprintf(os.Stderr, "\nError getting Components Version...")
 				return
 			}
 
-			header := []string{"Components", "Version"}
-			rows := [][]string{
-				{"Client", rootCmd.Version},
-				{"OpenEBS", getValidVersions(nsMap[util.OpenEBSProvisioner])},
-				{"OpenEBS CStor", getValidVersions(nsMap[util.CstorCasType])},
-				{"OpenEBS Jiva", getValidVersions(nsMap[util.JivaCasType])},
-				{"OpenEBS ZFS LocalPV", getValidVersions(nsMap[util.ZFSCasType])},
+			var rows []metav1.TableRow = []metav1.TableRow{
+				{
+					Cells: []interface{}{"Client", getValidVersion(rootCmd.Version)},
+				},
+				{
+					Cells: []interface{}{"OpenEBS", getValidVersion(nsMap[util.OpenEBSProvisioner])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS CStor", getValidVersion(nsMap[util.CstorCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(nsMap[util.JivaCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(nsMap[util.ZFSCasType])},
+				},
 			}
 
-			util.PrintToTable(header, rows)
+			util.TablePrinter(util.VersionColumnDefinition, rows, printers.PrintOptions{Wide: true})
 		},
 	}
 	return cmd
