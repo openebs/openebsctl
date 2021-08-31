@@ -262,3 +262,11 @@ type LVMVolDesc struct {
 	ThinProvisioned string
 	NodeID          string
 }
+
+// ComponentData stores the data for each component of an engine
+type ComponentData struct {
+	Namespace string
+	Status string
+	Version string
+	CasType string
+}
