@@ -51,7 +51,7 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
 			k, _ := client.NewK8sClient("")
-			nsMap, err := k.GetVersionMapOfComponents()
+			componentVersionMap, err := k.GetVersionMapOfComponents()
 
 			if err != nil {
 				fmt.Println("Client Version: " + getValidVersion(rootCmd.Version))
@@ -64,16 +64,16 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 					Cells: []interface{}{"Client", getValidVersion(rootCmd.Version)},
 				},
 				{
-					Cells: []interface{}{"OpenEBS", getValidVersion(nsMap[util.OpenEBSProvisioner])},
+					Cells: []interface{}{"OpenEBS", getValidVersion(componentVersionMap[util.OpenEBSProvisioner])},
 				},
 				{
-					Cells: []interface{}{"OpenEBS CStor", getValidVersion(nsMap[util.CstorCasType])},
+					Cells: []interface{}{"OpenEBS CStor", getValidVersion(componentVersionMap[util.CstorCasType])},
 				},
 				{
-					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(nsMap[util.JivaCasType])},
+					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(componentVersionMap[util.JivaCasType])},
 				},
 				{
-					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(nsMap[util.ZFSCasType])},
+					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(componentVersionMap[util.ZFSCasType])},
 				},
 			}
 
