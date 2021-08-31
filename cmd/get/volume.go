@@ -23,19 +23,15 @@ import (
 )
 
 var (
-	volumesListCommandHelpText = `
-This command displays status of available OpenEBS volumes.
+	volumesListCommandHelpText = `Usage: 
+  kubectl openebs get volume [flags]
 
-Usage: kubectl openebs get volume [options]
-
-Options:
---------
-Filter volumes by cas-type
---cas-type=[jiva|cstor|zfslocalpv|lvmlocalpv]
-
-Advanced:
-Filter by a fixed OpenEBS namespace
---openebs-namespace=[...]
+Flags:
+  -h, --help                           help for openebs get command
+      --openebs-namespace string       filter by a fixed OpenEBS namespace
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
 `
 )
 
@@ -45,7 +41,6 @@ func NewCmdGetVolume() *cobra.Command {
 		Use:     "volume",
 		Aliases: []string{"vol", "v", "volumes"},
 		Short:   "Displays status information about Volume(s)",
-		Long:    volumesListCommandHelpText,
 		Run: func(cmd *cobra.Command, args []string) {
 			// TODO: Should this method create the k8sClient object
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
@@ -53,5 +48,6 @@ func NewCmdGetVolume() *cobra.Command {
 			util.CheckErr(volume.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
+	cmd.SetUsageTemplate(volumesListCommandHelpText)
 	return cmd
 }

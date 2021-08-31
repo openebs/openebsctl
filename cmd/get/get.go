@@ -17,33 +17,30 @@ limitations under the License.
 package get
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
 const (
-	getCmdHelp = `Display one or many OpenEBS resources like volumes, storages, blockdevices
+	getCmdHelp = `Display one or many OpenEBS resources like volumes, storages, blockdevices.
 
-$ kubectl openebs get [volume|storage|bd] [flags]
+Usage:
+  kubectl openebs get [volume|storage|bd] [flags]
 
-# Get volumes
-$ kubectl openebs get volume [options]
+Get volumes:
+  kubectl openebs get volume [flags]
 
-# Get storages
-$ kubectl openebs get storage [options]
+Get storages:
+  kubectl openebs get storage [flags]
 
-# Get blockdevices
-$ kubectl openebs get bd
+Get blockdevices:
+  kubectl openebs get bd
 
-Options:
---------
-Filter volumes by cas-type
---cas-type=[cstor]
-
-Advanced:
-Filter by a fixed OpenEBS namespace
---openebs-namespace=[...]
+Flags:
+  -h, --help                           help for openebs get command
+      --openebs-namespace string       filter by a fixed OpenEBS namespace
+                                       If not provided it is determined from components.
+      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
+                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
 `
 )
 
@@ -52,13 +49,10 @@ func NewCmdGet(rootCmd *cobra.Command) *cobra.Command {
 	var casType string
 	cmd := &cobra.Command{
 		Use:       "get",
-		Short:     "Provides operations related to a Volume",
+		Short:     "Provides fetching operations related to a Volume/Storage",
 		ValidArgs: []string{"storage", "volume", "bd"},
-		Long:      getCmdHelp,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(getCmdHelp)
-		},
 	}
+	cmd.SetUsageTemplate(getCmdHelp)
 	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.AddCommand(
 		NewCmdGetVolume(),

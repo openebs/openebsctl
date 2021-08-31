@@ -24,18 +24,10 @@ import (
 	"k8s.io/klog"
 )
 
-// NewCmdCompletion creates the completion command
-func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:       "completion",
-		ValidArgs: []string{"bash", "zsh"},
-		Args:      cobra.ExactValidArgs(1),
-		Short:     "Outputs shell completion code for the specified shell (bash or zsh)",
-		Long: `
-Outputs shell completion code for the specified shell (bash or zsh)
-
+const (
+	completionUsage = `
 To load completion to current bash shell,
-. <(openebs completion bash)
+. <(kubectl openebs completion bash)
 
 To configure your bash shell to load completions for each session add to your bashrc
 # ~/.bashrc or ~/.profile
@@ -49,13 +41,23 @@ To configure your zsh shell to load completions for each session add to your zsh
 . <(kubectl openebs completion zsh)
 
 Do similar steps for fish & powershell
-`,
+`
+)
+
+// NewCmdCompletion creates the completion command
+func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:       "completion",
+		ValidArgs: []string{"bash", "zsh"},
+		Args:      cobra.ExactValidArgs(1),
+		Short:     "Outputs shell completion code for the specified shell (bash or zsh)",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			RunCompletion(os.Stdout, rootCmd, args)
 		},
 	}
+	cmd.SetUsageTemplate(completionUsage)
 	return cmd
 }
 

@@ -23,16 +23,20 @@ import (
 )
 
 var (
-	pvcInfoCommandHelpText = `
-This command fetches information and status  of  the  various  aspects 
+	pvcInfoCommandHelpText = `This command fetches information and status  of  the  various  aspects 
 of  the  PersistentVolumeClaims  and  its underlying related resources 
 in the provided namespace. If no namespace is provided it uses default
 namespace for execution.
 
-$ kubectl openebs describe pvc [name1] [name2] ... [nameN] -n [namespace]
-Options:
-Advanced: Override the auto-detected OPENEBS_NAMESPACE
---openebs-namespace=[...]
+Usage:
+  kubectl openebs describe pvc [...names] [flags]
+
+Flags:
+  -h, --help                           help for openebs
+  -n, --namespace string               to read the namespace for the pvc.
+      --openebs-namespace string       to read the openebs namespace from user.
+                                       If not provided it is determined from components.
+      --debug                          to launch the debugging mode for cstor pvcs.
 `
 )
 
@@ -43,8 +47,6 @@ func NewCmdDescribePVC() *cobra.Command {
 		Use:     "pvc",
 		Aliases: []string{"pvcs", "persistentvolumeclaims", "persistentvolumeclaim"},
 		Short:   "Displays PersistentVolumeClaim information",
-		Long:    pvcInfoCommandHelpText,
-		Example: `kubectl openebs describe pvc cstor-vol-1 cstor-vol-2 -n storage`,
 		Run: func(cmd *cobra.Command, args []string) {
 			var pvNs, openebsNamespace string
 			if pvNs, _ = cmd.Flags().GetString("namespace"); pvNs == "" {
@@ -59,6 +61,7 @@ func NewCmdDescribePVC() *cobra.Command {
 
 		},
 	}
+	cmd.SetUsageTemplate(pvcInfoCommandHelpText)
 	cmd.Flags().BoolVar(&debug, "debug", false, "Debug cstor volume")
 	return cmd
 }
