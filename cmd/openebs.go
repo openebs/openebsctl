@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"flag"
+	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -34,11 +35,12 @@ const (
   kubectl openebs [command] [resource] [...names] [flags]
 
 Available Commands:
-  completion  Outputs shell completion code for the specified shell (bash or zsh)
-  describe    Provide detailed information about an OpenEBS resource
-  get         Provides fetching operations related to a Volume/Pool
-  help        Help about any command
-  version     Shows openebs kubectl plugin's version
+  completion    Outputs shell completion code for the specified shell (bash or zsh)
+  describe      Provide detailed information about an OpenEBS resource
+  get           Provides fetching operations related to a Volume/Pool
+  help          Help about any command
+  version       Shows openebs kubectl plugin's version
+  cluster-info  Show component version, status and running components for each installed engine
 
 Flags:
   -h, --help                           help for openebs
@@ -78,6 +80,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
+		cluster_info.NewCmdClusterInfo(cmd),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)

@@ -38,7 +38,6 @@ func getValidVersion(version string) string {
 const (
 	versionCmdHelp = `Usage:
   kubectl openebs version
-
 Flags:
   -h, --help                           help for openebs get command
 `
