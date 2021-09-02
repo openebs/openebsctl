@@ -70,6 +70,9 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(componentVersionMap[util.JivaCasType])},
 				},
 				{
+					Cells: []interface{}{"OpenEBS LVM LocalPV", getValidVersion(componentVersionMap[util.LVMCasType])},
+				},
+				{
 					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(componentVersionMap[util.ZFSCasType])},
 				},
 			}
