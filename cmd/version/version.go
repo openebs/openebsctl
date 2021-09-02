@@ -27,14 +27,6 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-func getValidVersion(version string) string {
-	if version != "" {
-		return version
-	}
-
-	return "Not Installed"
-}
-
 const (
 	versionCmdHelp = `Usage:
   kubectl openebs version
@@ -42,6 +34,15 @@ Flags:
   -h, --help                           help for openebs get command
 `
 )
+
+// Get versions of components, return "Not Installed" on empty version
+func getValidVersion(version string) string {
+	if version != "" {
+		return version
+	}
+
+	return "Not Installed"
+}
 
 // NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {

@@ -189,6 +189,7 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
+// Get Versions of different components running in K8s 
 func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
 	for _, v := range util.CasTypeAndComponentNameMap {
