@@ -63,9 +63,6 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 					Cells: []interface{}{"Client", getValidVersion(rootCmd.Version)},
 				},
 				{
-					Cells: []interface{}{"OpenEBS", getValidVersion(componentVersionMap[util.OpenEBSProvisioner])},
-				},
-				{
 					Cells: []interface{}{"OpenEBS CStor", getValidVersion(componentVersionMap[util.CstorCasType])},
 				},
 				{

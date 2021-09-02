@@ -21,10 +21,6 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 const (
 	// OpenEBSCasTypeKey present in label of PV
 	OpenEBSCasTypeKey = "openebs.io/cas-type"
-	//OpenEBS Provisioner value
-	OpenEBSProvisioner = "openebs"
-	//OpenEBSProvisioner label value
-	OpenEBSProvisionerLabelValue = "openebs-provisioner"
 	// Unknown to be retuned when cas type is not known
 	Unknown = "unknown"
 	// OpenEBSCasTypeKeySc present in parameter of SC
@@ -124,15 +120,6 @@ var (
 		// NOTE: In near future this might mean all local-pv volumes
 		LocalPVLVMCSIDriver: LVMCasType,
 		ZFSCSIDriver:        ZFSCasType,
-	}
-
-	// ComponentName to ResourceType Map
-	ComponentNameToResourceTypeMap = map[string]string{
-		OpenEBSProvisionerLabelValue: OpenEBSProvisioner,
-	}
-	// ResourceType Map To Component Name
-	ResourceTypeMapToComponentName = map[string]string{
-		OpenEBSProvisioner: OpenEBSProvisionerLabelValue,
 	}
 
 	// CasTypeToComponentNamesMap stores the names of the control-plane components of each cas-types.

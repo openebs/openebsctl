@@ -194,10 +194,6 @@ func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 	for _, v := range util.CasTypeAndComponentNameMap {
 		label = label + v + ","
 	}
-	// Adding openebs provisioner is label selector to get openebs version
-	for _, v := range util.ResourceTypeMapToComponentName {
-		label = label + v + ","
-	}
 	label += ")"
 
 	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: label})
@@ -212,12 +208,10 @@ func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 		podLabels := pod.ObjectMeta.Labels
 		labelName := podLabels["openebs.io/component-name"]
 		version := podLabels["openebs.io/version"]
+
 		cas, okCas := util.ComponentNameToCasTypeMap[labelName]
-		res, okRes := util.ComponentNameToResourceTypeMap[labelName]
 		if okCas {
 			versionMap[cas] = version
-		} else if okRes {
-			versionMap[res] = version
 		}
 	}
 
