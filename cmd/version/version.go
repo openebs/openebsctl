@@ -18,8 +18,14 @@ package get
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
+	"strings"
 
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const (
@@ -37,8 +43,64 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
 			fmt.Println("Client Version: " + rootCmd.Version)
+			getCliLatestVersion(rootCmd.Version)
 		},
 	}
 	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
+}
+
+func getCliLatestVersion(currVersion string) {
+	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
+	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
+	util.CheckErrDefault(err, "Error reading response body")
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	util.CheckErrDefault(err, "Error reading response body")
+
+	var data map[string]interface{}
+	err = yaml.Unmarshal(body, &data)
+	util.CheckErrDefault(err, "Error parsing yaml")
+
+	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
+	if !isLatestVersion(currVersion, latestVersion) {
+		fmt.Printf("You are using older version (%s) of cli, latest available version is %s\n", currVersion, latestVersion)
+	}
+}
+
+func isLatestVersion(currVersion string, latestVersion string) bool {
+	if currVersion[0] == 'v' {
+		currVersion = currVersion[1:]
+	}
+
+	if latestVersion[0] == 'v' {
+		latestVersion = latestVersion[1:]
+	}
+
+	if currVersion[0] < '0' || currVersion[0] > '9' {
+		return true
+	}
+
+	delimeter := func(d rune) bool {
+		return d == '.' || d == '-'
+	}
+
+	currVer := strings.FieldsFunc(currVersion, delimeter)
+	latVer := strings.FieldsFunc(latestVersion, delimeter)
+
+	for i := 0; i < len(currVer) && i < len(latVer); i++ {
+		cv, e1 := strconv.Atoi(currVer[i])
+		lv, e2 := strconv.Atoi(latVer[i])
+
+		if e1 != nil || e2 != nil {
+			continue
+		}
+
+		if cv < lv {
+			return false
+		}
+	}
+
+	return true
 }
