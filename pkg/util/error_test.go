@@ -91,7 +91,7 @@ func TestCheckErrDefault(t *testing.T) {
 		{
 			"Message empty",
 			args{
-				err: nil,
+				err: errors.New("Some error occurred"),
 				msg: "",
 			},
 		},
