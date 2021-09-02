@@ -277,6 +277,11 @@ var (
 		{Name: "Message", Type: "string"},
 		{Name: "Type", Type: "string"},
 	}
+
+	VersionColumnDefinition = []metav1.TableColumnDefinition{
+		{Name: "Component", Type: "string"},
+		{Name: "Version", Type: "string"},
+  }
 	// ClusterInfoColumnDefinitions stores the Table headers for Cluster-Info details
 	ClusterInfoColumnDefinitions = []metav1.TableColumnDefinition{
 		{Name: "Cas-Type", Type: "string"},

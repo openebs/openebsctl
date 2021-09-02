@@ -20,12 +20,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const (
@@ -36,13 +40,50 @@ Flags:
 `
 )
 
+// Get versions of components, return "Not Installed" on empty version
+func getValidVersion(version string) string {
+	if version != "" {
+		return version
+	}
+
+	return "Not Installed"
+}
+
 // NewCmdVersion shows OpenEBSCTL version
 func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Shows openebs kubectl plugin's version",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Client Version: " + rootCmd.Version)
+			k, _ := client.NewK8sClient("")
+			componentVersionMap, err := k.GetVersionMapOfComponents()
+
+			if err != nil {
+				fmt.Println("Client Version: " + getValidVersion(rootCmd.Version))
+				fmt.Fprintf(os.Stderr, "\nError getting Components Version...")
+				getCliLatestVersion(rootCmd.Version)
+				return
+			}
+
+			var rows []metav1.TableRow = []metav1.TableRow{
+				{
+					Cells: []interface{}{"Client", getValidVersion(rootCmd.Version)},
+				},
+				{
+					Cells: []interface{}{"OpenEBS CStor", getValidVersion(componentVersionMap[util.CstorCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(componentVersionMap[util.JivaCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS LVM LocalPV", getValidVersion(componentVersionMap[util.LVMCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(componentVersionMap[util.ZFSCasType])},
+				},
+			}
+
+			util.TablePrinter(util.VersionColumnDefinition, rows, printers.PrintOptions{Wide: true})
 			getCliLatestVersion(rootCmd.Version)
 		},
 	}
@@ -65,7 +106,7 @@ func getCliLatestVersion(currVersion string) {
 
 	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
 	if !isLatestVersion(currVersion, latestVersion) {
-		fmt.Printf("You are using older version (%s) of cli, latest available version is %s\n", currVersion, latestVersion)
+		fmt.Printf("\nYou are using older version (%s) of cli, latest available version is %s\n", currVersion, latestVersion)
 	}
 }
 
