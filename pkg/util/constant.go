@@ -83,15 +83,15 @@ const (
 
 const (
 	// CstorComponentNames for the cstor control plane components
-	CstorComponentNames    = "cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
+	CstorComponentNames = "cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
 	// NDMComponentNames for the ndm components
-	NDMComponentNames      = "openebs-ndm-operator,ndm"
+	NDMComponentNames = "openebs-ndm-operator,ndm"
 	// JivaComponentNames for the jiva control plane components
-	JivaComponentNames     = "openebs-jiva-csi-node,openebs-jiva-csi-controller,openebs-localpv-provisioner,jiva-operator"
+	JivaComponentNames = "openebs-jiva-csi-node,openebs-jiva-csi-controller,jiva-operator"
 	// LVMComponentNames for the lvm control plane components
-	LVMComponentNames      = "openebs-lvm-controller,openebs-lvm-node"
+	LVMComponentNames = "openebs-lvm-controller,openebs-lvm-node"
 	// ZFSComponentNames for the zfs control plane components
-	ZFSComponentNames      = "openebs-zfs-controller,openebs-zfs-node"
+	ZFSComponentNames = "openebs-zfs-controller,openebs-zfs-node"
 	// HostpathComponentNames for the hostpath control plane components
 	HostpathComponentNames = "openebs-localpv-provisioner"
 )
@@ -126,7 +126,7 @@ var (
 	// To show statuses of new CasTypes, please update this map.
 	CasTypeToComponentNamesMap = map[string]string{
 		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
-		JivaCasType:          JivaComponentNames,
+		JivaCasType:          JivaComponentNames + "," + HostpathComponentNames,
 		LocalHostpathCasType: HostpathComponentNames,
 		LocalDeviceCasType:   HostpathComponentNames + "," + NDMComponentNames,
 		ZFSCasType:           ZFSComponentNames,
@@ -281,7 +281,7 @@ var (
 	VersionColumnDefinition = []metav1.TableColumnDefinition{
 		{Name: "Component", Type: "string"},
 		{Name: "Version", Type: "string"},
-  }
+	}
 	// ClusterInfoColumnDefinitions stores the Table headers for Cluster-Info details
 	ClusterInfoColumnDefinitions = []metav1.TableColumnDefinition{
 		{Name: "Cas-Type", Type: "string"},

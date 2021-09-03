@@ -1,11 +1,28 @@
+/*
+Copyright 2020-2021 The OpenEBS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package cluster_info
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"k8s.io/client-go/kubernetes/fake"
-	"reflect"
-	"testing"
 )
 
 func Test_getComponentDataByComponents(t *testing.T) {
@@ -30,15 +47,14 @@ func Test_getComponentDataByComponents(t *testing.T) {
 				componentNames: util.CasTypeToComponentNamesMap[util.CstorCasType],
 				casType:        util.CstorCasType,
 			},
-			//"cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
 			map[string]util.ComponentData{
-				"cspc-operator":                {"openebs", "Running", "2.1", "cstor"},
-				"cvc-operator":                 {"openebs", "Running", "2.1", "cstor"},
-				"cstor-admission-webhook":      {"openebs", "Running", "2.1", "cstor"},
-				"openebs-cstor-csi-node":       {"openebs", "Running", "2.1", "cstor"},
-				"openebs-cstor-csi-controller": {"openebs", "Running", "2.1", "cstor"},
-				"ndm":                          {"openebs", "Running", "1.1", "cstor"},
-				"openebs-ndm-operator":         {"openebs", "Running", "1.1", "cstor"},
+				"cspc-operator":                {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cvc-operator":                 {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cstor-admission-webhook":      {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"openebs-cstor-csi-node":       {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"openebs-cstor-csi-controller": {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"ndm":                          {Namespace: "openebs", Status: "Running", Version: "1.1", CasType: "cstor"},
+				"openebs-ndm-operator":         {Namespace: "openebs", Status: "Running", Version: "1.1", CasType: "cstor"},
 			},
 			false,
 		},
@@ -52,15 +68,14 @@ func Test_getComponentDataByComponents(t *testing.T) {
 				componentNames: util.CasTypeToComponentNamesMap[util.CstorCasType],
 				casType:        util.CstorCasType,
 			},
-			//"cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
 			map[string]util.ComponentData{
-				"cspc-operator":                {"openebs", "Running", "2.1", "cstor"},
-				"cvc-operator":                 {"openebs", "Running", "2.1", "cstor"},
-				"cstor-admission-webhook":      {"openebs", "Running", "2.1", "cstor"},
-				"openebs-cstor-csi-node":       {"openebs", "Running", "2.1", "cstor"},
+				"cspc-operator":                {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cvc-operator":                 {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cstor-admission-webhook":      {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"openebs-cstor-csi-node":       {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
 				"openebs-cstor-csi-controller": {},
 				"ndm":                          {},
-				"openebs-ndm-operator":         {"openebs", "Running", "1.1", "cstor"},
+				"openebs-ndm-operator":         {Namespace: "openebs", Status: "Running", Version: "1.1", CasType: "cstor"},
 			},
 			false,
 		},
@@ -74,15 +89,14 @@ func Test_getComponentDataByComponents(t *testing.T) {
 				componentNames: util.CasTypeToComponentNamesMap[util.CstorCasType],
 				casType:        util.CstorCasType,
 			},
-			//"cspc-operator,cvc-operator,cstor-admission-webhook,openebs-cstor-csi-node,openebs-cstor-csi-controller"
 			map[string]util.ComponentData{
-				"cspc-operator":                {"openebs", "Running", "2.1", "cstor"},
-				"cvc-operator":                 {"openebs", "Running", "2.1", "cstor"},
-				"cstor-admission-webhook":      {"openebs", "Running", "2.1", "cstor"},
-				"openebs-cstor-csi-node":       {"openebs", "Running", "2.1", "cstor"},
-				"openebs-cstor-csi-controller": {"openebs", "Running", "2.1", "cstor"},
-				"ndm":                          {"openebs", "Running", "1.1", "cstor"},
-				"openebs-ndm-operator":         {"openebs", "Running", "1.1", "cstor"},
+				"cspc-operator":                {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cvc-operator":                 {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"cstor-admission-webhook":      {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"openebs-cstor-csi-node":       {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"openebs-cstor-csi-controller": {Namespace: "openebs", Status: "Running", Version: "2.1", CasType: "cstor"},
+				"ndm":                          {Namespace: "openebs", Status: "Running", Version: "1.1", CasType: "cstor"},
+				"openebs-ndm-operator":         {Namespace: "openebs", Status: "Running", Version: "1.1", CasType: "cstor"},
 			},
 			false,
 		},
@@ -120,11 +134,13 @@ func Test_getLocalPVDeviceStatus(t *testing.T) {
 						Namespace: "openebs",
 						Status:    "Running",
 						Version:   "1.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 					"ndm": {
 						Namespace: "openebs",
 						Status:    "Running",
 						Version:   "3.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 				},
 			},
@@ -140,11 +156,13 @@ func Test_getLocalPVDeviceStatus(t *testing.T) {
 						Namespace: "openebs",
 						Status:    "Running",
 						Version:   "1.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 					"ndm": {
 						Namespace: "openebs",
 						Status:    "Pending",
 						Version:   "3.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 				},
 			},
@@ -160,11 +178,13 @@ func Test_getLocalPVDeviceStatus(t *testing.T) {
 						Namespace: "openebs",
 						Status:    "Pending",
 						Version:   "1.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 					"ndm": {
 						Namespace: "openebs",
 						Status:    "Pending",
 						Version:   "3.1",
+						CasType:   util.LocalDeviceCasType,
 					},
 				},
 			},
@@ -481,3 +501,102 @@ func Test_getVersion(t *testing.T) {
 
 //map[cspc-operator:{openebs Running 2.1 cstor} cstor-admission-webhook:{openebs Running 2.1 cstor} cvc-operator:{openebs Running 2.1 cstor} ndm:{openebs Running 1.1 cstor} openebs-cstor-csi-controller:{openebs Running 2.1 cstor} openebs-cstor-csi-node:{openebs Running 2.1 cstor} openebs-ndm-operator:{openebs Running 1.1 cstor}],
 //map[cspc-operator:{openebs Running 2.1 cstor} cstor-admission-webhook:{openebs Running 2.1 cstor} cvc-operator:{openebs Running 2.1 cstor} ndm:{openebs Running 1.1 cstor} ndm-operator:{openebs Running 1.1 cstor} openebs-cstor-csi-controller:{openebs Running 2.1 cstor} openebs-cstor-csi-node:{openebs Running 2.1 cstor}]
+
+func Test_compute(t *testing.T) {
+	type args struct {
+		k *client.K8sClient
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"All components of cstor present and running",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&cspcOperator, &cvcOperator, &cstorAdmissionWebhook, &ndm, &ndmOperator, &openebsCstorCsiController, &openebsCstorCsiNode),
+				},
+			},
+			false,
+		},
+		{
+			"Some components of cstor present and running",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&cspcOperator, &cvcOperator, &cstorAdmissionWebhook, &ndmOperator, &openebsCstorCsiNode),
+				},
+			},
+			false,
+		},
+		{
+			"All components of cstor present and running with some component having evicted pods",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&cspcOperator, &cvcOperator, &cstorAdmissionWebhook, &ndm, &ndmOperator, &openebsCstorCsiController, &openebsCstorCsiNode, &cspcOperatorEvicted, &cvcOperatorEvicted),
+				},
+			},
+			false,
+		},
+		{
+			"If no components are present",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(),
+				},
+			},
+			true,
+		},
+		{
+			"If ndm and localpv provisioner components are in same ns",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&localpvProvisionerInOpenebs, &ndm, &ndmOperator),
+				},
+			},
+			false,
+		},
+		{
+			"If ndm and localpv provisioner components are in different ns",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&localpvProvisioner, &ndm, &ndmOperator),
+				},
+			},
+			false,
+		},
+		{
+			"If jiva and ndm in same ns",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&jivaOperator, &openebsJivaCsiController, &openebsJivaCsiNode, &ndm, &ndmOperator, &localpvProvisionerInOpenebs),
+				},
+			},
+			false,
+		},
+		{
+			"If jiva and ndm in different ns",
+			args{
+				k: &client.K8sClient{
+					Ns:    "",
+					K8sCS: fake.NewSimpleClientset(&jivaOperator, &openebsJivaCsiController, &openebsJivaCsiNode, &ndmXYZ, &ndmOperatorXYZ, &localpvProvisionerInOpenebs),
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := compute(tt.args.k); (err != nil) != tt.wantErr {
+				t.Errorf("compute() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

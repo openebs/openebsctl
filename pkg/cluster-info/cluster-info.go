@@ -30,10 +30,15 @@ import (
 // ShowClusterInfo shows the openebs components and their status and versions
 func ShowClusterInfo() error {
 	k, _ := client.NewK8sClient("")
+	err := compute(k)
+	return err
+}
+
+func compute(k *client.K8sClient) error {
 	var clusterInfoRows []metav1.TableRow
 	for casType, componentNames := range util.CasTypeToComponentNamesMap {
-		componentDataMap, _ := getComponentDataByComponents(k, componentNames, casType)
-		if len(componentDataMap) != 0 {
+		componentDataMap, err := getComponentDataByComponents(k, componentNames, casType)
+		if err == nil && len(componentDataMap) != 0 {
 			status, working := "", ""
 			if casType == util.LocalDeviceCasType {
 				var err error
@@ -86,12 +91,32 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 				}
 			}
 		}
-		// Fill in the missing components
+
+		// Below is to handle corner cases in case of cstor and jiva, as they use components like ndm and localpv provisioner
+		// which are also used by other engine, below has been added to strictly identify the installed engine.
+		engineComponents := 0
+		for key := range componentDataMap {
+			if !strings.Contains(util.NDMComponentNames, key) && strings.Contains(util.CasTypeToComponentNamesMap[casType], key) {
+				engineComponents += 1
+				if casType == util.JivaCasType && key == util.HostpathComponentNames {
+					// Since hostpath component is not a unique engine component for jiva
+					engineComponents -= 1
+				}
+			}
+		}
+		if engineComponents == 0 {
+			return nil, fmt.Errorf("components for %s engine are not installed", casType)
+		}
+
+		// The below is to fill in the expected components, for example if 5 out of 7 cstor components are there
+		// in the cluster, we would not be able what was the expected number of components, the below would ensure cstor
+		// needs 7 component always to work.
 		for _, item := range strings.Split(componentNames, ",") {
 			if _, ok := componentDataMap[item]; !ok {
 				componentDataMap[item] = util.ComponentData{}
 			}
 		}
+
 		return componentDataMap, nil
 	} else {
 		return nil, fmt.Errorf("components for %s engine are not installed", casType)
@@ -118,7 +143,7 @@ func getStatus(componentDataMap map[string]util.ComponentData) (string, string) 
 func getLocalPVDeviceStatus(componentDataMap map[string]util.ComponentData) (string, string, error) {
 	if ndmData, ok := componentDataMap["ndm"]; ok {
 		if localPVData, ok := componentDataMap["openebs-localpv-provisioner"]; ok {
-			if ndmData.Namespace == localPVData.Namespace {
+			if ndmData.Namespace == localPVData.Namespace && localPVData.Namespace != "" && localPVData.CasType != "" {
 				status, working := getStatus(componentDataMap)
 				return status, working, nil
 			}
