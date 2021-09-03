@@ -86,6 +86,12 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 				}
 			}
 		}
+		// Fill in the missing components
+		for _, item := range strings.Split(componentNames, ",") {
+			if _, ok := componentDataMap[item]; !ok {
+				componentDataMap[item] = util.ComponentData{}
+			}
+		}
 		return componentDataMap, nil
 	} else {
 		return nil, fmt.Errorf("components for %s engine are not installed", casType)
@@ -102,7 +108,7 @@ func getStatus(componentDataMap map[string]util.ComponentData) (string, string) 
 	}
 	if healthyComponents == totalComponents {
 		return "Healthy", fmt.Sprintf("%d/%d", healthyComponents, totalComponents)
-	} else if healthyComponents < totalComponents {
+	} else if healthyComponents < totalComponents && healthyComponents != 0 {
 		return "Degraded", fmt.Sprintf("%d/%d", healthyComponents, totalComponents)
 	} else {
 		return "Unhealthy", fmt.Sprintf("%d/%d", 0, totalComponents)
@@ -123,7 +129,7 @@ func getLocalPVDeviceStatus(componentDataMap map[string]util.ComponentData) (str
 
 func getVersion(componentDataMap map[string]util.ComponentData) string {
 	for key, val := range componentDataMap {
-		if !strings.Contains(util.NDMComponentNames, key) && val.Version != "" && val.Status == "Running"{
+		if !strings.Contains(util.NDMComponentNames, key) && val.Version != "" && val.Status == "Running" {
 			return val.Version
 		}
 	}
