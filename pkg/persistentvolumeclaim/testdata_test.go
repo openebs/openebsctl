@@ -19,6 +19,10 @@ package persistentvolumeclaim
 import (
 	"time"
 
+	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
+	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
+	appsv1 "k8s.io/api/apps/v1"
+
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
@@ -31,6 +35,7 @@ import (
 
 var (
 	fourGigiByte = resource.MustParse("4Gi")
+	blockFS      = corev1.PersistentVolumeBlock
 )
 
 /****************
@@ -768,4 +773,213 @@ var cvrEvent2 = corev1.Event{
 	Count:   1,
 	Type:    "Warning",
 	Action:  "some-fake-action",
+}
+
+/****************
+* LVM LOCAL PV
+****************/
+
+var lvmScName = "lvmsc"
+
+var lvmVol1 = lvm.LVMVolume{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "LVMVolume",
+		APIVersion: "lvm.openebs.io/v1alpha1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "pvc-1",
+		Namespace:         "lvmlocalpv",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+		Labels:            map[string]string{},
+		Annotations:       map[string]string{},
+		OwnerReferences:   nil,
+		Finalizers:        nil,
+	},
+	Spec: lvm.VolumeInfo{
+		OwnerNodeID:   "node1",
+		VolGroup:      "lvmpv",
+		VgPattern:     "vg1*",
+		Capacity:      "4Gi",
+		Shared:        "NotShared",
+		ThinProvision: "No",
+	},
+	Status: lvm.VolStatus{
+		State: "Ready",
+		Error: nil,
+	},
+}
+
+var lvmPV1 = corev1.PersistentVolume{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "PersistentVolume",
+		APIVersion: "core/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "pvc-1",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	},
+	Spec: corev1.PersistentVolumeSpec{
+		// 4GiB
+		Capacity:               corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
+		PersistentVolumeSource: corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.LocalPVLVMCSIDriver}},
+		AccessModes:            []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		ClaimRef: &corev1.ObjectReference{Kind: "PersistentVolumeClaim", Namespace: "pvc-namespace",
+			Name: "lvm-pvc-1", APIVersion: "v1"},
+		PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
+		StorageClassName:              "lvm-sc-1",
+		VolumeMode:                    &blockFS,
+		NodeAffinity: &corev1.VolumeNodeAffinity{
+			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
+				{MatchExpressions: []corev1.NodeSelectorRequirement{
+					{Key: "kubernetes.io/hostname", Operator: corev1.NodeSelectorOpIn, Values: []string{"node2"}},
+				}},
+			}},
+		},
+	},
+	Status: corev1.PersistentVolumeStatus{
+		Phase:   corev1.VolumeBound,
+		Message: "Storage class not found",
+		Reason:  "K8s API was down",
+	},
+}
+
+var lvmPVC1 = corev1.PersistentVolumeClaim{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "PersistentVolumeClaim",
+		APIVersion: "core/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "lvm-pvc",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	},
+	Spec: corev1.PersistentVolumeClaimSpec{
+		AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		Resources:        corev1.ResourceRequirements{Requests: map[corev1.ResourceName]resource.Quantity{corev1.ResourceStorage: fourGigiByte}},
+		VolumeName:       "pvc-1",
+		StorageClassName: &lvmScName,
+		VolumeMode:       &blockFS,
+	},
+	Status: corev1.PersistentVolumeClaimStatus{
+		Phase: corev1.PersistentVolumeClaimPhase(corev1.VolumeBound),
+	},
+}
+
+var localpvCSICtrlSTS = appsv1.StatefulSet{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "StatefulSet",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "fake-LVM-CSI",
+		Namespace: "lvm",
+		Labels: map[string]string{
+			"openebs.io/version":        "1.9.0",
+			"openebs.io/component-name": "openebs-lvm-controller"},
+	},
+}
+
+/****************
+* ZFS LOCAL PV
+****************/
+
+var zfsVol1 = zfs.ZFSVolume{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "ZFSVolume",
+		APIVersion: "zfs.openebs.io/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:              "pvc-1",
+		Namespace:         "zfslocalpv",
+		CreationTimestamp: metav1.Time{Time: time.Now()},
+		Labels:            map[string]string{"kubernetes.io/nodename": "node1"},
+		Annotations:       map[string]string{},
+		OwnerReferences:   nil,
+		Finalizers:        nil,
+	},
+	Spec: zfs.VolumeInfo{
+		OwnerNodeID:   "node1",
+		PoolName:      "zfspv",
+		Capacity:      "4Gi",
+		RecordSize:    "4k",
+		Compression:   "off",
+		Dedup:         "off",
+		ThinProvision: "No",
+		VolumeType:    "DATASET",
+		FsType:        "zfs",
+		Shared:        "NotShared",
+	},
+	Status: zfs.VolStatus{State: "Ready"},
+}
+
+var zfsPV1 = corev1.PersistentVolume{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "PersistentVolume",
+		APIVersion: "core/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "pvc-1",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	},
+	Spec: corev1.PersistentVolumeSpec{
+		// 4GiB
+		Capacity:               corev1.ResourceList{corev1.ResourceStorage: fourGigiByte},
+		PersistentVolumeSource: corev1.PersistentVolumeSource{CSI: &corev1.CSIPersistentVolumeSource{Driver: util.ZFSCSIDriver}},
+		AccessModes:            []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		ClaimRef: &corev1.ObjectReference{Kind: "PersistentVolumeClaim", Namespace: "pvc-namespace",
+			Name: "zfs-pvc-1", APIVersion: "v1"},
+		PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
+		StorageClassName:              "zfs-sc-1",
+		VolumeMode:                    &blockFS,
+		NodeAffinity: &corev1.VolumeNodeAffinity{
+			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
+				{MatchExpressions: []corev1.NodeSelectorRequirement{
+					{Key: "kubernetes.io/hostname", Operator: corev1.NodeSelectorOpIn, Values: []string{"node2"}},
+				}},
+			}},
+		},
+	},
+	Status: corev1.PersistentVolumeStatus{
+		Phase:   corev1.VolumeBound,
+		Message: "Storage class not found",
+		Reason:  "K8s API was down",
+	},
+}
+
+var zfsPVC1 = corev1.PersistentVolumeClaim{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "PersistentVolumeClaim",
+		APIVersion: "core/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "zfs-pvc",
+		Labels:      map[string]string{},
+		Annotations: map[string]string{},
+	},
+	Spec: corev1.PersistentVolumeClaimSpec{
+		AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		Resources:        corev1.ResourceRequirements{Requests: map[corev1.ResourceName]resource.Quantity{corev1.ResourceStorage: fourGigiByte}},
+		VolumeName:       "pvc-1",
+		StorageClassName: &lvmScName,
+		VolumeMode:       &blockFS,
+	},
+	Status: corev1.PersistentVolumeClaimStatus{
+		Phase: corev1.PersistentVolumeClaimPhase(corev1.VolumeBound),
+	},
+}
+
+var localpvzfsCSICtrlSTS = appsv1.StatefulSet{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "StatefulSet",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "fake-ZFS-CSI",
+		Namespace: "zfslocalpv",
+		Labels: map[string]string{
+			"openebs.io/version":        "1.9.0",
+			"openebs.io/component-name": "openebs-zfs-controller"},
+	},
 }

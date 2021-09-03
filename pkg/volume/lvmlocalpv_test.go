@@ -167,15 +167,9 @@ func TestDescribeLVMLocalPVs(t *testing.T) {
 			false,
 		},
 		{"one lvm volume present and asked for but namespace wrong",
-			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(&lvmVol1)},
+			args{c: &client.K8sClient{Ns: "lvmlocalpv1", LVMCS: fake.NewSimpleClientset(&lvmVol1), K8sCS: k8sfake.NewSimpleClientset()},
 				vol: &lvmPV1, lvmfunc: lvmVolNotExists},
-			true,
-		},
-		{"one lvm volume present and some other volume asked for",
-			args{c: &client.K8sClient{Ns: "lvm", K8sCS: k8sfake.NewSimpleClientset(&lvmPV1), LVMCS: fake.NewSimpleClientset(&lvmVol1)},
-				vol:     &cstorPV2,
-				lvmfunc: lvmVolNotExists},
-			true,
+			false,
 		},
 	}
 	for _, tt := range tests {

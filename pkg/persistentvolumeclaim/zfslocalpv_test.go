@@ -1,0 +1,88 @@
+/*
+Copyright 2020-2021 The OpenEBS Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package persistentvolumeclaim
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/fake"
+	fakezfs "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/typed/zfs/v1/fake"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	k8sfake "k8s.io/client-go/kubernetes/fake"
+	k8stest "k8s.io/client-go/testing"
+)
+
+func TestDescribeZFSVolumeClaim(t *testing.T) {
+	type args struct {
+		c       *client.K8sClient
+		pvc     *corev1.PersistentVolumeClaim
+		pv      *corev1.PersistentVolume
+		zfsfunc func(sClient *client.K8sClient)
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			"Test with all valid values",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(&zfsVol1), K8sCS: k8sfake.NewSimpleClientset()},
+				pv:  &zfsPV1,
+				pvc: &zfsPVC1,
+			},
+			false,
+		},
+		{
+			"Test with PV missing",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(&zfsVol1), K8sCS: k8sfake.NewSimpleClientset()},
+				pv:  nil,
+				pvc: &zfsPVC1,
+			},
+			false,
+		},
+		{
+			"Test with ZFS Vol missing",
+			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(), K8sCS: k8sfake.NewSimpleClientset()},
+				pv:      &zfsPV1,
+				pvc:     &zfsPVC1,
+				zfsfunc: zfsVolNotExists,
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.args.zfsfunc != nil {
+				tt.args.zfsfunc(tt.args.c)
+			}
+			if err := DescribeZFSVolumeClaim(tt.args.c, tt.args.pvc, tt.args.pv); (err != nil) != tt.wantErr {
+				t.Errorf("DescribeZFSVolumeClaim() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// zfsVolNotExists makes fakezfsClientSet return error
+func zfsVolNotExists(c *client.K8sClient) {
+	// NOTE: Set the VERB & Resource correctly & make it work for single resources
+	c.ZFCS.ZfsV1().(*fakezfs.FakeZfsV1).Fake.PrependReactor("*", "*", func(action k8stest.Action) (handled bool, ret runtime.Object, err error) {
+		return true, nil, fmt.Errorf("failed to list ZFSVolumes")
+	})
+}

@@ -75,5 +75,7 @@ func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolum
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume) error{
 		util.JivaCasType:  DescribeJivaVolumeClaim,
 		util.CstorCasType: DescribeCstorVolumeClaim,
+		util.LVMCasType:   DescribeLVMVolumeClaim,
+		util.ZFSCasType:   DescribeZFSVolumeClaim,
 	}
 }
