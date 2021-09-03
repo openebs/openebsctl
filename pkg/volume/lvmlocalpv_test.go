@@ -171,6 +171,13 @@ func TestDescribeLVMLocalPVs(t *testing.T) {
 				vol: &lvmPV1, lvmfunc: lvmVolNotExists},
 			false,
 		},
+		{
+			"one lvm volume present and some other volume asked for",
+			args{c: &client.K8sClient{Ns: "lvm", K8sCS: k8sfake.NewSimpleClientset(&lvmPV1), LVMCS: fake.NewSimpleClientset(&lvmVol1)},
+				vol:     &cstorPV2,
+				lvmfunc: lvmVolNotExists},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

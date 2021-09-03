@@ -178,6 +178,12 @@ func TestDescribeZFSLocalPVs(t *testing.T) {
 				vol: &zfsPV1, zfsfunc: zfsVolNotExists},
 			false,
 		},
+		{"one zfs volume present and some other volume asked for",
+			args{c: &client.K8sClient{Ns: "zfs", K8sCS: k8sfake.NewSimpleClientset(&zfsPV1), ZFCS: fake.NewSimpleClientset(&zfsVol1)},
+				vol:     &cstorPV2,
+				zfsfunc: zfsVolNotExists},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
