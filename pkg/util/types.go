@@ -143,6 +143,30 @@ type JivaPVCInfo struct {
 	PVStatus         corev1.PersistentVolumePhase
 }
 
+// LVMPVCInfo struct will have all the details we want to give in the output for describe pvc
+// details section for lvm pvc
+type LVMPVCInfo struct {
+	Name             string
+	Namespace        string
+	CasType          string
+	BoundVolume      string
+	StorageClassName string
+	Size             string
+	PVCStatus        corev1.PersistentVolumeClaimPhase
+}
+
+// ZFSPVCInfo struct will have all the details we want to give in the output for describe pvc
+// details section for zfs pvc
+type ZFSPVCInfo struct {
+	Name             string
+	Namespace        string
+	CasType          string
+	BoundVolume      string
+	StorageClassName string
+	Size             string
+	PVCStatus        corev1.PersistentVolumeClaimPhase
+}
+
 // PVCInfo struct will have all the details we want to give in the output for describe pvc
 // details section for non-cstor pvc
 type PVCInfo struct {
@@ -266,7 +290,7 @@ type LVMVolDesc struct {
 // ComponentData stores the data for each component of an engine
 type ComponentData struct {
 	Namespace string
-	Status string
-	Version string
-	CasType string
+	Status    string
+	Version   string
+	CasType   string
 }

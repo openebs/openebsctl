@@ -8,6 +8,7 @@
     * [Get LocalPV-LVM VolumeGroups](#get-localpv-lvm-volumegroups)
     * [Describe LocalPV-LVM volumeGroups](#describe-localpv-lvm-volumeGroups)
     * [Describe LocalPV-LVM volumes](#describe-localpv-lvm-volumes)
+    * [Describe LocalPV-LVM PVCs](#describe-localpv-lvm-pvcs)
 
 * #### `LocalPV-LVM`
     * #### Get `LocalPV-LVM` volumes
@@ -68,3 +69,34 @@
       ThinProvisioned : no
       NodeID          : worker-sh1
       ```
+    * #### Describe `LocalPV-LVM` PVCs
+      ```bash
+      $ kubectl openebs describe pvc csi-lvmpv
+      
+      csi-lvmpv Details  :
+      -------------------
+      NAME               : csi-lvmpv
+      NAMESPACE          : default
+      CAS TYPE           : localpv-lvm
+      BOUND VOLUME       : pvc-109f0d33-cc41-4a3c-874d-f03d4c3073d8
+      STORAGE CLASS      : openebs-lvmpv
+      SIZE               : 4Gi
+      PVC STATUS         : Bound
+      
+      pvc-109f0d33-cc41-4a3c-874d-f03d4c3073d8 Details :
+      ------------------
+      NAME              : pvc-109f0d33-cc41-4a3c-874d-f03d4c3073d8
+      NAMESPACE         : localpv-lvm
+      ACCESS MODE       : ReadWriteOnce
+      CSI DRIVER        : local.csi.openebs.io
+      CAPACITY          : 4Gi
+      PVC NAME          : csi-lvmpv
+      VOLUME PHASE      : Bound
+      STORAGE CLASS     : openebs-lvmpv
+      VERSION           : 0.8.0
+      LVM VOLUME STATUS : Ready
+      VOLUME GROUP      : lvmvg
+      SHARED            : no
+      THIN PROVISIONED  : no
+      NODE ID           : node1-virtual-machine
+      ``` 

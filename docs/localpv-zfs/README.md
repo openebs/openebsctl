@@ -8,6 +8,7 @@
     * [Get LocalPV-ZFS Pools](#get-localpv-zfs-pools)
     * [Describe LocalPV-ZFS volumes](#describe-localpv-zfs-volumes)
     * [Describe LocalPV-ZFS pools](#describe-localpv-zfs-pools)
+    * [Describe LocalPV-ZFS PVCs](#describe-localpv-zfs-pvcs)
   
 * #### `LocalPV-ZFS`
     * #### Get `LocalPV-ZFS` volumes
@@ -51,7 +52,7 @@
       NodeID        : worker-sh1
       Recordsize    : 4k
       ```
-    * #### Describe `LocalPV-ZFS pools`
+    * #### Describe `LocalPV-ZFS` pools
       ```bash
       $ kubectl openebs describe storage node2
     
@@ -61,4 +62,38 @@
        NAMESPACE       : openebs
        NUMBER OF POOLS : 1
        TOTAL FREE      : 32 GiB
+      ```
+    * #### Describe `LocalPV-ZFS` PVCs
+      ```bash
+      $ kubectl openebs describe pvc csi-zfspv
+
+      csi-zfspv Details  :
+      -------------------
+      NAME               : csi-zfspv
+      NAMESPACE          : default
+      CAS TYPE           : localpv-zfs
+      BOUND VOLUME       : pvc-4aee0a2a-dccd-456b-95af-693ac8108be1
+      STORAGE CLASS      : openebs-zfspv
+      SIZE               : 4Gi
+      PVC STATUS         : Bound
+
+      pvc-4aee0a2a-dccd-456b-95af-693ac8108be1 Details :
+      ------------------
+      NAME              : pvc-4aee0a2a-dccd-456b-95af-693ac8108be1
+      NAMESPACE         : localpv-zfs
+      ACCESS MODE       : ReadWriteOnce
+      CSI DRIVER        : zfs.csi.openebs.io
+      CAPACITY          : 4Gi
+      PVC NAME          : csi-zfspv
+      VOLUME PHASE      : Bound
+      STORAGE CLASS     : openebs-zfspv
+      VERSION           : 1.9.1
+      ZFS VOLUME STATUS : Ready
+      VOLUME TYPE       : DATASET
+      POOL NAME         : zfspv-pool
+      FILE SYSTEM       : zfs
+      COMPRESSION       : off
+      DEDUPLICATION     : off
+      NODE ID           : node2-virtual-machine
+      RECORD SIZE       : 4k
       ```
