@@ -19,14 +19,12 @@ package persistentvolumeclaim
 import (
 	"time"
 
-	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
-	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
-	appsv1 "k8s.io/api/apps/v1"
-
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
+	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	"github.com/openebs/openebsctl/pkg/util"
+	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
 	corev1 "k8s.io/api/core/v1"
 	v12 "k8s.io/api/storage/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -866,20 +864,6 @@ var lvmPVC1 = corev1.PersistentVolumeClaim{
 	},
 }
 
-var localpvCSICtrlSTS = appsv1.StatefulSet{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "StatefulSet",
-		APIVersion: "apps/v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "fake-LVM-CSI",
-		Namespace: "lvm",
-		Labels: map[string]string{
-			"openebs.io/version":        "1.9.0",
-			"openebs.io/component-name": "openebs-lvm-controller"},
-	},
-}
-
 /****************
 * ZFS LOCAL PV
 ****************/
@@ -967,19 +951,5 @@ var zfsPVC1 = corev1.PersistentVolumeClaim{
 	},
 	Status: corev1.PersistentVolumeClaimStatus{
 		Phase: corev1.PersistentVolumeClaimPhase(corev1.VolumeBound),
-	},
-}
-
-var localpvzfsCSICtrlSTS = appsv1.StatefulSet{
-	TypeMeta: metav1.TypeMeta{
-		Kind:       "StatefulSet",
-		APIVersion: "apps/v1",
-	},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "fake-ZFS-CSI",
-		Namespace: "zfslocalpv",
-		Labels: map[string]string{
-			"openebs.io/version":        "1.9.0",
-			"openebs.io/component-name": "openebs-zfs-controller"},
 	},
 }

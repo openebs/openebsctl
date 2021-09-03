@@ -51,7 +51,7 @@ func DescribeZFSVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCla
 
 	if pv != nil {
 		_ = util.PrintByTemplate("zfsPvc", zfsPvcInfoTemplate, zfsPVCinfo)
-		volume.DescribeZFSLocalPVs(c, pv)
+		_ = volume.DescribeZFSLocalPVs(c, pv)
 	} else {
 		_ = util.PrintByTemplate("ZFSPvc", zfsPvcInfoTemplate, zfsPVCinfo)
 	}

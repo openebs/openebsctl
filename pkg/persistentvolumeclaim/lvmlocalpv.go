@@ -53,7 +53,7 @@ func DescribeLVMVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCla
 	// 2. If PV is present Describe the LVM Volume
 	if pv != nil {
 		_ = util.PrintByTemplate("lvmPvc", lvmPvcInfoTemplate, lvmPVCinfo)
-		volume.DescribeLVMLocalPVs(c, pv)
+		_ = volume.DescribeLVMLocalPVs(c, pv)
 	} else {
 		// Show only PVC details if volume is not found.
 		_ = util.PrintByTemplate("lvmPvc", lvmPvcInfoTemplate, lvmPVCinfo)
