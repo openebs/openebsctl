@@ -21,8 +21,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -61,7 +59,7 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			if err != nil {
 				fmt.Println("Client Version: " + getValidVersion(rootCmd.Version))
 				fmt.Fprintf(os.Stderr, "\nError getting Components Version...")
-				getCliLatestVersion(rootCmd.Version)
+				checkForLatestVersion(rootCmd.Version)
 				return
 			}
 
@@ -84,29 +82,29 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			}
 
 			util.TablePrinter(util.VersionColumnDefinition, rows, printers.PrintOptions{Wide: true})
-			getCliLatestVersion(rootCmd.Version)
+			checkForLatestVersion(rootCmd.Version)
 		},
 	}
 	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
 }
 
-func getCliLatestVersion(currVersion string) {
+func checkForLatestVersion(currVersion string) {
 	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
 	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
-	util.CheckErrDefault(err, "Error reading response body")
+	util.CheckErr(err, util.Fatal)
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	util.CheckErrDefault(err, "Error reading response body")
+	util.CheckErr(err, util.Fatal)
 
 	var data map[string]interface{}
 	err = yaml.Unmarshal(body, &data)
-	util.CheckErrDefault(err, "Error parsing yaml")
+	util.CheckErr(err, util.Fatal)
 
 	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
 	if !isLatestVersion(currVersion, latestVersion) {
-		fmt.Printf("\nYou are using older version (%s) of cli, latest available version is %s\n", currVersion, latestVersion)
+		fmt.Println("\nYou are using an older version (", currVersion, ") of cli, latest available version is: ", latestVersion)
 	}
 }
 
@@ -123,24 +121,8 @@ func isLatestVersion(currVersion string, latestVersion string) bool {
 		return true
 	}
 
-	delimeter := func(d rune) bool {
-		return d == '.' || d == '-'
-	}
-
-	currVer := strings.FieldsFunc(currVersion, delimeter)
-	latVer := strings.FieldsFunc(latestVersion, delimeter)
-
-	for i := 0; i < len(currVer) && i < len(latVer); i++ {
-		cv, e1 := strconv.Atoi(currVer[i])
-		lv, e2 := strconv.Atoi(latVer[i])
-
-		if e1 != nil || e2 != nil {
-			continue
-		}
-
-		if cv < lv {
-			return false
-		}
+	if currVersion != latestVersion {
+		return false
 	}
 
 	return true

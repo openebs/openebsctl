@@ -40,16 +40,3 @@ func CheckErr(err error, handleErr func(string)) {
 	}
 	handleErr(err.Error())
 }
-
-// CheckErrDefault to handle command errors with default handler
-func CheckErrDefault(err error, msg string) {
-	if err == nil {
-		return
-	}
-
-	if len(msg) == 0 {
-		fmt.Fprintf(os.Stderr, "An error occurred: %v\n", err.Error())
-	}
-
-	fmt.Fprintf(os.Stderr, "Error: %s", msg)
-}
