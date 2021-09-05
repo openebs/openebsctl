@@ -57,3 +57,53 @@ func TestCheckErr(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleEmptyTableError(t *testing.T) {
+	type args struct {
+		resource string
+		ns       string
+		casType  string
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			"No Namespace and cas",
+			args{
+				resource: "ResourceType",
+				ns:       "",
+				casType:  "",
+			},
+		},
+		{
+			"Wrong cas or Namespace",
+			args{
+				resource: "ResourceType",
+				ns:       "InValidNamespace",
+				casType:  "jiva",
+			},
+		},
+		{
+			"Wrong cas type in all namespace",
+			args{
+				resource: "ResourceType",
+				ns:       "",
+				casType:  "invalid",
+			},
+		},
+		{
+			"Wrong Namespace and all cas types",
+			args{
+				resource: "ResourceType",
+				ns:       "InValidNamespace",
+				casType:  "",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			HandleEmptyTableError(tt.args.resource, tt.args.ns, tt.args.casType)
+		})
+	}
+}

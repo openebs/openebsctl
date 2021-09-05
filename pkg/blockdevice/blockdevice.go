@@ -87,7 +87,11 @@ func createTreeByNode(k *client.K8sClient, bdNames []string) error {
 		// Add an empty row so that the tree looks neat
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{"", "", "", "", "", "", ""}})
 	}
-	// Show the output using cli-runtime
-	util.TablePrinter(util.BDTreeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+	if len(rows) == 0 {
+		util.HandleEmptyTableError("Block Device", k.Ns, "")
+	} else {
+		// Show the output using cli-runtime
+		util.TablePrinter(util.BDTreeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
+	}
 	return nil
 }

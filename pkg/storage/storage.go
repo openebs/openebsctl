@@ -36,19 +36,31 @@ func Get(pools []string, openebsNS string, casType string) error {
 		if err != nil {
 			return err
 		}
-		util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
+		if len(rows) == 0 {
+			return util.HandleEmptyTableError("Storage", openebsNS, casType)
+		} else {
+			util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
+		}
 	} else if casType != "" {
 		return fmt.Errorf("cas-type %s is not supported", casType)
 	} else {
+		storageResourcesFound := false
 		// 3. Call all functions & exit
 		for _, f := range CasList() {
 			header, row, err := f(k, pools)
 			if err == nil {
+				if len(row) > 0 {
+					storageResourcesFound = true
+				}
 				// 4. Find the correct heading & print the rows
 				util.TablePrinter(header, row, printers.PrintOptions{Wide: true})
 				// A visual separator for different cas-type pools/storage entities
 				fmt.Println()
 			}
+		}
+
+		if !storageResourcesFound {
+			return util.HandleEmptyTableError("Storage", openebsNS, casType)
 		}
 	}
 	return nil
