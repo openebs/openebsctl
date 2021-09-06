@@ -18,12 +18,15 @@ package get
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
@@ -56,6 +59,7 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			if err != nil {
 				fmt.Println("Client Version: " + getValidVersion(rootCmd.Version))
 				fmt.Fprintf(os.Stderr, "\nError getting Components Version...")
+				checkForLatestVersion(rootCmd.Version)
 				return
 			}
 
@@ -78,8 +82,49 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			}
 
 			util.TablePrinter(util.VersionColumnDefinition, rows, printers.PrintOptions{Wide: true})
+			checkForLatestVersion(rootCmd.Version)
 		},
 	}
 	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
+}
+
+func checkForLatestVersion(currVersion string) {
+	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
+	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
+	if err != nil {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error fetching latest version %s", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error reading response body %s", err.Error())
+		return
+	}
+
+	var data map[string]interface{}
+	err = yaml.Unmarshal(body, &data)
+	if err != nil {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error parsing yaml %s", err.Error())
+		return
+	}
+
+	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
+	if !isLatestVersion(currVersion, latestVersion) {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Printf("You are using an older version (%s) of cli, latest available version is: %s", currVersion, latestVersion)
+	}
+}
+
+func isLatestVersion(currVersion string, latestVersion string) bool {
+	return currVersion == latestVersion
 }
