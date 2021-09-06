@@ -57,7 +57,7 @@ func GetZFSPools(c *client.K8sClient, zfsnodes []string) ([]metav1.TableColumnDe
 	}
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
-		return nil, nil, fmt.Errorf("no zfspools found")
+		return nil, nil, util.HandleEmptyTableError("zfs pools", c.Ns, "")
 	}
 	return util.ZFSPoolListColumnDefinitions, rows, nil
 }

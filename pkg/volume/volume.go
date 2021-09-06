@@ -62,7 +62,11 @@ func Get(vols []string, openebsNS, casType string) error {
 			}
 		}
 	}
-	// 3. Print the volumes from rows
+
+	// 3. Return Error or Print volumes from rows
+	if len(rows) == 0 {
+		return util.HandleEmptyTableError("Volume", openebsNS, casType)
+	}
 	util.TablePrinter(util.VolumeListColumnDefinations, rows, printers.PrintOptions{Wide: true})
 	return nil
 }
