@@ -92,7 +92,7 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 func checkForLatestVersion(currVersion string) {
 	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
 	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
-	if(err != nil) {
+	if err != nil {
 		// The seperator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error fetching latest version %s", err.Error())
@@ -101,25 +101,27 @@ func checkForLatestVersion(currVersion string) {
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	if(err != nil) {
+	if err != nil {
 		// The seperator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error reading response body %s", err.Error())
-		return;
+		return
 	}
 
 	var data map[string]interface{}
 	err = yaml.Unmarshal(body, &data)
-	if(err != nil) {
+	if err != nil {
 		// The seperator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error parsing yaml %s", err.Error())
-		return;
+		return
 	}
 
 	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
 	if !isLatestVersion(currVersion, latestVersion) {
-		fmt.Println("\nYou are using an older version (", currVersion, ") of cli, latest available version is: ", latestVersion)
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Printf("You are using an older version (%s) of cli, latest available version is: %s", currVersion, latestVersion)
 	}
 }
 
