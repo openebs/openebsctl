@@ -30,7 +30,6 @@ Flags:
 `
 )
 
-
 // NewCmdClusterInfo shows OpenEBSCTL cluster-info
 func NewCmdClusterInfo(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{

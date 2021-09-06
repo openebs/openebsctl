@@ -268,3 +268,32 @@ func TestGetUsedCapacityFromCVR(t *testing.T) {
 		})
 	}
 }
+
+func TestIsValidCasType(t *testing.T) {
+	type args struct {
+		casType string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"Valid Cas Name",
+			args{casType: CstorCasType},
+			true,
+		},
+		{
+			"Invalid Cas Name",
+			args{casType: "some-invalid-cas"},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidCasType(tt.args.casType); got != tt.want {
+				t.Errorf("IsValidCasType() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
