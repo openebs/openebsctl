@@ -103,3 +103,8 @@ func GetReadyContainers(containers []corev1.ContainerStatus) string {
 	}
 	return strconv.Itoa(ready) + "/" + strconv.Itoa(total)
 }
+
+// IsValidCasType to return true if the casType is supported
+func IsValidCasType(casType string) bool {
+	return casType == CstorCasType || casType == JivaCasType || casType == LVMCasType || casType == ZFSCasType
+}

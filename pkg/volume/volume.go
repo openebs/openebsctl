@@ -17,6 +17,8 @@ limitations under the License.
 package volume
 
 import (
+	"fmt"
+
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
@@ -27,6 +29,9 @@ import (
 
 // Get manages various implementations of Volume listing
 func Get(vols []string, openebsNS, casType string) error {
+	if casType != "" && !util.IsValidCasType(casType) {
+		return fmt.Errorf("cas-type %s is not supported", casType)
+	}
 	// TODO: Prefer passing the client from outside
 	k, _ := client.NewK8sClient("")
 	// 1. Get a list of required PersistentVolumes
