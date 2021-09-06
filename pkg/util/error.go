@@ -41,7 +41,7 @@ func CheckErr(err error, handleErr func(string)) {
 	handleErr(err.Error())
 }
 
-// Handle Empty handles error when resources or set of resources are not found
+// HandleEmptyTableError handles error when resources or set of resources are not found
 func HandleEmptyTableError(resource string, ns string, casType string) error {
 	if ns == "" && casType == "" {
 		return fmt.Errorf("no %s found in your cluster", resource)
