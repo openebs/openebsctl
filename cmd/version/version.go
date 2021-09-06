@@ -92,15 +92,30 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 func checkForLatestVersion(currVersion string) {
 	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
 	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
-	util.CheckErr(err, util.Fatal)
+	if(err != nil) {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error fetching latest version %s", err.Error())
+		return
+	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
-	util.CheckErr(err, util.Fatal)
+	if(err != nil) {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error reading response body %s", err.Error())
+		return;
+	}
 
 	var data map[string]interface{}
 	err = yaml.Unmarshal(body, &data)
-	util.CheckErr(err, util.Fatal)
+	if(err != nil) {
+		// The seperator for the error print
+		fmt.Println()
+		fmt.Fprintf(os.Stderr, "Error parsing yaml %s", err.Error())
+		return;
+	}
 
 	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
 	if !isLatestVersion(currVersion, latestVersion) {
