@@ -126,21 +126,5 @@ func checkForLatestVersion(currVersion string) {
 }
 
 func isLatestVersion(currVersion string, latestVersion string) bool {
-	if currVersion[0] == 'v' {
-		currVersion = currVersion[1:]
-	}
-
-	if latestVersion[0] == 'v' {
-		latestVersion = latestVersion[1:]
-	}
-
-	if currVersion[0] < '0' || currVersion[0] > '9' {
-		return true
-	}
-
-	if currVersion != latestVersion {
-		return false
-	}
-
-	return true
+	return currVersion == latestVersion
 }
