@@ -38,9 +38,8 @@ func Get(pools []string, openebsNS string, casType string) error {
 		}
 		if len(rows) == 0 {
 			return util.HandleEmptyTableError("Storage", openebsNS, casType)
-		} else {
-			util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
 		}
+		util.TablePrinter(header, rows, printers.PrintOptions{Wide: true})
 	} else if casType != "" {
 		return fmt.Errorf("cas-type %s is not supported", casType)
 	} else {

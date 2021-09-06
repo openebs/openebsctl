@@ -55,8 +55,7 @@ func GetVolumeGroups(c *client.K8sClient, vgs []string) ([]metav1.TableColumnDef
 	}
 	// 3. Actually print the table or return an error
 	if len(rows) == 0 {
-		// TODO: Improve this in issue #56
-		return nil, nil, fmt.Errorf("no lvm volumegroups found")
+		return nil, nil, util.HandleEmptyTableError("lvm Volumegroups", c.Ns, "")
 	}
 	return util.LVMvolgroupListColumnDefinitions, rows, nil
 }

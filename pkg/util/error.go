@@ -41,14 +41,14 @@ func CheckErr(err error, handleErr func(string)) {
 	handleErr(err.Error())
 }
 
-// Handle Empty Table Error
+// Handle Empty handles error when resources or set of resources are not found
 func HandleEmptyTableError(resource string, ns string, casType string) error {
 	if ns == "" && casType == "" {
 		return fmt.Errorf("no %s found in your cluster", resource)
 	} else if ns != "" && casType != "" {
 		return fmt.Errorf("no %s %s found in %s namespace", casType, resource, ns)
-	} else if casType != "" {
-		return fmt.Errorf("unknown cas-type %s", casType)
+	} else if casType != "" && !IsValidCasType(casType) {
+		return fmt.Errorf("cas-type %s not supported", casType)
 	} else {
 		return fmt.Errorf("no %s found in %s namespace", resource, ns)
 	}
