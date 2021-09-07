@@ -73,7 +73,7 @@ func Get(vols []string, openebsNS, casType string) error {
 
 // Describe manages various implementations of Volume Describing
 func Describe(vols []string, openebsNs string) error {
-	if vols == nil {
+	if len(vols) == 0 || vols == nil {
 		return errors.New("please provide atleast one pv name to describe")
 	}
 	// Clienset creation
