@@ -69,8 +69,6 @@ const (
 	// LocalPVLVMCSIDriver is the name of the LVM LocalPV CSI driver
 	// NOTE: This might also mean local-hostpath, local-device or zfs-localpv later.
 	LocalPVLVMCSIDriver = "local.csi.openebs.io"
-	// LocalHostPathCSIDriver is the name of local-hostpath CSI driver
-	LocalHostpathCSIDriver = "openebs.io/local"
 )
 
 // Constant CSI component-name label values
@@ -83,8 +81,6 @@ const (
 	LVMLocalPVcsiControllerLabelValue = "openebs-lvm-controller"
 	// ZFSLocalPVcsiControllerLabelValue is the label value of CSI controller STS & pod
 	ZFSLocalPVcsiControllerLabelValue = "openebs-zfs-controller"
-	// LocalHostpathControllerLabelValue is the label value of CSI controller STS & pod
-	LocalHostpathControllerLabelValue = "openebs-hostpath-controller"
 )
 
 const (
@@ -110,7 +106,6 @@ var (
 		JivaCasType:  JivaCSIControllerLabelValue,
 		LVMCasType:   LVMLocalPVcsiControllerLabelValue,
 		ZFSCasType:   ZFSLocalPVcsiControllerLabelValue,
-		LocalHostpath: LocalHostpathControllerLabelValue,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
@@ -119,7 +114,6 @@ var (
 		JivaCSIControllerLabelValue:       JivaCasType,
 		LVMLocalPVcsiControllerLabelValue: LVMCasType,
 		ZFSLocalPVcsiControllerLabelValue: ZFSCasType,
-		LocalHostpathControllerLabelValue: LocalHostpath,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
