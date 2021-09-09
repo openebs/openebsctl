@@ -53,10 +53,7 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
-		attachedNode := pv.Labels["nodeID"]
-		customStatus := "N/A"
-		ns := "N/A"
-		storageVersion := "N/A"
+		attachedNode, customStatus, ns, storageVersion := pv.Labels["nodeID"], "N/A", "N/A", "N/A"
 
 		accessMode := pv.Spec.AccessModes[0]
 		rows = append(rows, metav1.TableRow{
@@ -83,7 +80,7 @@ func DescribeLocalHostpathVolume(c *client.K8sClient, vol *corev1.PersistentVolu
 		},
 		Path:          vol.Spec.PersistentVolumeSource.Local.Path,
 		ReclaimPolicy: string(vol.Spec.PersistentVolumeReclaimPolicy),
-		CasType:       "local-hostpath",
+		CasType:       util.LocalHostpath,
 	}
 
 	// Print the Volume information
