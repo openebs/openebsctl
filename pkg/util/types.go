@@ -88,9 +88,9 @@ type VolumeInfo struct {
 
 type LocalHostPathVolInfo struct {
 	VolumeInfo
-	Path string
+	Path          string
 	ReclaimPolicy string
-	CasType string
+	CasType       string
 }
 
 // PortalInfo keep info about the ISCSI Target Portal.

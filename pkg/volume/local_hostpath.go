@@ -55,6 +55,11 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 		attached := pv.Status.Phase
 		attachedNode, customStatus, ns, storageVersion := pv.Labels["nodeID"], "N/A", "N/A", "N/A"
 
+		deployment, err := c.GetLocalPvDeployment("openebs-localpv-provisioner")
+		if err == nil {
+			storageVersion = deployment.Labels["openebs.io/version"]
+		}
+
 		accessMode := pv.Spec.AccessModes[0]
 		rows = append(rows, metav1.TableRow{
 			Cells: []interface{}{
@@ -67,7 +72,7 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 
 // DescribeLocalHostpathVolume describes a local-hostpath PersistentVolume
 func DescribeLocalHostpathVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error {
-	// Get volume Information
+	// Get Local-volume Information
 	localHostpathVolInfo := util.LocalHostPathVolInfo{
 		VolumeInfo: util.VolumeInfo{
 			AccessMode:   util.AccessModeToString(vol.Spec.AccessModes),
