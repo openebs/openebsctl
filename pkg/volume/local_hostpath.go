@@ -45,7 +45,7 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 	var rows []metav1.TableRow
 	for _, pv := range pvList.Items {
 		// Ignore all the other volumes that is not of cas-type local-hostpath
-		if pv.Labels["openebs.io/cas-type"] != util.LocalHostpath {
+		if util.GetCasTypeFromPV(&pv) != util.LocalHostpath {
 			continue
 		}
 
@@ -55,9 +55,9 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 		attached := pv.Status.Phase
 		attachedNode, customStatus, ns, storageVersion := pv.Labels["nodeID"], "N/A", "N/A", "N/A"
 
-		deployment, err := c.GetLocalPvDeployment("openebs-localpv-provisioner")
+		deployment, err := c.GetLocalPvDeployment("openebs.io/component-name=openebs-localpv-provisioner")
 		if err == nil {
-			storageVersion = deployment.Labels["openebs.io/version"]
+			storageVersion = deployment.Items[0].Labels["openebs.io/version"]
 		}
 
 		accessMode := pv.Spec.AccessModes[0]
