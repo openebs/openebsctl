@@ -102,10 +102,10 @@ var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
 	CasTypeAndComponentNameMap = map[string]string{
-		CstorCasType: CStorCSIControllerLabelValue,
-		JivaCasType:  JivaCSIControllerLabelValue,
-		LVMCasType:   LVMLocalPVcsiControllerLabelValue,
-		ZFSCasType:   ZFSLocalPVcsiControllerLabelValue,
+		CstorCasType:         CStorCSIControllerLabelValue,
+		JivaCasType:          JivaCSIControllerLabelValue,
+		LVMCasType:           LVMLocalPVcsiControllerLabelValue,
+		ZFSCasType:           ZFSLocalPVcsiControllerLabelValue,
 		LocalHostpathCasType: HostpathComponentNames,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
@@ -115,7 +115,7 @@ var (
 		JivaCSIControllerLabelValue:       JivaCasType,
 		LVMLocalPVcsiControllerLabelValue: LVMCasType,
 		ZFSLocalPVcsiControllerLabelValue: ZFSCasType,
-		HostpathComponentNames: LocalHostpathCasType,
+		HostpathComponentNames:            LocalHostpathCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
@@ -129,12 +129,12 @@ var (
 	// CasTypeToComponentNamesMap stores the names of the control-plane components of each cas-types.
 	// To show statuses of new CasTypes, please update this map.
 	CasTypeToComponentNamesMap = map[string]string{
-		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
-		JivaCasType:          JivaComponentNames + "," + HostpathComponentNames,
+		CstorCasType:           CstorComponentNames + "," + NDMComponentNames,
+		JivaCasType:            JivaComponentNames + "," + HostpathComponentNames,
 		LocalPvHostpathCasType: HostpathComponentNames,
-		LocalDeviceCasType:   HostpathComponentNames + "," + NDMComponentNames,
-		ZFSCasType:           ZFSComponentNames,
-		LVMCasType:           LVMComponentNames,
+		LocalDeviceCasType:     HostpathComponentNames + "," + NDMComponentNames,
+		ZFSCasType:             ZFSComponentNames,
+		LVMCasType:             LVMComponentNames,
 	}
 
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
