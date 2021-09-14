@@ -133,7 +133,7 @@ func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeLis
 		util.CstorCasType:  GetCStor,
 		util.ZFSCasType:    GetZFSLocalPVs,
 		util.LVMCasType:    GetLVMLocalPV,
-		util.LocalHostpath: GetLocalHostpath,
+		util.LocalHostpathCasType: GetLocalHostpath,
 	}
 }
 
@@ -145,6 +145,6 @@ func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolum
 		util.CstorCasType:  DescribeCstorVolume,
 		util.ZFSCasType:    DescribeZFSLocalPVs,
 		util.LVMCasType:    DescribeLVMLocalPVs,
-		util.LocalHostpath: DescribeLocalHostpathVolume,
+		util.LocalHostpathCasType: DescribeLocalHostpathVolume,
 	}
 }

@@ -33,12 +33,12 @@ const (
 	JivaCasType = "jiva"
 	// LVMCasType cas type name
 	LVMCasType = "localpv-lvm"
-	// LocalHostpathCasType cas type name
-	LocalHostpathCasType = "localpv-hostpath"
+	// LocalPvHostpathCasType cas type name
+	LocalPvHostpathCasType = "localpv-hostpath"
 	// LocalDeviceCasType cas type name
 	LocalDeviceCasType = "localpv-device"
 	// Local host path cas type name
-	LocalHostpath = "local-hostpath"
+	LocalHostpathCasType = "local-hostpath"
 	// Healthy cstor volume status
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
@@ -106,7 +106,7 @@ var (
 		JivaCasType:  JivaCSIControllerLabelValue,
 		LVMCasType:   LVMLocalPVcsiControllerLabelValue,
 		ZFSCasType:   ZFSLocalPVcsiControllerLabelValue,
-		LocalHostpath: HostpathComponentNames,
+		LocalHostpathCasType: HostpathComponentNames,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
@@ -115,7 +115,7 @@ var (
 		JivaCSIControllerLabelValue:       JivaCasType,
 		LVMLocalPVcsiControllerLabelValue: LVMCasType,
 		ZFSLocalPVcsiControllerLabelValue: ZFSCasType,
-		HostpathComponentNames: LocalHostpath,
+		HostpathComponentNames: LocalHostpathCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{
@@ -131,7 +131,7 @@ var (
 	CasTypeToComponentNamesMap = map[string]string{
 		CstorCasType:         CstorComponentNames + "," + NDMComponentNames,
 		JivaCasType:          JivaComponentNames + "," + HostpathComponentNames,
-		LocalHostpathCasType: HostpathComponentNames,
+		LocalPvHostpathCasType: HostpathComponentNames,
 		LocalDeviceCasType:   HostpathComponentNames + "," + NDMComponentNames,
 		ZFSCasType:           ZFSComponentNames,
 		LVMCasType:           LVMComponentNames,

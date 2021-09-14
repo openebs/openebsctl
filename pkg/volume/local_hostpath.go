@@ -45,7 +45,7 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 	var rows []metav1.TableRow
 	for _, pv := range pvList.Items {
 		// Ignore all the other volumes that is not of cas-type local-hostpath
-		if util.GetCasTypeFromPV(&pv) != util.LocalHostpath {
+		if util.GetCasTypeFromPV(&pv) != util.LocalHostpathCasType {
 			continue
 		}
 
@@ -85,7 +85,7 @@ func DescribeLocalHostpathVolume(c *client.K8sClient, vol *corev1.PersistentVolu
 		},
 		Path:          vol.Spec.PersistentVolumeSource.Local.Path,
 		ReclaimPolicy: string(vol.Spec.PersistentVolumeReclaimPolicy),
-		CasType:       util.LocalHostpath,
+		CasType:       util.LocalHostpathCasType,
 	}
 
 	// Print the Volume information
