@@ -748,14 +748,14 @@ func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace
 	LOCAL VOLUMES SPECIFIC METHODS
 */
 
-// GetLocalPvDeployment returns the deployment-list with a specific
+// GetDeploymentList returns the deployment-list with a specific
 // label selector query
-func (k K8sClient) GetLocalPvDeployment(labelSelector string) (*appsv1.DeploymentList, error) {
+func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
 	if pv, err := k.K8sCS.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labelSelector,
 	}); err == nil && len(pv.Items) >= 1 {
 		return pv, nil
 	} else {
-		return nil, fmt.Errorf("got 0 local-volumes with the label openebs.io/component-name=%s", labelSelector)
+		return nil, fmt.Errorf("got 0 local-deployments with the label-Selector %s", labelSelector)
 	}
 }
