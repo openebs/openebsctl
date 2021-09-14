@@ -37,7 +37,7 @@ const (
 	LocalPvHostpathCasType = "localpv-hostpath"
 	// LocalDeviceCasType cas type name
 	LocalDeviceCasType = "localpv-device"
-	// Local host path cas type name
+	// Local-hostpath cas type name
 	LocalHostpathCasType = "local-hostpath"
 	// Healthy cstor volume status
 	Healthy = "Healthy"

@@ -756,6 +756,6 @@ func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentLi
 	}); err == nil && len(pv.Items) >= 1 {
 		return pv, nil
 	} else {
-		return nil, fmt.Errorf("got 0 local-deployments with the label-Selector %s", labelSelector)
+		return nil, fmt.Errorf("got 0 deployments with label-Selector as %s", labelSelector)
 	}
 }
