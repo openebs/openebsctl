@@ -40,24 +40,28 @@ RECLAIM POLICY  : {{.ReclaimPolicy}}
 `
 )
 
-// GetLocalHostpath returns a list of local-hostpath columes
+// GetLocalHostpath returns a list of localpv-hostpath columes
 func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, openebsNS string) ([]metav1.TableRow, error) {
 	var rows []metav1.TableRow
 	for _, pv := range pvList.Items {
 		// Ignore all the other volumes that is not of cas-type local-hostpath
-		if util.GetCasTypeFromPV(&pv) != util.LocalHostpathCasType {
+		// dynamic-local-provisioner has this label for PVs openebs.io/cas-type=local-hostpath
+		// this might be fixed later
+		if util.GetCasTypeFromPV(&pv) != util.LocalHostpathCasLabel {
 			continue
 		}
-
 		name := pv.Name
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
-		attachedNode, customStatus, ns, storageVersion := pv.Labels["nodeID"], "N/A", "N/A", "N/A"
-
-		deployment, err := c.GetDeploymentList("openebs.io/component-name=openebs-localpv-provisioner")
-		if err == nil {
-			storageVersion = deployment.Items[0].Labels["openebs.io/version"]
+		attachedNode := pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions[0].Values[0]
+		var storageVersion, ns, customStatus string
+		deploy, err := c.GetDeploymentList("openebs.io/component-name=openebs-localpv-provisioner")
+		if err == nil && len(deploy.Items) == 1 {
+			storageVersion = deploy.Items[0].Labels["openebs.io/version"]
+			ns = deploy.Items[0].Namespace
+		} else {
+			storageVersion = "N/A"
 		}
 
 		accessMode := pv.Spec.AccessModes[0]
@@ -70,8 +74,8 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 	return rows, nil
 }
 
-// DescribeLocalHostpathVolume describes a local-hostpath PersistentVolume
-func DescribeLocalHostpathVolume(c *client.K8sClient, vol *corev1.PersistentVolume) error {
+// DescribeLocalHostpathVolume describes a localpv-hostpath PersistentVolume
+func DescribeLocalHostpathVolume(_ *client.K8sClient, vol *corev1.PersistentVolume) error {
 	// Get Local-volume Information
 	localHostpathVolInfo := util.LocalHostPathVolInfo{
 		VolumeInfo: util.VolumeInfo{
@@ -85,7 +89,7 @@ func DescribeLocalHostpathVolume(c *client.K8sClient, vol *corev1.PersistentVolu
 		},
 		Path:          vol.Spec.PersistentVolumeSource.Local.Path,
 		ReclaimPolicy: string(vol.Spec.PersistentVolumeReclaimPolicy),
-		CasType:       util.LocalHostpathCasType,
+		CasType:       util.LocalPvHostpathCasType,
 	}
 
 	// Print the Volume information
