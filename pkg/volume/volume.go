@@ -104,7 +104,7 @@ func Describe(vols []string, openebsNs string) error {
 			if val, ok := nsMap[casType]; ok {
 				k.Ns = val
 			} else if casType != util.ZFSCasType && casType != util.LVMCasType {
-				// The reason for above condition is that, newer lvm has cas ty
+				// The reason for above condition is that, newer lvm has cas type
 				return errors.New("could not determine the underlying storage engine ns, please provide using '--openebs-namespace' flag")
 			}
 		}
@@ -122,17 +122,18 @@ func Describe(vols []string, openebsNs string) error {
 // CasList returns a list of functions by cas-types for volume listing
 func CasList() []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error) {
 	// a good hack to implement immutable lists in Golang & also write tests for it
-	return []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){GetJiva, GetCStor, GetZFSLocalPVs, GetLVMLocalPV}
+	return []func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){GetJiva, GetCStor, GetZFSLocalPVs, GetLVMLocalPV, GetLocalHostpath}
 }
 
 // CasListMap returns a map cas-types to functions for volume listing
 func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error) {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){
-		util.JivaCasType:  GetJiva,
-		util.CstorCasType: GetCStor,
-		util.ZFSCasType:   GetZFSLocalPVs,
-		util.LVMCasType:   GetLVMLocalPV,
+		util.JivaCasType:          GetJiva,
+		util.CstorCasType:         GetCStor,
+		util.ZFSCasType:           GetZFSLocalPVs,
+		util.LVMCasType:           GetLVMLocalPV,
+		util.LocalHostpathCasType: GetLocalHostpath,
 	}
 }
 
@@ -140,9 +141,10 @@ func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeLis
 func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolume) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolume) error{
-		util.JivaCasType:  DescribeJivaVolume,
-		util.CstorCasType: DescribeCstorVolume,
-		util.ZFSCasType:   DescribeZFSLocalPVs,
-		util.LVMCasType:   DescribeLVMLocalPVs,
+		util.JivaCasType:          DescribeJivaVolume,
+		util.CstorCasType:         DescribeCstorVolume,
+		util.ZFSCasType:           DescribeZFSLocalPVs,
+		util.LVMCasType:           DescribeLVMLocalPVs,
+		util.LocalHostpathCasType: DescribeLocalHostpathVolume,
 	}
 }

@@ -189,7 +189,7 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
-// Get Versions of different components running in K8s 
+// Get Versions of different components running in K8s
 func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
 	for _, v := range util.CasTypeAndComponentNameMap {
@@ -742,4 +742,20 @@ func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace
 		return nil, fmt.Errorf("error getting pods : %v", err)
 	}
 	return pods, nil
+}
+
+/*
+	LOCAL VOLUMES SPECIFIC METHODS
+*/
+
+// GetDeploymentList returns the deployment-list with a specific
+// label selector query
+func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
+	if pv, err := k.K8sCS.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labelSelector,
+	}); err == nil && len(pv.Items) >= 1 {
+		return pv, nil
+	} else {
+		return nil, fmt.Errorf("got 0 deployments with label-Selector as %s", labelSelector)
+	}
 }
