@@ -35,6 +35,7 @@ import (
 	jiva "github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
 
 	appsv1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -189,7 +190,7 @@ func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	return NSmap, nil
 }
 
-// Get Versions of different components running in K8s 
+// Get Versions of different components running in K8s
 func (k K8sClient) GetVersionMapOfComponents() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
 	for _, v := range util.CasTypeAndComponentNameMap {
@@ -742,4 +743,71 @@ func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace
 		return nil, fmt.Errorf("error getting pods : %v", err)
 	}
 	return pods, nil
+}
+
+/*
+   UPGRADE SPECIFIC METHODS
+*/
+
+// Create Batch Job From a JobSpec Object
+func (k K8sClient) CreateBatchJob() {
+	jobs := k.K8sCS.BatchV1().Jobs("openebs")
+	jobSpec := GetJivaBatchJob()
+
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Error Creating Batch Job: ", err)
+		return
+	}
+
+	fmt.Println("Job Created successfully", &jobSpec)
+}
+
+// GetJivaBatchJob returns the Jiva Batch Specifications
+func GetJivaBatchJob() *batchV1.Job {
+	var backOffLimit int32 = 5
+
+	jobSpec := &batchV1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "jiva-volume-upgrade",
+			Namespace: "openebs",
+		},
+		Spec: batchV1.JobSpec{
+			BackoffLimit: &backOffLimit,
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "jiva-operator",
+					Containers: []corev1.Container{
+						{
+							Name: "upgrade-jiva-go",
+							Args: []string{
+								"jiva-volume",
+								"--from-version=2.7.0",                     // TODO: To be auto-determined
+								"--to-version =2.12.1",                     // TODO: To be given by flags
+								"pvc-9cebb2c3-b26e-4372-9e25-d1dc2d26c650", // TODO: To be determined by the control plane
+								"--v=4", // can be taken from flags
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name: "OPENEBS_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+							},
+							TTY:             true,
+							Image:           "openebs/upgrade:2.12.1", // TODO: To be given by flags
+							ImagePullPolicy: corev1.PullIfNotPresent,
+						},
+					},
+					RestartPolicy: corev1.RestartPolicyOnFailure,
+				},
+			},
+		},
+	}
+
+	return jobSpec
 }
