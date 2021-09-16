@@ -106,7 +106,7 @@ var (
 		JivaCasType:           JivaCSIControllerLabelValue,
 		LVMCasType:            LVMLocalPVcsiControllerLabelValue,
 		ZFSCasType:            ZFSLocalPVcsiControllerLabelValue,
-		LocalHostpathCasLabel: HostpathComponentNames,
+		LocalPvHostpathCasType: HostpathComponentNames,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
@@ -115,7 +115,7 @@ var (
 		JivaCSIControllerLabelValue:       JivaCasType,
 		LVMLocalPVcsiControllerLabelValue: LVMCasType,
 		ZFSLocalPVcsiControllerLabelValue: ZFSCasType,
-		HostpathComponentNames:            LocalHostpathCasLabel,
+		HostpathComponentNames:            LocalPvHostpathCasType,
 	}
 	// ProvsionerAndCasTypeMap stores the cas type name of the corresponding provisioner
 	ProvsionerAndCasTypeMap = map[string]string{

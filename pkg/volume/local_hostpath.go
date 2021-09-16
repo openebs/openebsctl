@@ -54,12 +54,14 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 		capacity := pv.Spec.Capacity.Storage()
 		sc := pv.Spec.StorageClassName
 		attached := pv.Status.Phase
-		attachedNode, customStatus := pv.Labels["nodeID"], ""
-		var storageVersion, ns string
+		attachedNode := pv.Spec.NodeAffinity.Required.NodeSelectorTerms[0].MatchExpressions[0].Values[0]
+		var storageVersion, ns, customStatus string
 		deploy, err := c.GetDeploymentList("openebs.io/component-name=openebs-localpv-provisioner")
 		if err == nil && len(deploy.Items) == 1 {
 			storageVersion = deploy.Items[0].Labels["openebs.io/version"]
 			ns = deploy.Items[0].Namespace
+		} else {
+			storageVersion = "N/A"
 		}
 
 		accessMode := pv.Spec.AccessModes[0]
