@@ -129,11 +129,11 @@ func CasList() []func(*client.K8sClient, *corev1.PersistentVolumeList, string) (
 func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error) {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeList, string) ([]metav1.TableRow, error){
-		util.JivaCasType:          GetJiva,
-		util.CstorCasType:         GetCStor,
-		util.ZFSCasType:           GetZFSLocalPVs,
-		util.LVMCasType:           GetLVMLocalPV,
-		util.LocalHostpathCasType: GetLocalHostpath,
+		util.JivaCasType:            GetJiva,
+		util.CstorCasType:           GetCStor,
+		util.ZFSCasType:             GetZFSLocalPVs,
+		util.LVMCasType:             GetLVMLocalPV,
+		util.LocalPvHostpathCasType: GetLocalHostpath,
 	}
 }
 
@@ -141,10 +141,10 @@ func CasListMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeLis
 func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolume) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolume) error{
-		util.JivaCasType:          DescribeJivaVolume,
-		util.CstorCasType:         DescribeCstorVolume,
-		util.ZFSCasType:           DescribeZFSLocalPVs,
-		util.LVMCasType:           DescribeLVMLocalPVs,
-		util.LocalHostpathCasType: DescribeLocalHostpathVolume,
+		util.JivaCasType:            DescribeJivaVolume,
+		util.CstorCasType:           DescribeCstorVolume,
+		util.ZFSCasType:             DescribeZFSLocalPVs,
+		util.LVMCasType:             DescribeLVMLocalPVs,
+		util.LocalPvHostpathCasType: DescribeLocalHostpathVolume,
 	}
 }
