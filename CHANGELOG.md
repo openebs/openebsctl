@@ -7,8 +7,9 @@ Thank you to all that contributed with flushing out issues with OpenEBS-CTL!<br/
 You can checkout the [documentation](https://github.com/openebs/openebsctl#readme) for more information.<br/>
 
 ## Notable Changes
-We have added more features for `LocalPV-Hostpath` & `Jiva` storage engine.<br/>
+We have added more features for `LocalPV-Hostpath`, `Jiva`, `LocalPV-LVM` & `LocalPV-ZFS` storage engines.<br/>
 * The localpv-hostpath volumes can be listed and described.
+* The LocalPV-LVM & LocalPV-ZFS PVCs support pvc describe.
 * Add replica information for Jiva volume describe.
 * Update code to consume the corev1 Events for debugging.
 * Automated future releases to the krew-index.
