@@ -8,7 +8,7 @@ You can checkout the [documentation](https://github.com/openebs/openebsctl#readm
 
 ## Notable Changes
 We have added more features for `LocalPV-Hostpath`, `Jiva`, `LocalPV-LVM` & `LocalPV-ZFS` storage engines.<br/>
-* The localpv-hostpath volumes can be listed and described.
+* The LocalPV-Hostpath volumes can be listed and described.
 * The LocalPV-LVM & LocalPV-ZFS PVCs support pvc describe.
 * Add replica information for Jiva volume describe.
 * Update code to consume the corev1 Events for debugging.
