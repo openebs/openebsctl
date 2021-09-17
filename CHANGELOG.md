@@ -1,3 +1,32 @@
+# Release v0.4.0
+<img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
+
+## Notes
+Users are encouraged to install this tool, use it and help us know what can be better.<br/>
+Thank you to all that contributed with flushing out issues with OpenEBS-CTL!<br/>
+You can checkout the [documentation](https://github.com/openebs/openebsctl#readme) for more information.<br/>
+
+## Notable Changes
+We have added more features for `LocalPV-Hostpath`, `Jiva`, `LocalPV-LVM` & `LocalPV-ZFS` storage engines.<br/>
+* The LocalPV-Hostpath volumes can be listed and described.
+* The LocalPV-LVM & LocalPV-ZFS PVCs support pvc describe.
+* Add replica information for Jiva volume describe.
+* Update code to consume the corev1 Events for debugging.
+* Automated future releases to the krew-index.
+* Add OpenEBS component details via the cluster-info & version sub-commands.
+
+## What's Next
+* Support for upgrading pool and volumes.
+* Support for moving the pool to new nodes, if the disks are already moved to new node.
+* Ability to generate raise GitHub issues with required troubleshooting information.
+* Support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilised pools.
+
+## Resolved Bugs
+
+* [#102](https://github.com/openebs/openebsctl/issues/102) An arbitrary cas-type flag listed all volumes instead of an error.
+* [#56](https://github.com/openebs/openebsctl/issues/56) Handled error messages when no resources were found.
+
+
 # Release v0.3.0
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
@@ -20,7 +49,7 @@ We have added more features for `cStor`, `LocalPV-LVM`, `LocalPV-ZFS` storage en
 * Support for moving the pool to new nodes, if the disks are already moved to new node.
 * Ability to generate raise GitHub issues with required troubleshooting information.
 * Adding support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilised pools.
-  
+
 ## Resolved Bugs
 
 + [[Issue 72]](https://github.com/openebs/openebsctl/issues/72) Make OpenEBS CLI easier to install via krew.
