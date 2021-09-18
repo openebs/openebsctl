@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -51,12 +52,26 @@ func InstantiateJivaUpgrade(cmd *cobra.Command) {
 
 	cType, err := cmd.Flags().GetString("cas-type")
 	handleErr(cType, "cas-type", err)
+	if !util.IsValidCasType(cType) {
+		fmt.Fprintf(os.Stderr, "cas-type %s not supported", cType)
+	}
+
+	volNames, fromVersion, desiredVersion, err := GetJivaVolumes(k)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if desiredVersion != fromVersion {
+		// Mark it as toVersion
+		tv = desiredVersion
+	}
 
 	cfg := jivaUpdateConfig{
-		fromVersion:        "2.7.0", // determine from control plane
+		fromVersion:        fromVersion,
 		toVersion:          tv,
 		namespace:          ns,
-		pvNames:            []string{"pvc-9cebb2c3-b26e-4372-9e25-d1dc2d26c650"}, // determine from Control plane
+		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
 		logLevel:           4,
@@ -66,9 +81,43 @@ func InstantiateJivaUpgrade(cmd *cobra.Command) {
 	k.CreateBatchJob(jobSpec)
 }
 
+// GetJivaVolumes returns the Jiva volumes list and current version
+func GetJivaVolumes(k *client.K8sClient) ([]string, string, string, error) {
+	// 1. Fetch all jivavolumes CRs in all namespaces
+	_, jvMap, err := k.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
+	if err != nil {
+		return nil, "", "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
+	}
+
+	var jivaList *corev1.PersistentVolumeList
+	//2. Get Jiva Persistent volumes
+	jivaList, err = k.GetPvByCasType([]string{"jiva"}, "")
+	if err != nil {
+		return nil, "", "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
+	}
+
+	var volumeNames []string
+	var version, desiredVersion string
+
+	//3. Write-out names, versions and desired-versions
+	for _, pv := range jivaList.Items {
+		volumeNames = append(volumeNames, pv.Name)
+		if v, ok := jvMap[pv.Name]; ok && len(version) == 0 {
+			version = v.VersionDetails.Status.Current
+			desiredVersion = v.VersionDetails.Desired
+		}
+	}
+
+	//4. Check for zero jiva-volumes
+	if len(version) == 0 || len(volumeNames) == 0 {
+		return volumeNames, version, desiredVersion, fmt.Errorf("no jiva volumes found")
+	}
+
+	return volumeNames, version, desiredVersion, nil
+}
+
 // GetJivaBatchJob returns the Jiva Batch Specifications
 func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
-	var backOffLimit int32 = 5
 
 	jobSpec := &batchV1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -76,7 +125,7 @@ func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 			Namespace: cfg.namespace,
 		},
 		Spec: batchV1.JobSpec{
-			BackoffLimit: &backOffLimit,
+			BackoffLimit: &cfg.backOffLimit,
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
 					ServiceAccountName: cfg.serviceAccountName,
