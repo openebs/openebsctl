@@ -27,7 +27,7 @@ import (
 
 // Debug manages various implementations of PersistentVolumeClaim Describing
 func Debug(pvcs []string, namespace string, openebsNs string) error {
-	if pvcs == nil {
+	if len(pvcs) == 0 || pvcs == nil {
 		return errors.New("please provide atleast one pvc name to describe")
 	}
 	// Clienset creation

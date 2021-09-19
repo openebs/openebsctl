@@ -86,6 +86,13 @@ type VolumeInfo struct {
 	JVP string
 }
 
+type LocalHostPathVolInfo struct {
+	VolumeInfo
+	Path          string
+	ReclaimPolicy string
+	CasType       string
+}
+
 // PortalInfo keep info about the ISCSI Target Portal.
 type PortalInfo struct {
 	// Target iSCSI Qualified Name.combination of nodeBase

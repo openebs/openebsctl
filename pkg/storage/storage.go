@@ -17,6 +17,7 @@ limitations under the License.
 package storage
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/openebs/openebsctl/pkg/client"
@@ -73,6 +74,9 @@ func CasList() []func(*client.K8sClient, []string) ([]metav1.TableColumnDefiniti
 
 // Describe manages various implementations of Storage Describing
 func Describe(storages []string, openebsNs, casType string) error {
+	if len(storages) == 0 || storages == nil {
+		return errors.New("please provide atleast one pv name to describe")
+	}
 	// 1. Create the clientset
 	k, _ := client.NewK8sClient(openebsNs)
 	// 2. Get the namespace
