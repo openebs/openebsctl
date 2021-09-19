@@ -18,13 +18,17 @@ package upgrade
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type jivaUpdateConfig struct {
@@ -38,10 +42,20 @@ type jivaUpdateConfig struct {
 }
 
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade(openensNs string, toVersion string) {
+func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile string) {
 	k, err := client.NewK8sClient("")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating k8s client")
+		return
+	}
+
+	// If manifest Files is provided, apply the file to create a new upgrade-job
+	if menifestFile != "" {
+		yamlFile, err := yamlToJobSpec(menifestFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error in Job: %s", err)
+		}
+		k.CreateBatchJob(yamlFile)
 		return
 	}
 
@@ -62,10 +76,15 @@ func InstantiateJivaUpgrade(openensNs string, toVersion string) {
 		}
 	}
 
+	if openebsNs == "" {
+		fmt.Println(`No Namespace Provided, using "default" as a namespace`)
+		openebsNs = "default"
+	}
+
 	cfg := jivaUpdateConfig{
 		fromVersion:        fromVersion,
 		toVersion:          toVersion,
-		namespace:          openensNs,
+		namespace:          openebsNs,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
@@ -154,4 +173,41 @@ func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 	}
 
 	return jobSpec
+}
+
+func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
+	job := batchV1.Job{}
+	// Check if the filepath is a remote-url
+	if strings.HasPrefix(filePath, "http") {
+		res, err := http.Get(filePath)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		// unmarshal yaml file into struct
+		err = yaml.Unmarshal(body, &job)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// A file path is given located on local-disk of host
+		yamlFile, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			return nil, err
+		}
+
+		// unmarshal yaml file to structs
+		err = yaml.Unmarshal(yamlFile, &job)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &job, nil
 }
