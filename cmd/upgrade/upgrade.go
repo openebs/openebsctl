@@ -18,8 +18,10 @@ package upgrade
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/openebs/openebsctl/pkg/upgrade"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 	// "github.com/openebs/openebsctl/pkg/upgrade"
 )
@@ -49,8 +51,14 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			cType, _ := cmd.Flags().GetString("cas-type")
 			toVersion, _ := cmd.Flags().GetString("to-version")
-			fmt.Println("cmd options: ", openebsNs, cType, toVersion)
-			upgrade.InstantiateJivaUpgrade(cmd)
+			if !util.IsValidCasType(cType) {
+				fmt.Fprintf(os.Stderr, "cas-type %s not supported\n", cType)
+			} else if cType == util.JivaCasType {
+				upgrade.InstantiateJivaUpgrade(openebsNs, toVersion)
+			} else {
+				fmt.Println("Only Jiva upgrades are available at this point")
+				fmt.Println("To upgrade other cas-types follow: https://github.com/openebs/upgrade#upgrading-openebs-reources")
+			}
 		},
 	}
 	cmd.SetUsageTemplate(upgradeCmdHelp)

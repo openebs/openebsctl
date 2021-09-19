@@ -22,7 +22,6 @@ import (
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
-	"github.com/spf13/cobra"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,21 +38,11 @@ type jivaUpdateConfig struct {
 }
 
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade(cmd *cobra.Command) {
+func InstantiateJivaUpgrade(openensNs string, toVersion string) {
 	k, err := client.NewK8sClient("")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating k8s client")
-	}
-	ns, err := cmd.Flags().GetString("openebs-namespace")
-	handleErr(ns, "openebs-namespace", err)
-
-	tv, err := cmd.Flags().GetString("to-version")
-	handleErr(tv, "to-version", err)
-
-	cType, err := cmd.Flags().GetString("cas-type")
-	handleErr(cType, "cas-type", err)
-	if !util.IsValidCasType(cType) {
-		fmt.Fprintf(os.Stderr, "cas-type %s not supported", cType)
+		return
 	}
 
 	volNames, fromVersion, desiredVersion, err := GetJivaVolumes(k)
@@ -62,15 +51,21 @@ func InstantiateJivaUpgrade(cmd *cobra.Command) {
 		return
 	}
 
-	if desiredVersion != fromVersion {
-		// Mark it as toVersion
-		tv = desiredVersion
+	if toVersion == "" {
+		if desiredVersion != fromVersion {
+			// Mark it as toVersion
+			toVersion = desiredVersion
+		} else {
+			// TODO: Upgrade version to latest available version for Jiva volumes
+			fmt.Println("Fetching latest version from the remote")
+			// ...
+		}
 	}
 
 	cfg := jivaUpdateConfig{
 		fromVersion:        fromVersion,
-		toVersion:          tv,
-		namespace:          ns,
+		toVersion:          toVersion,
+		namespace:          openensNs,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
@@ -118,7 +113,6 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, string, error) {
 
 // GetJivaBatchJob returns the Jiva Batch Specifications
 func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
-
 	jobSpec := &batchV1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "jiva-volume-upgrade",
@@ -160,13 +154,4 @@ func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 	}
 
 	return jobSpec
-}
-
-func handleErr(res string, argName string, err error) {
-	if err != nil || len(res) == 0 {
-		fmt.Fprintf(os.Stderr, "--%s not Provided or failed fetching --%s\n", argName, argName)
-		fmt.Printf(`Try setting %s with "--%s" flag`, argName, argName)
-		os.Exit(1)
-		return
-	}
 }
