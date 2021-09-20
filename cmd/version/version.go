@@ -117,14 +117,14 @@ func checkForLatestVersion(currVersion string) {
 		return
 	}
 
-	currversion := data["spec"].(map[string]interface{})["version"].(string)
+	
 	latestVersion := data["spec"].(map[string]interface{})["version"].(string)
-	if currversion == "dev" {
+	if !isLatestVersion(currVersion, latestVersion) {
 		fmt.Println()
-		fmt.Printf("You are using development version of cli, latest released version is: %s", currversion)
-	} else if !isLatestVersion(currVersion, latestVersion) {
-		// The seperator for the error print
-		fmt.Println()
+		if currVersion == "dev" {
+			fmt.Printf("You are using development version of cli, latest released version is: %s", latestVersion)
+			return
+		}
 		fmt.Printf("You are using an older version (%s) of cli, latest available version is: %s", currVersion, latestVersion)
 	}
 }

@@ -9,10 +9,12 @@ require (
 	github.com/openebs/lvm-localpv v0.6.0
 	github.com/openebs/zfs-localpv v1.8.0
 	github.com/pkg/errors v0.9.1
+	github.com/ramya-rao-a/go-outline v0.0.0-20210608161538-9736a4bde949 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	golang.org/x/tools v0.1.6 // indirect
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.20.0
