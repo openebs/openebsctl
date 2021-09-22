@@ -124,7 +124,7 @@ func checkForLatestVersion(currVersion string) {
 			fmt.Println("You are using development version of cli, latest released version is: " + latestVersion)
 			return
 		}
-			fmt.Println("You are using an older version of cli, latest available version is: " + currVersion, latestVersion)
+		fmt.Println("You are using an older version of cli, latest available version is: " + latestVersion)
 	}
 }
 
