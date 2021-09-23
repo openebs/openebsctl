@@ -25,7 +25,6 @@ import (
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
-	// apiExtV1 "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -177,43 +176,6 @@ func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 }
 
 func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
-	job := batchV1.Job{}
-	// Check if the filepath is a remote-url
-	if strings.HasPrefix(filePath, "http") {
-		res, err := http.Get(filePath)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file into struct
-		err = yaml.Unmarshal(body, &job)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// A file path is given located on local-disk of host
-		yamlFile, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file to structs
-		err = yaml.Unmarshal(yamlFile, &job)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &job, nil
-}
-
-func yamlToCrd(filePath string) (*batchV1.Job, error) {
 	job := batchV1.Job{}
 	// Check if the filepath is a remote-url
 	if strings.HasPrefix(filePath, "http") {
