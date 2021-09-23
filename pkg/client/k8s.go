@@ -800,10 +800,21 @@ func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentLi
 func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 	jobs := k.K8sCS.BatchV1().Jobs("openebs")
 
-	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+	// 1. Do a dry-run to check if the process can went without problems
+	fmt.Println("Creating Dry-run job...")
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{DryRun: []string{"All"}})
 
 	if err != nil {
-		fmt.Fprint(os.Stderr, "Error Creating Batch Job: ", err)
+		fmt.Fprint(os.Stderr, "Dry-run failed: ", err)
+		return
+	}
+
+	// 2. Create an actual persisted job run
+	fmt.Println("Creating a batch job...")
+	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Job creation failed: ", err)
 		return
 	}
 
