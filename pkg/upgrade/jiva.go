@@ -19,6 +19,7 @@ package upgrade
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -71,8 +72,12 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 			toVersion = desiredVersion
 		} else {
 			// TODO: Upgrade version to latest available version for Jiva volumes
-			fmt.Println("Fetching latest version from the remote")
-			// ...
+			fmt.Println("Fetching latest version from the remote...")
+			latVer, err := getLatestJivaVersion()
+			if err != nil {
+				log.Fatal("Error fetching latest version: ", err)
+			}
+			toVersion = latVer
 		}
 	}
 
@@ -210,4 +215,29 @@ func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
 	}
 
 	return &job, nil
+}
+
+func getLatestJivaVersion() (string, error) {
+	url := "https://raw.githubusercontent.com/openebs/jiva-operator/develop/deploy/helm/charts/Chart.yaml"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var respData map[string]interface{}
+	err = yaml.Unmarshal(body, &respData)
+	if err != nil {
+		return "", err
+	}
+
+	jivaLatestVersion := respData["version"].(string)
+	return jivaLatestVersion, nil
 }
