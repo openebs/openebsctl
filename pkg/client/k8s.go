@@ -779,6 +779,7 @@ func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace
 /*
 	LOCAL VOLUMES SPECIFIC METHODS
 */
+
 // GetDeploymentList returns the deployment-list with a specific
 // label selector query
 func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
@@ -794,6 +795,7 @@ func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentLi
 /*
    UPGRADE SPECIFIC METHODS
 */
+
 // Create Batch Job From a JobSpec Object
 func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 	jobs := k.K8sCS.BatchV1().Jobs("openebs")

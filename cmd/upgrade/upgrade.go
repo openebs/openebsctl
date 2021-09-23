@@ -23,7 +23,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/upgrade"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
-	// "github.com/openebs/openebsctl/pkg/upgrade"
 )
 
 const (
