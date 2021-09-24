@@ -74,7 +74,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 	}
 	cmd.SetUsageTemplate(usageTemplate)
 	cmd.AddCommand(
-		// Add a helper command to show what version of X is installedCfgFile
+		// Add a helper command to show what version of X is installed
 		completion.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
