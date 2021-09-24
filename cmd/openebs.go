@@ -18,11 +18,12 @@ package cmd
 
 import (
 	"flag"
+
 	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
+	"github.com/openebs/openebsctl/pkg/util"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 
 	"github.com/openebs/openebsctl/cmd/completion"
 	"github.com/openebs/openebsctl/cmd/describe"
@@ -50,6 +51,7 @@ Flags:
       --cas-type                       to specify the cas-type of the engine, for engine based filtering.
                                        ex- cstor, jiva, localpv-lvm, localpv-zfs.
       --debug                          to launch the debugging mode for cstor pvcs.
+  -c, --kubeconfig                     Path to configuration file
 
 Use "kubectl openebs command --help" for more information about a command.
 `
@@ -71,11 +73,8 @@ Find out more about OpenEBS on https://openebs.io/`,
 		TraverseChildren: true,
 	}
 	cmd.SetUsageTemplate(usageTemplate)
-	// TODO: Check if this brings in the flags from kubectl binary to this one via exec for all platforms
-	kubernetesConfigFlags := genericclioptions.NewConfigFlags(true)
-	kubernetesConfigFlags.AddFlags(cmd.PersistentFlags())
 	cmd.AddCommand(
-		// Add a helper command to show what version of X is installed
+		// Add a helper command to show what version of X is installedCfgFile
 		completion.NewCmdCompletion(cmd),
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
@@ -83,6 +82,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		cluster_info.NewCmdClusterInfo(cmd),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
+	cmd.PersistentFlags().StringVarP(&util.Kubeconfig, "kubeconfig", "c", "", "path to config file")
 	cmd.Flags().AddGoFlagSet(flag.CommandLine)
 	_ = flag.CommandLine.Parse([]string{})
 	_ = viper.BindPFlag("namespace", cmd.PersistentFlags().Lookup("namespace"))
