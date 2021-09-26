@@ -29,7 +29,7 @@ import (
 
 // ShowClusterInfo shows the openebs components and their status and versions
 func ShowClusterInfo() error {
-	k, _ := client.NewK8sClient("")
+	k := client.NewK8sClient()
 	err := compute(k)
 	return err
 }

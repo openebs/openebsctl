@@ -33,7 +33,7 @@ func Get(vols []string, openebsNS, casType string) error {
 		return fmt.Errorf("cas-type %s is not supported", casType)
 	}
 	// TODO: Prefer passing the client from outside
-	k, _ := client.NewK8sClient("")
+	k := client.NewK8sClient()
 	// 1. Get a list of required PersistentVolumes
 	var pvList *corev1.PersistentVolumeList
 	var err error
@@ -77,7 +77,7 @@ func Describe(vols []string, openebsNs string) error {
 		return errors.New("please provide atleast one pv name to describe")
 	}
 	// Clienset creation
-	k, _ := client.NewK8sClient(openebsNs)
+	k := client.NewK8sClient(openebsNs)
 
 	// 1. Get a list of required PersistentVolumes
 	var pvList *corev1.PersistentVolumeList

@@ -29,7 +29,7 @@ import (
 // Get manages various implementations of Storage listing
 func Get(pools []string, openebsNS string, casType string) error {
 	// 1. Create the clientset
-	k, _ := client.NewK8sClient("")
+	k := client.NewK8sClient()
 	// 2. If casType is specified, call the specific function & exit
 	if f, ok := CasListMap()[casType]; ok {
 		// if a cas-type is found, run it and return the error
@@ -78,7 +78,7 @@ func Describe(storages []string, openebsNs, casType string) error {
 		return errors.New("please provide atleast one pv name to describe")
 	}
 	// 1. Create the clientset
-	k, _ := client.NewK8sClient(openebsNs)
+	k := client.NewK8sClient(openebsNs)
 	// 2. Get the namespace
 	nsMap, _ := k.GetOpenEBSNamespaceMap()
 	if openebsNs == "" {
