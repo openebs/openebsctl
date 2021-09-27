@@ -50,6 +50,9 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		return
 	}
 
+	p, _ := k.GetPods("job-name=jiva-volume-upgrade", "", "openebs")
+	fmt.Println(p)
+
 	// If manifest Files is provided, apply the file to create a new upgrade-job
 	if menifestFile != "" {
 		yamlFile, err := yamlToJobSpec(menifestFile)

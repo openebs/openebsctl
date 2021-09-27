@@ -820,3 +820,13 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 
 	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
 }
+
+
+func (k K8sClient) GetBatchJobs() {
+	list, er := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
+	if er != nil {
+		fmt.Println("Error creating ,,", er)
+	}
+
+	fmt.Println(list)
+ }
