@@ -102,10 +102,10 @@ var (
 	// CasTypeAndComponentNameMap stores the component name of the corresponding cas type
 	// NOTE: Not including ZFSLocalPV as it'd break existing code
 	CasTypeAndComponentNameMap = map[string]string{
-		CstorCasType:          CStorCSIControllerLabelValue,
-		JivaCasType:           JivaCSIControllerLabelValue,
-		LVMCasType:            LVMLocalPVcsiControllerLabelValue,
-		ZFSCasType:            ZFSLocalPVcsiControllerLabelValue,
+		CstorCasType:           CStorCSIControllerLabelValue,
+		JivaCasType:            JivaCSIControllerLabelValue,
+		LVMCasType:             LVMLocalPVcsiControllerLabelValue,
+		ZFSCasType:             ZFSLocalPVcsiControllerLabelValue,
 		LocalPvHostpathCasType: HostpathComponentNames,
 	}
 	// ComponentNameToCasTypeMap is a reverse map of CasTypeAndComponentNameMap
