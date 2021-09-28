@@ -18,8 +18,8 @@ package client
 
 import (
 	"context"
-	"flag"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -104,15 +104,21 @@ func NewK8sClient(ns string) (*K8sClient, error) {
 // sets the env variable for the same
 func GetOutofClusterKubeConfig() {
 	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.
-			Join(home, ".kube", "config"), "absolute path to kubeconfig")
+	// config file not provided, auto detect from the host OS
+	if util.Kubeconfig == "" {
+		if home := homeDir(); home != "" {
+			cfg := filepath.Join(home, ".kube", "config")
+			kubeconfig = &cfg
+		} else {
+			log.Fatal(`kubeconfig not provided, Please provide config file path with "--kubeconfig" flag`)
+		}
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig")
+		// Get the kubeconfig file from CLI args
+		kubeconfig = &util.Kubeconfig
 	}
-	flag.Parse()
 	err := os.Setenv("KUBECONFIG", *kubeconfig)
 	if err != nil {
+		log.Fatal(err)
 		return
 	}
 }
