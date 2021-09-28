@@ -821,12 +821,12 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
 }
 
-
-func (k K8sClient) GetBatchJobs() {
-	list, er := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
-	if er != nil {
-		fmt.Println("Error creating ,,", er)
+// GetBatchJobs returns all the batch jobs running in all-namespaces
+func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error){
+	list, err := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
 	}
 
-	fmt.Println(list)
- }
+	return list, nil
+}

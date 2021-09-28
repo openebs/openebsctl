@@ -33,6 +33,7 @@ import (
 )
 
 type jivaUpdateConfig struct {
+	name               string
 	fromVersion        string
 	toVersion          string
 	namespace          string
@@ -49,6 +50,8 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		fmt.Fprintf(os.Stderr, "Error creating k8s client")
 		return
 	}
+
+	CheckIfJobIsAlreadyRunning(k)
 
 	p, _ := k.GetPods("job-name=jiva-volume-upgrade", "", "openebs")
 	fmt.Println(p)
@@ -90,6 +93,7 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 	}
 
 	cfg := jivaUpdateConfig{
+		name:               "jiva-upgrade-job",
 		fromVersion:        fromVersion,
 		toVersion:          toVersion,
 		namespace:          openebsNs,
@@ -136,51 +140,6 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, string, error) {
 	}
 
 	return volumeNames, version, desiredVersion, nil
-}
-
-// GetJivaBatchJob returns the Jiva Batch Specifications
-func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
-	jobSpec := &batchV1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "jiva-volume-upgrade",
-			Namespace: cfg.namespace,
-		},
-		Spec: batchV1.JobSpec{
-			BackoffLimit: &cfg.backOffLimit,
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					ServiceAccountName: cfg.serviceAccountName,
-					Containers: []corev1.Container{
-						{
-							Name: "upgrade-jiva-go",
-							Args: append([]string{
-								"jiva-volume",
-								fmt.Sprintf("--from-version=%s", cfg.fromVersion),
-								fmt.Sprintf("--to-version=%s", cfg.toVersion),
-								"--v=4", // can be taken from flags
-							}, cfg.pvNames...),
-							Env: []corev1.EnvVar{
-								{
-									Name: "OPENEBS_NAMESPACE",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-							},
-							TTY:             true,
-							Image:           fmt.Sprintf("openebs/upgrade:%s", cfg.toVersion),
-							ImagePullPolicy: corev1.PullIfNotPresent,
-						},
-					},
-					RestartPolicy: corev1.RestartPolicyOnFailure,
-				},
-			},
-		},
-	}
-
-	return jobSpec
 }
 
 func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
@@ -243,4 +202,66 @@ func getLatestJivaVersion() (string, error) {
 
 	jivaLatestVersion := respData["version"].(string)
 	return jivaLatestVersion, nil
+}
+
+// GetJivaBatchJob returns the Jiva Batch Specifications
+func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
+	jobSpec := &batchV1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      cfg.name,
+			Namespace: cfg.namespace,
+		},
+		Spec: batchV1.JobSpec{
+			BackoffLimit: &cfg.backOffLimit,
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					ServiceAccountName: cfg.serviceAccountName,
+					Containers:         getJivaUpgradeContainer(cfg),
+					RestartPolicy:      corev1.RestartPolicyOnFailure,
+				},
+			},
+		},
+	}
+
+	return jobSpec
+}
+
+// getJivaUpgradeContainer returns containers for the jiva-upgrade-job
+func getJivaUpgradeContainer(cfg *jivaUpdateConfig) []corev1.Container {
+	return []corev1.Container{
+		{
+			Name: "upgrade-jiva-go",
+			Args: append([]string{
+				"jiva-volume",
+				fmt.Sprintf("--from-version=%s", cfg.fromVersion),
+				fmt.Sprintf("--to-version=%s", cfg.toVersion),
+				"--v=4", // can be taken from flags
+			}, cfg.pvNames...),
+			Env: []corev1.EnvVar{
+				{
+					Name: "OPENEBS_NAMESPACE",
+					ValueFrom: &corev1.EnvVarSource{
+						FieldRef: &corev1.ObjectFieldSelector{
+							FieldPath: "metadata.namespace",
+						},
+					},
+				},
+			},
+			TTY:             true,
+			Image:           fmt.Sprintf("openebs/upgrade:%s", cfg.toVersion),
+			ImagePullPolicy: corev1.PullIfNotPresent,
+		},
+	}
+}
+
+func CheckIfJobIsAlreadyRunning(k *client.K8sClient) (bool, error) {
+	jobs, err := k.GetBatchJobs()
+	if err != nil {
+		return false, err
+	}
+
+	for _, v := range jobs.Items {
+		fmt.Println(v)
+	}
+	return false, nil
 }
