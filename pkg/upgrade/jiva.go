@@ -22,6 +22,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/openebs/openebsctl/pkg/client"
@@ -51,10 +52,8 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		return
 	}
 
-	CheckIfJobIsAlreadyRunning(k)
-
-	p, _ := k.GetPods("job-name=jiva-volume-upgrade", "", "openebs")
-	fmt.Println(p)
+	// p, _ := k.GetPods("job-name=jiva-volume-upgrade", "", "openebs")
+	// fmt.Println(p)
 
 	// If manifest Files is provided, apply the file to create a new upgrade-job
 	if menifestFile != "" {
@@ -104,6 +103,14 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 	}
 
 	jobSpec := GetJivaBatchJob(&cfg)
+
+	// Check if a job is running with underlying PV
+	res, err := CheckIfJobIsAlreadyRunning(k, &cfg)
+	// If error or upgrade job is already running return
+	if err != nil || res {
+		log.Fatal("An upgrade job is already running with the underlying volume!")
+	}
+
 	k.CreateBatchJob(jobSpec)
 }
 
@@ -254,14 +261,26 @@ func getJivaUpgradeContainer(cfg *jivaUpdateConfig) []corev1.Container {
 	}
 }
 
-func CheckIfJobIsAlreadyRunning(k *client.K8sClient) (bool, error) {
+func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
 	jobs, err := k.GetBatchJobs()
 	if err != nil {
 		return false, err
 	}
 
-	for _, v := range jobs.Items {
-		fmt.Println(v)
+	for _, v := range jobs.Items { // JobItems
+		for _, pvName := range cfg.pvNames { // running pvs in control plane
+			if reflect.DeepEqual(v.Spec.Template, corev1.PodTemplateSpec{}) && reflect.DeepEqual(v.Spec.Template.Spec, corev1.PodSpec{}) && len(v.Spec.Template.Spec.Containers) > 0 {
+				for _, container := range v.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
+					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
+						if args == pvName {
+							return true, nil
+						}
+					}
+				}
+			}
+		}
 	}
+
+	// TODO: Check if the job is completed or failed or running without problems
 	return false, nil
 }

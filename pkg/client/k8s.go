@@ -806,6 +806,7 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 
 	if err != nil {
 		fmt.Fprint(os.Stderr, "Dry-run failed: ", err)
+		fmt.Println()
 		return
 	}
 
@@ -822,7 +823,7 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 }
 
 // GetBatchJobs returns all the batch jobs running in all-namespaces
-func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error){
+func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
 	list, err := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
