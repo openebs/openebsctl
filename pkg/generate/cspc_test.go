@@ -65,7 +65,8 @@ func TestCSPC(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, got1, err := CSPC(tt.args.c, tt.args.nodes, tt.args.GB, tt.args.devs, tt.args.poolType)
+			// tt.args.GB,
+			got, got1, err := CSPC(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CSPC() error = %v, wantErr %v", err, tt.wantErr)
 				return

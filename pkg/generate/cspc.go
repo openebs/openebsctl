@@ -18,8 +18,10 @@ package generate
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -37,12 +39,12 @@ func isPoolTypeValid(raid string) bool {
 }
 
 // Pool calls the generate routine for different cas-types
-func Pool(nodes []string, devs, GB int, raid string) error {
+func Pool(nodes []string, devs int, raid string) error {
 	c, _ := client.NewK8sClient("")
 	if !isPoolTypeValid(strings.ToLower(raid)) {
 		return fmt.Errorf("invalid pool type %s", raid)
 	}
-	_, str, err := CSPC(c, nodes, devs, GB, strings.ToLower(raid))
+	_, str, err := CSPC(c, nodes, devs, strings.ToLower(raid))
 	if err != nil {
 		return err
 	}
@@ -51,7 +53,7 @@ func Pool(nodes []string, devs, GB int, raid string) error {
 }
 
 // CSPC takes eligible nodes, number of devices and poolType to create a pool cluster template
-func CSPC(c *client.K8sClient, nodes []string, devs, minGB int, poolType string) (*cstorv1.CStorPoolCluster, string, error) {
+func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*cstorv1.CStorPoolCluster, string, error) {
 	// 0. Figure out the OPENEBS_NAMESPACE for CStor
 	cstorNS, err := c.GetOpenEBSNamespace(util.CstorCasType)
 	// assume CSTOR's OPENEBS_NAMESPACE has all the relevant blockdevices
@@ -92,10 +94,42 @@ func CSPC(c *client.K8sClient, nodes []string, devs, minGB int, poolType string)
 		ObjectMeta: metav1.ObjectMeta{Name: "", Namespace: cstorNS, GenerateName: "cstor"},
 		Spec: cstorv1.CStorPoolClusterSpec{
 			Pools: *p,
-		}}
+		},
+	}
 	// 5. Unmarshall it into a string
-	// 6. Split the string by the newlines/carriage returns and insert the BD's link
-	return &cspc, "", nil
+	y, err := yaml.Marshal(cspc)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		return nil, "", err
+	}
+	yaml := string(y)
+	// 6. removing status and versionDetails field
+	yaml = yaml[:strings.Index(yaml, "status: {}")]
+	// 7. Split the string by the newlines/carriage returns and insert the BD's link
+	yaml = addBDDetailComments(yaml, bds)
+	return &cspc, yaml, nil
+}
+
+func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
+	finalYaml := ""
+	for _, l := range strings.Split(yaml, "\n") {
+		if strings.Contains(l, "- blockDeviceName:") {
+			name := strings.Trim(strings.Split(l, ":")[1], " ")
+			finalYaml = finalYaml + getBDComment(name, bdList) + "GB\n"
+		}
+		finalYaml = finalYaml + l + "\n"
+	}
+	return finalYaml
+}
+
+func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
+	for _, bd := range bdList.Items {
+		if bd.Name == name {
+			return "      # " + bd.Spec.Path + "  " +
+				strconv.FormatUint(bd.Spec.Capacity.Storage/(1024*1024*1024), 10)
+		}
+	}
+	return ""
 }
 
 func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice) (*[]cstorv1.PoolSpec, error) {
@@ -113,12 +147,12 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 				}}
 			}
 			spec = append(spec, cstorv1.PoolSpec{
-				NodeSelector:  map[string]string{"kubernetes.io/hostname": node} ,
+				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
 				DataRaidGroups: []cstorv1.RaidGroup{raid},
-				PoolConfig:     cstorv1.PoolConfig{
+				PoolConfig: cstorv1.PoolConfig{
 					DataRaidGroupType: string(cstorv1.PoolStriped),
 				},
-			})	
+			})
 		}
 		return &spec, nil
 	} else if poolType == string(cstorv1.PoolMirrored) {
