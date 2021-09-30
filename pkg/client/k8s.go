@@ -797,8 +797,8 @@ func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentLi
 */
 
 // Create Batch Job From a JobSpec Object
-func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
-	jobs := k.K8sCS.BatchV1().Jobs("openebs")
+func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
+	jobs := k.K8sCS.BatchV1().Jobs(namespace)
 
 	// 1. Do a dry-run to check if the process can went without problems
 	fmt.Println("Creating Dry-run job...")
@@ -820,6 +820,11 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job) {
 	}
 
 	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
+}
+
+// Delete a Batch Job by name
+func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
+	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
 // GetBatchJobs returns all the batch jobs running in all-namespaces

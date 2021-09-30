@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"reflect"
@@ -61,7 +62,7 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error in Job: %s", err)
 		}
-		k.CreateBatchJob(yamlFile)
+		k.CreateBatchJob(yamlFile, yamlFile.Namespace)
 		return
 	}
 
@@ -91,8 +92,9 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		openebsNs = "default"
 	}
 
+	n := fmt.Sprintf("jiva-upgrade-job-%v", rand.Intn(100)) // TODO: Seed random Numbers
 	cfg := jivaUpdateConfig{
-		name:               "jiva-upgrade-job",
+		name:               n,
 		fromVersion:        fromVersion,
 		toVersion:          toVersion,
 		namespace:          openebsNs,
@@ -106,12 +108,13 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 
 	// Check if a job is running with underlying PV
 	res, err := CheckIfJobIsAlreadyRunning(k, &cfg)
+	fmt.Println("ran")
 	// If error or upgrade job is already running return
 	if err != nil || res {
 		log.Fatal("An upgrade job is already running with the underlying volume!")
 	}
 
-	k.CreateBatchJob(jobSpec)
+	k.CreateBatchJob(jobSpec, cfg.namespace)
 }
 
 // GetJivaVolumes returns the Jiva volumes list and current version
@@ -267,13 +270,18 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		return false, err
 	}
 
-	for _, v := range jobs.Items { // JobItems
+	var runningJob *batchV1.Job
+	runningJobFound := false
+
+	for _, job := range jobs.Items { // JobItems
 		for _, pvName := range cfg.pvNames { // running pvs in control plane
-			if reflect.DeepEqual(v.Spec.Template, corev1.PodTemplateSpec{}) && reflect.DeepEqual(v.Spec.Template.Spec, corev1.PodSpec{}) && len(v.Spec.Template.Spec.Containers) > 0 {
-				for _, container := range v.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
+			if !runningJobFound && !reflect.DeepEqual(job.Spec.Template, corev1.PodTemplateSpec{}) && !reflect.DeepEqual(job.Spec.Template.Spec, corev1.PodSpec{}) && len(job.Spec.Template.Spec.Containers) > 0 {
+				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
 					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
 						if args == pvName {
-							return true, nil
+							runningJob = &job
+							runningJobFound = true
+							break
 						}
 					}
 				}
@@ -281,6 +289,30 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		}
 	}
 
-	// TODO: Check if the job is completed or failed or running without problems
+	if runningJobFound {
+		active := runningJob.Status.Active
+		failed := runningJob.Status.Failed
+		succeeded := runningJob.Status.Succeeded
+
+		if failed > 0 {
+			fmt.Println("Previous job failed. Creating a new Job with name ", cfg.name, "...")
+			// Job found but delete the job and return false so that further process can be started
+			return false, k.DeleteBatchJob(cfg.name, cfg.namespace)
+		}
+
+		if active > 0 {
+			fmt.Println("A job is already active with the name ", runningJob.Name, " that is upgrading the PV")
+			// TODO:  Check the POD underlying the PV if their is any error inside
+			return true, nil
+		}
+
+		if succeeded > 0 {
+			fmt.Println("Previous upgrade-job was successful for upgrading P.V., Not running current one.")
+			os.Exit(0)
+			// TODO:  Provide the option to restart the Job
+		}
+		return false, nil
+	}
+
 	return false, nil
 }
