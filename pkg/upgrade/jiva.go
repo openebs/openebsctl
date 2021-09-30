@@ -66,32 +66,35 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		return
 	}
 
-	volNames, fromVersion, desiredVersion, err := GetJivaVolumes(k)
+	volNames, fromVersion, err := GetJivaVolumes(k)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	// assign to-version
 	if toVersion == "" {
-		if desiredVersion != fromVersion {
-			// Mark it as toVersion
-			toVersion = desiredVersion
-		} else {
-			// TODO: Upgrade version to latest available version for Jiva volumes
-			fmt.Println("Fetching latest version from the remote...")
-			latVer, err := getLatestJivaVersion()
-			if err != nil {
-				log.Fatal("Error fetching latest version: ", err)
-			}
-			toVersion = latVer
+		pods, e := k.GetPods("name=jiva-operator", "", "")
+		if e != nil {
+			fmt.Println("Failed to get operator-version, err: ", e)
+			return
 		}
+
+		if len(pods.Items) == 0 {
+			fmt.Println("Jiva-operator is not running!")
+			return
+		}
+
+		toVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 
+	// assign namespace
 	if openebsNs == "" {
 		fmt.Println(`No Namespace Provided, using "default" as a namespace`)
 		openebsNs = "default"
 	}
 
+	// create configuration
 	n := fmt.Sprintf("jiva-upgrade-job-%v", rand.Intn(100)) // TODO: Seed random Numbers
 	cfg := jivaUpdateConfig{
 		name:               n,
@@ -108,7 +111,6 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 
 	// Check if a job is running with underlying PV
 	res, err := CheckIfJobIsAlreadyRunning(k, &cfg)
-	fmt.Println("ran")
 	// If error or upgrade job is already running return
 	if err != nil || res {
 		log.Fatal("An upgrade job is already running with the underlying volume!")
@@ -118,38 +120,37 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 }
 
 // GetJivaVolumes returns the Jiva volumes list and current version
-func GetJivaVolumes(k *client.K8sClient) ([]string, string, string, error) {
+func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
 	// 1. Fetch all jivavolumes CRs in all namespaces
 	_, jvMap, err := k.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	if err != nil {
-		return nil, "", "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
+		return nil, "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
 	}
 
 	var jivaList *corev1.PersistentVolumeList
 	//2. Get Jiva Persistent volumes
 	jivaList, err = k.GetPvByCasType([]string{"jiva"}, "")
 	if err != nil {
-		return nil, "", "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
+		return nil, "", fmt.Errorf("err getting jiva volumes: %s", err.Error())
 	}
 
 	var volumeNames []string
-	var version, desiredVersion string
+	var version string
 
 	//3. Write-out names, versions and desired-versions
 	for _, pv := range jivaList.Items {
 		volumeNames = append(volumeNames, pv.Name)
 		if v, ok := jvMap[pv.Name]; ok && len(version) == 0 {
 			version = v.VersionDetails.Status.Current
-			desiredVersion = v.VersionDetails.Desired
 		}
 	}
 
 	//4. Check for zero jiva-volumes
 	if len(version) == 0 || len(volumeNames) == 0 {
-		return volumeNames, version, desiredVersion, fmt.Errorf("no jiva volumes found")
+		return volumeNames, version, fmt.Errorf("no jiva volumes found")
 	}
 
-	return volumeNames, version, desiredVersion, nil
+	return volumeNames, version, nil
 }
 
 func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
@@ -297,6 +298,7 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		if failed > 0 {
 			fmt.Println("Previous job failed. Creating a new Job with name ", cfg.name, "...")
 			// Job found but delete the job and return false so that further process can be started
+			// TODO: Add Goroutines to handle job deletion completion
 			return false, k.DeleteBatchJob(cfg.name, cfg.namespace)
 		}
 
