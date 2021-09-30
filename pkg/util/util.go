@@ -34,6 +34,8 @@ import (
 	"k8s.io/klog"
 )
 
+var Kubeconfig string
+
 const (
 	maxTerms                = 2
 	stringsToBeColoredGreen = "healthy bound online active claimed running attached normal"
