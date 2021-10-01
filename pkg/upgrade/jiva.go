@@ -27,6 +27,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/manifoldco/promptui"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
@@ -270,13 +271,8 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 
 		if failed > 0 {
 			fmt.Println("Previous job failed. Creating a new Job with name:", cfg.name)
-			// Job found but delete the job and return false so that further process can be started
-			// TODO: Add Goroutines to handle job deletion completion
-			err := k.DeleteBatchJob(cfg.name, cfg.namespace)
-			if err != nil {
-				return true, err
-			}
-			confirmDeletion(k, cfg)
+			// Job found thus delete the job and return false so that further process can be started
+			startDeletionTask(k, cfg)
 		}
 
 		if active > 0 {
@@ -286,14 +282,30 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		}
 
 		if succeeded > 0 {
-			fmt.Println("Previous upgrade-job was successful for upgrading P.V., Not running current one.")
-			os.Exit(0)
-			// TODO:  Provide the option to restart the Job
+			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
+			// Provide the option to restart the Job
+			shouldStart := promptToStartAgain()
+			if shouldStart {
+				// Delete previous successful task
+				startDeletionTask(k, cfg)
+			} else {
+				os.Exit(0)
+			}
 		}
 		return false, nil
 	}
 
 	return false, nil
+}
+
+// startDeletionTask instantiates a deletion process
+func startDeletionTask(k *client.K8sClient, cfg *jivaUpdateConfig) error {
+	err := k.DeleteBatchJob(cfg.name, cfg.namespace)
+	if err != nil {
+		return err
+	}
+	confirmDeletion(k, cfg)
+	return nil
 }
 
 // confirmDeletion runs until the job is successfully done or reached threshhold duration
@@ -323,4 +335,24 @@ func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
 			return
 		}
 	}
+}
+
+// promptToStartAgain returns if the job should be started Again
+func promptToStartAgain() bool {
+	prompt := promptui.Prompt{
+		Label: "Do you want to restart the Job?",
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		fmt.Println("prompt Failed: ", err)
+		return false
+	}
+
+	result = strings.ToLower(result)
+	if result == "yes" || result == "y" {
+		return true
+	}
+
+	return false
 }
