@@ -29,6 +29,7 @@ import (
 	"github.com/openebs/openebsctl/pkg/util"
 	zfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
@@ -809,12 +810,20 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
 	// 1. Do a dry-run to check if the process can went without problems
 	fmt.Println("Creating Dry-run job...")
 	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{DryRun: []string{"All"}})
-
 	if err != nil {
 		fmt.Fprint(os.Stderr, "Dry-run failed: ", err)
 		fmt.Println()
 		return
 	}
+
+	// The trial code to show Job before starting
+	// Needs another approach, since it is throwing a lot of things which is not needed
+	out, err := yaml.Marshal(jobSpec)
+	if err != nil {
+		fmt.Println("e: ", err)
+	}
+	s := string(out[:])
+	fmt.Println(s)
 
 	// 2. Create an actual persisted job run
 	fmt.Println("Creating a batch job...")
