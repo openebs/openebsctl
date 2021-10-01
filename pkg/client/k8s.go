@@ -842,3 +842,12 @@ func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
 
 	return list, nil
 }
+
+// GetBatchJob returns batch-job by name
+func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, error) {
+	job, err := k.K8sCS.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return job, nil
+}

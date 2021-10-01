@@ -25,6 +25,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -52,9 +53,6 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		fmt.Fprintf(os.Stderr, "Error creating k8s client")
 		return
 	}
-
-	// p, _ := k.GetPods("job-name=jiva-volume-upgrade", "", "openebs")
-	// fmt.Println(p)
 
 	// If manifest Files is provided, apply the file to create a new upgrade-job
 	if menifestFile != "" {
@@ -95,9 +93,9 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 	}
 
 	// create configuration
-	n := fmt.Sprintf("jiva-upgrade-job-%v", rand.Intn(100)) // TODO: Seed random Numbers
+	name := fmt.Sprintf("jiva-upgrade-job-%v", rand.Intn(100)) // TODO: Seed random Numbers
 	cfg := jivaUpdateConfig{
-		name:               n,
+		name:               name,
 		fromVersion:        fromVersion,
 		toVersion:          toVersion,
 		namespace:          openebsNs,
@@ -190,31 +188,6 @@ func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
 	return &job, nil
 }
 
-func getLatestJivaVersion() (string, error) {
-	url := "https://raw.githubusercontent.com/openebs/jiva-operator/develop/deploy/helm/charts/Chart.yaml"
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var respData map[string]interface{}
-	err = yaml.Unmarshal(body, &respData)
-	if err != nil {
-		return "", err
-	}
-
-	jivaLatestVersion := respData["version"].(string)
-	return jivaLatestVersion, nil
-}
-
 // GetJivaBatchJob returns the Jiva Batch Specifications
 func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 	jobSpec := &batchV1.Job{
@@ -296,10 +269,14 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		succeeded := runningJob.Status.Succeeded
 
 		if failed > 0 {
-			fmt.Println("Previous job failed. Creating a new Job with name ", cfg.name, "...")
+			fmt.Println("Previous job failed. Creating a new Job with name:", cfg.name)
 			// Job found but delete the job and return false so that further process can be started
 			// TODO: Add Goroutines to handle job deletion completion
-			return false, k.DeleteBatchJob(cfg.name, cfg.namespace)
+			err := k.DeleteBatchJob(cfg.name, cfg.namespace)
+			if err != nil {
+				return true, err
+			}
+			confirmDeletion(k, cfg)
 		}
 
 		if active > 0 {
@@ -317,4 +294,33 @@ func CheckIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 	}
 
 	return false, nil
+}
+
+// confirmDeletion runs until the job is successfully done or reached threshhold duration
+func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
+	// create interval to call function periodically
+	interval := time.NewTicker(time.Second * 2)
+
+	// Create channel
+	channel := make(chan bool)
+
+	// Set threshhold time
+	go func() {
+		time.Sleep(time.Second * 10)
+		channel <- true
+	}()
+
+	for {
+		select {
+		case <-interval.C:
+			_, err := k.GetBatchJob(cfg.name, cfg.namespace)
+			// Job is deleted successfully
+			if err != nil {
+				return
+			}
+		case <-channel:
+			fmt.Println("Waiting time reached! Try Again!")
+			return
+		}
+	}
 }
