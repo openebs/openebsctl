@@ -739,3 +739,78 @@ var pv3 = corev1.PersistentVolume{
 	Spec:   corev1.PersistentVolumeSpec{},
 	Status: corev1.PersistentVolumeStatus{},
 }
+
+/****************
+* Local Hostpath
+****************/
+var localHostpathVolumeCapacity = corev1.ResourceList{corev1.ResourceStorage: fourGigiByte}
+
+var localHostpathPv1 = corev1.PersistentVolume{
+	TypeMeta: metav1.TypeMeta{},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "pvc-1",
+		Namespace: "localhostpath",
+		Labels: map[string]string{
+			"openebs.io/component-name": "openebs-localpv-provisioner",
+			"openebs.io/cas-type":       "local-hostpath",
+			"openebs.io/version":        "1.9.0",
+		},
+		Annotations: map[string]string{},
+	},
+	Spec: corev1.PersistentVolumeSpec{
+		// 4GiB
+		Capacity: localHostpathVolumeCapacity,
+		PersistentVolumeSource: corev1.PersistentVolumeSource{
+			Local: &corev1.LocalVolumeSource{Path: "/random/path"},
+		},
+		AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+		ClaimRef: &corev1.ObjectReference{
+			Kind:            "PersistentVolumeClaim",
+			Namespace:       "local-app",
+			Name:            "mongo-local",
+			APIVersion:      "v1",
+			ResourceVersion: "123"},
+		PersistentVolumeReclaimPolicy: corev1.PersistentVolumeReclaimDelete,
+		StorageClassName:              "pvc-1-local",
+		VolumeMode:                    &blockFS,
+		NodeAffinity: &corev1.VolumeNodeAffinity{
+			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
+				{MatchExpressions: []corev1.NodeSelectorRequirement{
+					{Key: "kubernetes.io/hostname", Operator: corev1.NodeSelectorOpIn, Values: []string{"node1"}},
+				}},
+			}},
+		},
+	},
+	Status: corev1.PersistentVolumeStatus{
+		Phase:   corev1.VolumeBound,
+		Message: "",
+		Reason:  "",
+	},
+}
+var localpvHostpathDpl1 = appsv1.Deployment{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "fake-deploy-hostpath-1",
+		Namespace: "openebs",
+		Labels: map[string]string{
+			"openebs.io/version":        "1.9.0",
+			"openebs.io/component-name": "openebs-localpv-provisioner"},
+	},
+}
+
+var localpvHostpathDpl2 = appsv1.Deployment{
+	TypeMeta: metav1.TypeMeta{
+		Kind:       "Deployment",
+		APIVersion: "apps/v1",
+	},
+	ObjectMeta: metav1.ObjectMeta{
+		Name:      "fake-deploy-hostpath2",
+		Namespace: "openebs",
+		Labels: map[string]string{
+			"openebs.io/version":        "1.9.0",
+			"openebs.io/component-name": "openebs-localpv-provisioner"},
+	},
+}
