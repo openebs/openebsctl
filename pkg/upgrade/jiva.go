@@ -45,19 +45,25 @@ type jivaUpdateConfig struct {
 	backOffLimit       int32
 	serviceAccountName string
 	logLevel           int32
+	additionalArgs     []string
 }
 
+// The variables that is to be used by the CLI for jiva-upgrade-job
+var CasType, ToVersion, File, ImagePrefix, ImageTag string
+
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile string) {
+func InstantiateJivaUpgrade(openebsNs string) {
 	k, err := client.NewK8sClient("")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating k8s client")
 		return
 	}
 
+	fmt.Println(CasType, ToVersion, File, ImagePrefix, ImageTag)
+
 	// If manifest Files is provided, apply the file to create a new upgrade-job
-	if menifestFile != "" {
-		yamlFile, err := yamlToJobSpec(menifestFile)
+	if File != "" {
+		yamlFile, err := yamlToJobSpec(File)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error in Job: %s", err)
 		}
@@ -65,6 +71,7 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 		return
 	}
 
+	// get running volumes from cluster
 	volNames, fromVersion, err := GetJivaVolumes(k)
 	if err != nil {
 		fmt.Println(err)
@@ -72,7 +79,7 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 	}
 
 	// assign to-version
-	if toVersion == "" {
+	if ToVersion == "" {
 		pods, e := k.GetPods("name=jiva-operator", "", "")
 		if e != nil {
 			fmt.Println("Failed to get operator-version, err: ", e)
@@ -84,7 +91,7 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 			return
 		}
 
-		toVersion = pods.Items[0].Labels["openebs.io/version"]
+		ToVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 
 	// assign namespace
@@ -98,12 +105,13 @@ func InstantiateJivaUpgrade(openebsNs string, toVersion string, menifestFile str
 	cfg := jivaUpdateConfig{
 		name:               name,
 		fromVersion:        fromVersion,
-		toVersion:          toVersion,
+		toVersion:          ToVersion,
 		namespace:          openebsNs,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
 		logLevel:           4,
+		additionalArgs:     addArgs(),
 	}
 
 	jobSpec := GetJivaBatchJob(&cfg)
@@ -150,6 +158,20 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
 	}
 
 	return volumeNames, version, nil
+}
+
+// Returns additional arguments like image-prefix and image-tags
+func addArgs() []string {
+	var result []string
+	if ImagePrefix != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", ImagePrefix))
+	}
+
+	if ImageTag != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", ImageTag))
+	}
+
+	return result
 }
 
 func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
@@ -213,15 +235,19 @@ func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 
 // getJivaUpgradeContainer returns containers for the jiva-upgrade-job
 func getJivaUpgradeContainer(cfg *jivaUpdateConfig) []corev1.Container {
+	// Set container arguments
+	args := append([]string{
+		"jiva-volume",
+		fmt.Sprintf("--from-version=%s", cfg.fromVersion),
+		fmt.Sprintf("--to-version=%s", cfg.toVersion),
+		"--v=4", // can be taken from flags
+	}, cfg.pvNames...)
+	args = append(args, cfg.additionalArgs...)
+
 	return []corev1.Container{
 		{
 			Name: "upgrade-jiva-go",
-			Args: append([]string{
-				"jiva-volume",
-				fmt.Sprintf("--from-version=%s", cfg.fromVersion),
-				fmt.Sprintf("--to-version=%s", cfg.toVersion),
-				"--v=4", // can be taken from flags
-			}, cfg.pvNames...),
+			Args: args,
 			Env: []corev1.EnvVar{
 				{
 					Name: "OPENEBS_NAMESPACE",
@@ -340,7 +366,7 @@ func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
 // promptToStartAgain returns if the job should be started Again
 func promptToStartAgain() bool {
 	prompt := promptui.Prompt{
-		Label: "Do you want to restart the Job?",
+		Label: "Do you want to restart the Job?(no)",
 	}
 
 	result, err := prompt.Run()
