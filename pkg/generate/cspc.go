@@ -40,8 +40,9 @@ func isPoolTypeValid(raid string) bool {
 
 // Pool calls the generate routine for different cas-types
 func Pool(nodes []string, devs int, raid string) error {
-	c, _ := client.NewK8sClient("")
+	c := client.NewK8sClient()
 	if !isPoolTypeValid(strings.ToLower(raid)) {
+		// TODO: Use the well defined pool constant types from openebs/api when added there
 		return fmt.Errorf("invalid pool type %s", raid)
 	}
 	_, str, err := CSPC(c, nodes, devs, strings.ToLower(raid))
@@ -69,6 +70,7 @@ func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 	if len(nodeList.Items) != len(nodes) {
 		return nil, "", fmt.Errorf("not all worker nodes are available for provisioning a CSPC")
 	}
+	// 2. Fetch BD's from the eligible/valid nodes
 	bds, err := c.GetBDs(nil, "kubernetes.io/hostname in ("+strings.Join(nodes, ",")+")")
 	if err != nil || len(bds.Items) == 0 {
 		return nil, "", fmt.Errorf("no blockdevices found in %s nodes", nodes)
@@ -77,18 +79,18 @@ func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 	if err != nil {
 		return nil, "", fmt.Errorf("(server error) unable to fetch bds from %s nodes", nodes)
 	}
-	// 2. Choose devices at the valid nodes
+	// 3. Choose devices at the valid nodes
 	nodeToBD := make(map[string][]v1alpha1.BlockDevice)
 	for _, bd := range bds.Items {
 		nodeToBD[bd.Labels["kubernetes.io/hostname"]] = append(nodeToBD[bd.Labels["kubernetes.io/hostname"]], bd)
 	}
-	// 3. Select disks
+	// 4. Select disks and create the PoolSpec
 	p, err := makePools(poolType, devs, nodeToBD)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// 4. Write the CSPC object with a dummy name
+	// 5. Write the CSPC object with a dummy name
 	cspc := cstorv1.CStorPoolCluster{
 		TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
 		ObjectMeta: metav1.ObjectMeta{Name: "", Namespace: cstorNS, GenerateName: "cstor"},
@@ -96,20 +98,21 @@ func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 			Pools: *p,
 		},
 	}
-	// 5. Unmarshall it into a string
+	// 6. Unmarshall it into a string
 	y, err := yaml.Marshal(cspc)
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		return nil, "", err
 	}
 	yaml := string(y)
-	// 6. removing status and versionDetails field
+	// 7. removing status and versionDetails field
 	yaml = yaml[:strings.Index(yaml, "status: {}")]
-	// 7. Split the string by the newlines/carriage returns and insert the BD's link
+	// 8. Split the string by the newlines/carriage returns and insert the BD's link
 	yaml = addBDDetailComments(yaml, bds)
 	return &cspc, yaml, nil
 }
 
+// addBDDetailComments adds more information about the blockdevice in a CSPC YAML string
 func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
 	finalYaml := ""
 	for _, l := range strings.Split(yaml, "\n") {
@@ -122,6 +125,8 @@ func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
 	return finalYaml
 }
 
+// getBDComment returns information about a blockdevice, with fixed whitespace
+// to match the identation level
 func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 	for _, bd := range bdList.Items {
 		if bd.Name == name {
@@ -132,6 +137,8 @@ func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 	return ""
 }
 
+// makePools creates a poolSpec based on the poolType, number of devices per
+// pool instance and a collection of blockdevices by nodes
 func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice) (*[]cstorv1.PoolSpec, error) {
 	var spec []cstorv1.PoolSpec
 	if poolType == string(cstorv1.PoolStriped) {
@@ -156,12 +163,30 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		}
 		return &spec, nil
 	} else if poolType == string(cstorv1.PoolMirrored) {
+		if nDevices%2 != 0 {
+			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
+		}
+		for node, bds := range bd {
+			var raid cstorv1.RaidGroup
+			for d := 0; d < nDevices; d++ {
+				raid = cstorv1.RaidGroup{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{
+					{BlockDeviceName: bds[d].Name},
+				}}
+			}
+			spec = append(spec, cstorv1.PoolSpec{
+				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
+				DataRaidGroups: []cstorv1.RaidGroup{raid},
+				PoolConfig: cstorv1.PoolConfig{
+					DataRaidGroupType: string(cstorv1.PoolStriped),
+				},
+			})
+		}
 		// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
 		// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
 	} else if poolType == string(cstorv1.PoolRaidz) {
-		// 2ⁿ⁺¹ devices per RaidGroup
+		// 2ⁿ+1 devices per RaidGroup
 	} else if poolType == string(cstorv1.PoolRaidz2) {
-		// 2ⁿ⁺² devices per RaidGroup
+		// 2ⁿ+2 devices per RaidGroup
 	}
 	return nil, fmt.Errorf("unknown pool-type")
 }

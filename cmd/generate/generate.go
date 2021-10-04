@@ -52,7 +52,8 @@ func NewCmdGenerateStorage() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&nodes, "nodes", "", "",
 		"comma separated set of nodes for pool creation --nodes=node1,node2,node3,node4")
 	cmd.MarkPersistentFlagRequired("nodes")
-	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "--number-of-devices=2")
-	cmd.PersistentFlags().StringVarP(&raidType, "raidtype", "", "stripe", "--raidtype=mirrored")
+	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "number of devices per node")
+	cmd.PersistentFlags().StringVarP(&raidType, "raidtype", "", "stripe",
+		"allowed RAID configuration such as, stripe, mirror, raid, raidz2")
 	return cmd
 }
