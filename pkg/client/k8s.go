@@ -74,10 +74,32 @@ type K8sClient struct {
 	CLIENT CREATION METHODS AND RELATED OPERATIONS
 */
 
-// NewK8sClient creates a new K8sClient
+// NewK8sClient is a wrapper around newK8sClient to handle errors in
+// creating clients implicitilty and simulating namespace as an optional parameter
+// ns: kubernetes namespace
+func NewK8sClient(ns ...string) *K8sClient {
+	// If more than one-namespace is provided as a function param, throw error and exit
+	if len(ns) > 1 {
+		log.Fatal("Only one namespace arg is allowed")
+	}
+
+	namespace := ""
+	if len(ns) == 1 {
+		namespace = ns[0]
+	}
+
+	k, err := newK8sClient(namespace)
+	if err != nil {
+		log.Fatal("error creating kubernetes client: ", err)
+	}
+
+	return k
+}
+
+// newK8sClient creates a new K8sClient
 // TODO: improve K8sClientset instantiation. for example remove the Ns from
 // K8sClient struct
-func NewK8sClient(ns string) (*K8sClient, error) {
+func newK8sClient(ns string) (*K8sClient, error) {
 	// get the appropriate clientsets & set the kubeconfig accordingly
 	// TODO: The kubeconfig should ideally be initialized in the CLI depending on various flags
 	GetOutofClusterKubeConfig()
