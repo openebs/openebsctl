@@ -28,11 +28,11 @@ import (
 	"time"
 
 	"github.com/manifoldco/promptui"
+	core "github.com/openebs/api/v2/pkg/kubernetes/core"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -114,8 +114,6 @@ func InstantiateJivaUpgrade(openebsNs string) {
 		additionalArgs:     addArgs(),
 	}
 
-	jobSpec := GetJivaBatchJob(&cfg)
-
 	// Check if a job is running with underlying PV
 	res, err := checkIfJobIsAlreadyRunning(k, &cfg)
 	// If error or upgrade job is already running return
@@ -123,7 +121,7 @@ func InstantiateJivaUpgrade(openebsNs string) {
 		log.Fatal("An upgrade job is already running with the underlying volume!")
 	}
 
-	k.CreateBatchJob(jobSpec, cfg.namespace)
+	k.CreateBatchJob(BuildJivaBatchJob(&cfg), cfg.namespace)
 }
 
 // GetJivaVolumes returns the Jiva volumes list and current version
@@ -211,30 +209,44 @@ func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
 	return &job, nil
 }
 
-// GetJivaBatchJob returns the Jiva Batch Specifications
-func GetJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
-	jobSpec := &batchV1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cfg.name,
-			Namespace: cfg.namespace,
-		},
-		Spec: batchV1.JobSpec{
-			BackoffLimit: &cfg.backOffLimit,
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					ServiceAccountName: cfg.serviceAccountName,
-					Containers:         getJivaUpgradeContainer(cfg),
-					RestartPolicy:      corev1.RestartPolicyOnFailure,
-				},
-			},
-		},
-	}
-
-	return jobSpec
+// BuildJivaBatchJob returns Job to be build
+func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
+	return NewJob().
+		WithName(cfg.name).
+		WithNamespace(cfg.namespace).
+		WithBackOffLimit(cfg.backOffLimit).
+		WithPodTemplateSpec(
+			func() *core.PodTemplateSpec {
+				return core.NewPodTemplateSpec().
+					WithServiceAccountName(cfg.serviceAccountName).
+					WithContainers(
+						func() *core.Container {
+							return core.NewContainer().
+								WithName("upgrade-jiva-go").
+								WithArgumentsNew(getContainerArguments(cfg)).
+								WithEnvsNew(
+									[]corev1.EnvVar{
+										{
+											Name: "OPENEBS_NAMESPACE",
+											ValueFrom: &corev1.EnvVarSource{
+												FieldRef: &corev1.ObjectFieldSelector{
+													FieldPath: "metadata.namespace",
+												},
+											},
+										},
+									},
+								).
+								WithImage(fmt.Sprintf("openebs/upgrade:%s", cfg.toVersion)).
+								WithImagePullPolicy(corev1.PullIfNotPresent) // Add TTY to openebs/api
+						}(),
+					)
+			}(),
+		).
+		WithRestartPolicy(corev1.RestartPolicyOnFailure). // Add restart policy in openebs/api
+		Job
 }
 
-// getJivaUpgradeContainer returns containers for the jiva-upgrade-job
-func getJivaUpgradeContainer(cfg *jivaUpdateConfig) []corev1.Container {
+func getContainerArguments(cfg *jivaUpdateConfig) []string {
 	// Set container arguments
 	args := append([]string{
 		"jiva-volume",
@@ -243,26 +255,7 @@ func getJivaUpgradeContainer(cfg *jivaUpdateConfig) []corev1.Container {
 		"--v=4", // can be taken from flags
 	}, cfg.pvNames...)
 	args = append(args, cfg.additionalArgs...)
-
-	return []corev1.Container{
-		{
-			Name: "upgrade-jiva-go",
-			Args: args,
-			Env: []corev1.EnvVar{
-				{
-					Name: "OPENEBS_NAMESPACE",
-					ValueFrom: &corev1.EnvVarSource{
-						FieldRef: &corev1.ObjectFieldSelector{
-							FieldPath: "metadata.namespace",
-						},
-					},
-				},
-			},
-			TTY:             true,
-			Image:           fmt.Sprintf("openebs/upgrade:%s", cfg.toVersion),
-			ImagePullPolicy: corev1.PullIfNotPresent,
-		},
-	}
+	return args
 }
 
 func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
@@ -298,7 +291,9 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		if failed > 0 {
 			fmt.Println("Previous job failed. Creating a new Job with name:", cfg.name)
 			// Job found thus delete the job and return false so that further process can be started
-			startDeletionTask(k, cfg)
+			if err := startDeletionTask(k, cfg); err != nil {
+				return true, err
+			}
 		}
 
 		if active > 0 {
@@ -313,7 +308,9 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 			shouldStart := promptToStartAgain()
 			if shouldStart {
 				// Delete previous successful task
-				startDeletionTask(k, cfg)
+				if err := startDeletionTask(k, cfg); err != nil {
+					return true, err
+				}
 			} else {
 				os.Exit(0)
 			}
