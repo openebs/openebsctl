@@ -34,7 +34,7 @@ const (
 // Get manages various implementations of blockdevice listing
 func Get(bds []string, openebsNS string) error {
 	// TODO: Prefer passing the client from outside
-	k, _ := client.NewK8sClient(openebsNS)
+	k := client.NewK8sClient(openebsNS)
 	err := createTreeByNode(k, bds)
 	if err != nil {
 		return err

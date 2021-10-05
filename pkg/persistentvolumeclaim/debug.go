@@ -31,7 +31,7 @@ func Debug(pvcs []string, namespace string, openebsNs string) error {
 		return errors.New("please provide atleast one pvc name to describe")
 	}
 	// Clienset creation
-	k, _ := client.NewK8sClient(openebsNs)
+	k := client.NewK8sClient(openebsNs)
 
 	// 1. Get a list of required PersistentVolumeClaims
 	var pvcList *corev1.PersistentVolumeClaimList
