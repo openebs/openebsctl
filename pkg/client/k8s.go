@@ -24,12 +24,12 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
 	zfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/pkg/errors"
-	"gopkg.in/yaml.v2"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
@@ -820,10 +820,15 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
 	// Needs another approach, since it is throwing a lot of things which is not needed
 	out, err := yaml.Marshal(jobSpec)
 	if err != nil {
-		fmt.Println("e: ", err)
+		fmt.Println("error Marshalling yaml:", err)
 	}
 	s := string(out[:])
 	fmt.Println(s)
+
+	if contnue := util.PromptToStartAgain("Continue?", true); !contnue {
+		fmt.Println("Job not started on user's choice")
+		os.Exit(0)
+	}
 
 	// 2. Create an actual persisted job run
 	fmt.Println("Creating a batch job...")

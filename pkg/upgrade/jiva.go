@@ -27,7 +27,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/manifoldco/promptui"
 	core "github.com/openebs/api/v2/pkg/kubernetes/core"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -305,7 +304,7 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		if succeeded > 0 {
 			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
 			// Provide the option to restart the Job
-			shouldStart := promptToStartAgain()
+			shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
 			if shouldStart {
 				// Delete previous successful task
 				if err := startDeletionTask(k, cfg); err != nil {
@@ -358,24 +357,4 @@ func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
 			return
 		}
 	}
-}
-
-// promptToStartAgain returns if the job should be started Again
-func promptToStartAgain() bool {
-	prompt := promptui.Prompt{
-		Label: "Do you want to restart the Job?(no)",
-	}
-
-	result, err := prompt.Run()
-	if err != nil {
-		fmt.Println("prompt Failed: ", err)
-		return false
-	}
-
-	result = strings.ToLower(result)
-	if result == "yes" || result == "y" {
-		return true
-	}
-
-	return false
 }

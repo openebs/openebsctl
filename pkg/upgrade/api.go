@@ -65,7 +65,7 @@ func (b *Job) WithPodTemplateSpec(pts *corebuilder.PodTemplateSpec) *Job {
 }
 
 // Temporary code until PR into openebs/api is not merged----
-func (b *Job) WithRestartPolicy(policy corev1.RestartPolicy ) *Job {
+func (b *Job) WithRestartPolicy(policy corev1.RestartPolicy) *Job {
 	b.Spec.Template.Spec.RestartPolicy = policy
 	return b
 }
