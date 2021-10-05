@@ -73,9 +73,9 @@ type K8sClient struct {
 	CLIENT CREATION METHODS AND RELATED OPERATIONS
 */
 
-// A wrapper around newK8sClient to handle errors in creating
-// clients implicitilty and simulating namespace as an optional
-// param for better code usability
+// NewK8sClient is a wrapper around newK8sClient to handle errors in
+// creating clients implicitilty and simulating namespace as an optional
+// parameter for better code usability
 // ns: kubernetes namespace
 func NewK8sClient(ns ...string) *K8sClient {
 	// If more than one-namespace is provided as a function param, throw error and exit
