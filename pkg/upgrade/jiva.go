@@ -52,11 +52,7 @@ var CasType, ToVersion, File, ImagePrefix, ImageTag string
 
 // Jiva Data-plane Upgrade Job instantiator
 func InstantiateJivaUpgrade(openebsNs string) {
-	k, err := client.NewK8sClient("")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating k8s client")
-		return
-	}
+	k := client.NewK8sClient()
 
 	fmt.Println(CasType, ToVersion, File, ImagePrefix, ImageTag)
 
