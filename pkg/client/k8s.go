@@ -318,12 +318,18 @@ func (k K8sClient) GetPvByCasType(casTypes []string, labelselector string) (*cor
 
 	for _, vol := range pvs.Items {
 		for _, casType := range casTypes {
-			if CSIProvisioner, ok := util.CasTypeToProvisionerMap[casType]; ok {
+			if CSIProvisioner, ok := util.CasTypeToCSIProvisionerMap[casType]; ok {
 				if vol.Spec.CSI != nil && vol.Spec.CSI.Driver == CSIProvisioner {
 					list = append(list, vol)
 				}
 			}
 		}
+	}
+
+	// No volumes with given cas-type found
+	if len(list) == 0 {
+		casTypesString := strings.Join(casTypes, ",")
+		return nil, fmt.Errorf("couldn't find volumes of cas-type(s) %s", casTypesString)
 	}
 
 	return &corev1.PersistentVolumeList{

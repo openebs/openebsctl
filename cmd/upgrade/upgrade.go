@@ -46,7 +46,7 @@ const (
 	`
 )
 
-// NewCmdClusterInfo to upgrade volumes and interfaces
+// NewCmdVolumeUpgrade to upgrade volumes and interfaces
 func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "upgrade",

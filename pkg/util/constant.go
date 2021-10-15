@@ -125,8 +125,8 @@ var (
 		LocalPVLVMCSIDriver: LVMCasType,
 		ZFSCSIDriver:        ZFSCasType,
 	}
-	// CasTypeToProvisionerMap stores the provisioner of corresponding cas-types
-	CasTypeToProvisionerMap = map[string]string{
+	// CasTypeToCSIProvisionerMap stores the provisioner of corresponding cas-types
+	CasTypeToCSIProvisionerMap = map[string]string{
 		CstorCasType: CStorCSIDriver,
 		JivaCasType:  JivaCSIDriver,
 		// NOTE: In near future this might mean all local-pv volumes

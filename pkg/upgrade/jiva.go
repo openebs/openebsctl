@@ -47,14 +47,9 @@ type jivaUpdateConfig struct {
 	additionalArgs     []string
 }
 
-// The variables that is to be used by the CLI for jiva-upgrade-job
-var CasType, ToVersion, File, ImagePrefix, ImageTag string
-
 // Jiva Data-plane Upgrade Job instantiator
 func InstantiateJivaUpgrade(openebsNs string) {
 	k := client.NewK8sClient()
-
-	fmt.Println(CasType, ToVersion, File, ImagePrefix, ImageTag)
 
 	// If manifest Files is provided, apply the file to create a new upgrade-job
 	if File != "" {
@@ -260,44 +255,43 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 	}
 
 	var runningJob *batchV1.Job
-	runningJobFound := false
-
-	for _, job := range jobs.Items { // JobItems
-		for _, pvName := range cfg.pvNames { // running pvs in control plane
-			if !runningJobFound && !reflect.DeepEqual(job.Spec.Template, corev1.PodTemplateSpec{}) && !reflect.DeepEqual(job.Spec.Template.Spec, corev1.PodSpec{}) && len(job.Spec.Template.Spec.Containers) > 0 {
-				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
-					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
-						if args == pvName {
-							runningJob = &job
-							runningJobFound = true
-							break
+	func() {
+		for _, job := range jobs.Items { // JobItems
+			for _, pvName := range cfg.pvNames { // running pvs in control plane
+				if !reflect.DeepEqual(job.Spec.Template, corev1.PodTemplateSpec{}) && !reflect.DeepEqual(job.Spec.Template.Spec, corev1.PodSpec{}) && len(job.Spec.Template.Spec.Containers) > 0 {
+					for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
+						for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
+							if args == pvName {
+								runningJob = &job
+								return
+							}
 						}
 					}
 				}
 			}
 		}
-	}
+	}()
 
-	if runningJobFound {
-		active := runningJob.Status.Active
-		failed := runningJob.Status.Failed
-		succeeded := runningJob.Status.Succeeded
-
-		if failed > 0 {
-			fmt.Println("Previous job failed. Creating a new Job with name:", cfg.name)
+	// fmt.Println(runningJob)
+	if runningJob != nil {
+		if runningJob.Status.Failed > 0 ||
+			runningJob.Status.Conditions[0].Type == "Failed" && runningJob.Status.Conditions[0].Status == "True" {
+			fmt.Println("Previous job failed.")
+			fmt.Println("Reason: ", getReason(runningJob))
+			fmt.Println("Creating a new Job with name:", cfg.name)
 			// Job found thus delete the job and return false so that further process can be started
 			if err := startDeletionTask(k, cfg); err != nil {
 				return true, err
 			}
 		}
 
-		if active > 0 {
-			fmt.Println("A job is already active with the name ", runningJob.Name, " that is upgrading the PV")
+		if runningJob.Status.Active > 0 {
+			fmt.Println("A job is already active with the name ", runningJob.Name, " that is upgrading the PV.")
 			// TODO:  Check the POD underlying the PV if their is any error inside
 			return true, nil
 		}
 
-		if succeeded > 0 {
+		if runningJob.Status.Succeeded > 0 {
 			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
 			// Provide the option to restart the Job
 			shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
@@ -314,6 +308,14 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 	}
 
 	return false, nil
+}
+
+func getReason(job *batchV1.Job) string {
+	reason := job.Status.Conditions[0].Reason
+	if len(reason) == 0 {
+		return "Reason Not Found, check by inspecting jobs"
+	}
+	return reason
 }
 
 // startDeletionTask instantiates a deletion process
