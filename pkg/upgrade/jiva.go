@@ -23,7 +23,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -45,6 +44,11 @@ type jivaUpdateConfig struct {
 	serviceAccountName string
 	logLevel           int32
 	additionalArgs     []string
+}
+
+type jobInfo struct {
+	name      string
+	namespace string
 }
 
 // Jiva Data-plane Upgrade Job instantiator
@@ -202,7 +206,8 @@ func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
 // BuildJivaBatchJob returns Job to be build
 func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 	return NewJob().
-		WithName(cfg.name).
+		WithGeneratedName("jiva-upgrade").
+		WithLabel(map[string]string{"name": "jiva-upgrade", "cas-type": "jiva"}). // sets labels for job discovery
 		WithNamespace(cfg.namespace).
 		WithBackOffLimit(cfg.backOffLimit).
 		WithPodTemplateSpec(
@@ -254,17 +259,17 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		return false, err
 	}
 
+	// runningJob holds the information about the jobs that are in use by the PV
+	// that has an upgrade-job progress(any status) already going
 	var runningJob *batchV1.Job
 	func() {
 		for _, job := range jobs.Items { // JobItems
 			for _, pvName := range cfg.pvNames { // running pvs in control plane
-				if !reflect.DeepEqual(job.Spec.Template, corev1.PodTemplateSpec{}) && !reflect.DeepEqual(job.Spec.Template.Spec, corev1.PodSpec{}) && len(job.Spec.Template.Spec.Containers) > 0 {
-					for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
-						for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
-							if args == pvName {
-								runningJob = &job
-								return
-							}
+				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
+					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
+						if args == pvName {
+							runningJob = &job
+							return
 						}
 					}
 				}
@@ -272,15 +277,17 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 		}
 	}()
 
-	// fmt.Println(runningJob)
 	if runningJob != nil {
+		jobCondition := runningJob.Status.Conditions
+		info := jobInfo{name: runningJob.Name, namespace: runningJob.Namespace}
 		if runningJob.Status.Failed > 0 ||
-			runningJob.Status.Conditions[0].Type == "Failed" && runningJob.Status.Conditions[0].Status == "True" {
+			len(jobCondition) > 0 && jobCondition[0].Type == "Failed" && jobCondition[0].Status == "True" {
 			fmt.Println("Previous job failed.")
 			fmt.Println("Reason: ", getReason(runningJob))
 			fmt.Println("Creating a new Job with name:", cfg.name)
 			// Job found thus delete the job and return false so that further process can be started
-			if err := startDeletionTask(k, cfg); err != nil {
+			if err := startDeletionTask(k, &info); err != nil {
+				fmt.Println("error deleting job:", err)
 				return true, err
 			}
 		}
@@ -297,7 +304,7 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 			shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
 			if shouldStart {
 				// Delete previous successful task
-				if err := startDeletionTask(k, cfg); err != nil {
+				if err := startDeletionTask(k, &info); err != nil {
 					return true, err
 				}
 			} else {
@@ -319,17 +326,17 @@ func getReason(job *batchV1.Job) string {
 }
 
 // startDeletionTask instantiates a deletion process
-func startDeletionTask(k *client.K8sClient, cfg *jivaUpdateConfig) error {
-	err := k.DeleteBatchJob(cfg.name, cfg.namespace)
+func startDeletionTask(k *client.K8sClient, info *jobInfo) error {
+	err := k.DeleteBatchJob(info.name, info.namespace)
 	if err != nil {
 		return err
 	}
-	confirmDeletion(k, cfg)
+	confirmDeletion(k, info)
 	return nil
 }
 
 // confirmDeletion runs until the job is successfully done or reached threshhold duration
-func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
+func confirmDeletion(k *client.K8sClient, info *jobInfo) {
 	// create interval to call function periodically
 	interval := time.NewTicker(time.Second * 2)
 
@@ -345,7 +352,7 @@ func confirmDeletion(k *client.K8sClient, cfg *jivaUpdateConfig) {
 	for {
 		select {
 		case <-interval.C:
-			_, err := k.GetBatchJob(cfg.name, cfg.namespace)
+			_, err := k.GetBatchJob(info.name, info.namespace)
 			// Job is deleted successfully
 			if err != nil {
 				return

@@ -17,6 +17,8 @@ limitations under the License.
 package upgrade
 
 import (
+	"fmt"
+
 	corebuilder "github.com/openebs/api/v2/pkg/kubernetes/core"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +38,18 @@ func NewJob() *Job {
 // WithName sets the name of the field of Job
 func (b *Job) WithName(name string) *Job {
 	b.Name = name
+	return b
+}
+
+// WithGeneratedName Creates a job with auto-generated name
+func (b *Job) WithGeneratedName(name string) *Job {
+	b.GenerateName = fmt.Sprintf("%s-", name)
+	return b
+}
+
+// WithLabel sets label for the job
+func (b *Job) WithLabel(label map[string]string) *Job {
+	b.Labels = label
 	return b
 }
 
