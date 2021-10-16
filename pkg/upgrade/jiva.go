@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -35,7 +34,6 @@ import (
 )
 
 type jivaUpdateConfig struct {
-	name               string
 	fromVersion        string
 	toVersion          string
 	namespace          string
@@ -95,9 +93,7 @@ func InstantiateJivaUpgrade(openebsNs string) {
 	}
 
 	// create configuration
-	name := fmt.Sprintf("jiva-upgrade-job-%v", rand.Intn(100)) // TODO: Seed random Numbers
 	cfg := jivaUpdateConfig{
-		name:               name,
 		fromVersion:        fromVersion,
 		toVersion:          ToVersion,
 		namespace:          openebsNs,
@@ -284,7 +280,7 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 			len(jobCondition) > 0 && jobCondition[0].Type == "Failed" && jobCondition[0].Status == "True" {
 			fmt.Println("Previous job failed.")
 			fmt.Println("Reason: ", getReason(runningJob))
-			fmt.Println("Creating a new Job with name:", cfg.name)
+			fmt.Println("Creating a new Job with name:", info.name)
 			// Job found thus delete the job and return false so that further process can be started
 			if err := startDeletionTask(k, &info); err != nil {
 				fmt.Println("error deleting job:", err)
