@@ -1,0 +1,14 @@
+tasks:
+  - init: go mod vendor
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    pullRequestsFromForks: true
+    addCheck: true
+
+vscode:
+  extensions:
+    - golang.go
+    - ms-azuretools.vscode-docker
