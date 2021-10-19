@@ -461,9 +461,13 @@ func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
 	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
 }
 
-// Delete a Batch Job by name
-func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
-	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+// GetBatchJob returns batch-job by name
+func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, error) {
+	job, err := k.K8sCS.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return job, nil
 }
 
 // GetBatchJobs returns all the batch jobs running in all-namespaces
@@ -476,11 +480,7 @@ func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
 	return list, nil
 }
 
-// GetBatchJob returns batch-job by name
-func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, error) {
-	job, err := k.K8sCS.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return job, nil
+// Delete a Batch Job by name
+func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
+	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
