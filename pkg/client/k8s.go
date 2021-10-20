@@ -24,9 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/storage/v1"
+	"github.com/ghodss/yaml"
 
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -35,6 +33,10 @@ import (
 
 	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
 
+	appsv1 "k8s.io/api/apps/v1"
+	batchV1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -342,6 +344,43 @@ func (k K8sClient) GetPVs(volNames []string, labelselector string) (*corev1.Pers
 	}, nil
 }
 
+// GetPvByCasType returns a list of PersistentVolumes based on cas-type slice
+// casTypes slice if is nil or empty, it returns all the PVs in the cluster.
+// casTypes slice if is not nil or not empty, it return the PVs with cas-types present in the slice.
+// labelselector takes the label(key+value) and makes an api call with this filter applied. Can be empty string if label filtering is not needed.
+func (k K8sClient) GetPvByCasType(casTypes []string, labelselector string) (*corev1.PersistentVolumeList, error) {
+	pvs, err := k.K8sCS.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{LabelSelector: labelselector})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(casTypes) == 0 {
+		return pvs, nil
+	}
+
+	var list []corev1.PersistentVolume
+
+	for _, vol := range pvs.Items {
+		for _, casType := range casTypes {
+			if CSIProvisioner, ok := util.CasTypeToCSIProvisionerMap[casType]; ok {
+				if vol.Spec.CSI != nil && vol.Spec.CSI.Driver == CSIProvisioner {
+					list = append(list, vol)
+				}
+			}
+		}
+	}
+
+	// No volumes with given cas-type found
+	if len(list) == 0 {
+		casTypesString := strings.Join(casTypes, ",")
+		return nil, fmt.Errorf("couldn't find volumes of cas-type(s) %s", casTypesString)
+	}
+
+	return &corev1.PersistentVolumeList{
+		Items: list,
+	}, nil
+}
+
 // GetPVC returns a PersistentVolumeClaim object using the pvc name passed.
 func (k K8sClient) GetPVC(name string, namespace string) (*corev1.PersistentVolumeClaim, error) {
 	pvc, err := k.K8sCS.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), name, metav1.GetOptions{})
@@ -377,4 +416,71 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string, labelselector st
 	return &corev1.PersistentVolumeClaimList{
 		Items: items,
 	}, nil
+}
+
+/*
+   UPGRADE SPECIFIC METHODS
+*/
+
+// Create Batch Job From a JobSpec Object
+func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
+	jobs := k.K8sCS.BatchV1().Jobs(namespace)
+
+	// 1. Do a dry-run to check if the process can went without problems
+	fmt.Println("Creating Dry-run job...")
+	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{DryRun: []string{"All"}})
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Dry-run failed: ", err)
+		fmt.Println()
+		return
+	}
+
+	// The trial code to show Job before starting
+	// Needs another approach, since it is throwing a lot of things which is not needed
+	out, err := yaml.Marshal(jobSpec)
+	if err != nil {
+		fmt.Println("error Marshalling yaml:", err)
+	}
+	s := string(out[:])
+	fmt.Println(s)
+
+	if contnue := util.PromptToStartAgain("Continue?", true); !contnue {
+		fmt.Println("Job not started on user's choice")
+		os.Exit(0)
+	}
+
+	// 2. Create an actual persisted job run
+	fmt.Println("Creating a batch job...")
+	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+
+	if err != nil {
+		fmt.Fprint(os.Stderr, "Job creation failed: ", err)
+		return
+	}
+
+	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
+}
+
+// GetBatchJob returns batch-job by name
+func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, error) {
+	job, err := k.K8sCS.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return job, nil
+}
+
+// GetBatchJobs returns all the batch jobs running in all-namespaces
+func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
+	list, err := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+// Delete a Batch Job by name
+func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
+	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }

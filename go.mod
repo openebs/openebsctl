@@ -4,6 +4,8 @@ go 1.16
 
 require (
 	github.com/docker/go-units v0.4.0
+	github.com/ghodss/yaml v1.0.0
+	github.com/manifoldco/promptui v0.8.0
 	github.com/openebs/api/v2 v2.3.0
 	github.com/openebs/jiva-operator v1.12.2-0.20210607114402-811a3af7c34a
 	github.com/openebs/lvm-localpv v0.6.0
@@ -13,6 +15,7 @@ require (
 	github.com/spf13/viper v1.7.0
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.20.0

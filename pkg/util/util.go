@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/docker/go-units"
+	"github.com/manifoldco/promptui"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
@@ -179,4 +180,29 @@ func ColorStringOnStatus(stringToColor string) string {
 	} else {
 		return ColorText(stringToColor, Red)
 	}
+}
+
+// PromptToStartAgain opens prompt and waits for the user for response
+func PromptToStartAgain(label string, defaultOption bool) bool {
+	prompt := promptui.Prompt{
+		Label: label,
+	}
+
+	result, err := prompt.Run()
+	if err != nil {
+		fmt.Println("prompt Failed: ", err)
+		return false
+	}
+
+	result = strings.ToLower(result)
+
+	if len(result) == 0 {
+		return defaultOption
+	}
+
+	if result == "yes" || result == "y" {
+		return true
+	}
+
+	return false
 }

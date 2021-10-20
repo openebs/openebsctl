@@ -20,6 +20,7 @@ import (
 	"flag"
 
 	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
+	"github.com/openebs/openebsctl/cmd/upgrade"
 	"github.com/openebs/openebsctl/pkg/util"
 
 	"github.com/spf13/cobra"
@@ -42,6 +43,7 @@ Available Commands:
   help          Help about any command
   version       Shows openebs kubectl plugin's version
   cluster-info  Show component version, status and running components for each installed engine
+  upgrade       Upgrade CSI Interfaces and Volumes
 
 Flags:
   -h, --help                           help for openebs
@@ -65,7 +67,7 @@ func NewOpenebsCommand() *cobra.Command {
 	var openebsNs string
 	cmd := &cobra.Command{
 		Use:       "openebs",
-		ValidArgs: []string{"get", "describe", "completion"},
+		ValidArgs: []string{"get", "describe", "completion", "upgrade"},
 		Short:     "openebs is a a kubectl plugin for interacting with OpenEBS storage components",
 		Long: `openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
 Find out more about OpenEBS on https://openebs.io/`,
@@ -80,6 +82,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
 		cluster_info.NewCmdClusterInfo(cmd),
+		upgrade.NewCmdVolumeUpgrade(cmd),
 	)
 	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
 	cmd.PersistentFlags().StringVarP(&util.Kubeconfig, "kubeconfig", "c", "", "path to config file")
