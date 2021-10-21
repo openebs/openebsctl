@@ -34,11 +34,12 @@ BOUND VOLUME       : {{.BoundVolume}}
 STORAGE CLASS      : {{.StorageClassName}}
 SIZE               : {{.Size}}
 PVC STATUS         : {{.PVCStatus}}
+MOUNTED BY         : {{.MountPods}}
 `
 )
 
 // DescribeLVMVolumeClaim describes a LVM storage engine PersistentVolumeClaim
-func DescribeLVMVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
+func DescribeLVMVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, mountPods string) error {
 	// 1. Fill in the PVC information
 	lvmPVCinfo := util.LVMPVCInfo{
 		Name:             pvc.Name,
@@ -48,6 +49,7 @@ func DescribeLVMVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCla
 		StorageClassName: *pvc.Spec.StorageClassName,
 		Size:             pvc.Spec.Resources.Requests.Storage().String(),
 		PVCStatus:        pvc.Status.Phase,
+		MountPods:        mountPods,
 	}
 
 	// 2. If PV is present Describe the LVM Volume

@@ -258,6 +258,15 @@ func (k K8sClient) GetPods(labelSelector string, fieldSelector string, namespace
 	return pods, nil
 }
 
+// GetAllPods returns all corev1 Pods
+func (k K8sClient) GetAllPods(namespace string) (*corev1.PodList, error) {
+	pods, err := k.K8sCS.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("error getting pods : %v", err)
+	}
+	return pods, nil
+}
+
 // GetDeploymentList returns the deployment-list with a specific
 // label selector query
 func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
