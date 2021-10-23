@@ -17,8 +17,13 @@ limitations under the License.
 package upgrade
 
 import (
+	"fmt"
+	"os"
+
+	"github.com/openebs/openebsctl/pkg/upgrade"
 	"github.com/openebs/openebsctl/pkg/upgrade/status"
-	"github.com/spf13/cobra"	
+	"github.com/openebs/openebsctl/pkg/util"
+	"github.com/spf13/cobra"
 )
 
 func NewCmdUpgradeStatus() *cobra.Command {
@@ -27,10 +32,13 @@ func NewCmdUpgradeStatus() *cobra.Command {
 		Aliases: []string{"Status"},
 		Short:   "Display Upgrade-status for a running upgrade-job",
 		Run: func(cmd *cobra.Command, args []string) {
+			if upgrade.CasType != util.JivaCasType {
+				fmt.Println("Only jiva upgrade-status are supported!")
+				os.Exit(1)
+			}
 			status.GetJobStatus()
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&status.WaitFlag, "wait", false, "Wait for the logs stream")
-
 	return cmd
 }
