@@ -13,8 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package upgrade
 
-// The variables that is to be used by the CLI for volume-upgrade-jobs
-var CasType, ToVersion, File, ImagePrefix, ImageTag, OpenebsNs string
+import (
+	"github.com/openebs/openebsctl/pkg/upgrade/status"
+	"github.com/spf13/cobra"	
+)
 
+func NewCmdUpgradeStatus() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "status",
+		Aliases: []string{"Status"},
+		Short:   "Display Upgrade-status for a running upgrade-job",
+		Run: func(cmd *cobra.Command, args []string) {
+			status.GetJobStatus()
+		},
+	}
+	cmd.PersistentFlags().BoolVar(&status.WaitFlag, "wait", false, "Wait for the logs stream")
+
+	return cmd
+}

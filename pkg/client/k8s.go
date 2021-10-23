@@ -17,12 +17,15 @@ limitations under the License.
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ghodss/yaml"
 
@@ -470,9 +473,9 @@ func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, err
 	return job, nil
 }
 
-// GetBatchJobs returns all the batch jobs running in all-namespaces
-func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
-	list, err := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
+// GetBatchJobs returns batch jobs running in the namespacec with the label
+func (k K8sClient) GetBatchJobs(namespace string, labelSelector string) (*batchV1.JobList, error) {
+	list, err := k.K8sCS.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		return nil, err
 	}
@@ -483,4 +486,61 @@ func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
 // Delete a Batch Job by name
 func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
 	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+}
+
+// GetPodLogs returns logs from the containers running in the pod
+func (k K8sClient) GetPodLogs(pod corev1.Pod, ns string) string {
+	podLogOPts := corev1.PodLogOptions{}
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
+	podLogs, err := req.Stream(context.TODO())
+	if err != nil {
+		log.Fatal("err getting logs", err)
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		log.Fatal("err converting log buffer", err)
+	}
+
+	return buf.String()
+}
+
+// StartPodLogsStream starts stream of logs for the given pod
+func (k K8sClient) StartPodLogsStream(pod corev1.Pod, ns string) {
+	podLogOPts := corev1.PodLogOptions{}
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
+	stream, err := req.Stream(context.TODO())
+	if err != nil {
+		log.Fatal("err getting logs", err)
+	}
+	defer stream.Close()
+
+	fmt.Println("Waiting for the Pod Logs...")
+
+	for {
+		buf := make([]byte, 2000)
+		numBytes, err := stream.Read(buf)
+
+		// No newer logs
+		if numBytes == 0 {
+			// sleeping for 2 seconds to save CPU power of host running infinite loop
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		// Logs stream ended
+		if err == io.EOF {
+			break
+		}
+
+		// Err fetching logs
+		if err != nil {
+			log.Fatal("stopping pod logs stream, err:", err)
+		}
+
+		message := string(buf[:numBytes])
+		fmt.Print(message)
+	}
 }
