@@ -494,7 +494,7 @@ func (k K8sClient) GetPodLogs(pod corev1.Pod, ns string) string {
 	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
 	podLogs, err := req.Stream(context.TODO())
 	if err != nil {
-		log.Fatal("err getting logs", err)
+		log.Fatal("err getting logs ", err)
 	}
 	defer podLogs.Close()
 
@@ -513,7 +513,7 @@ func (k K8sClient) StartPodLogsStream(pod corev1.Pod, ns string) {
 	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
 	stream, err := req.Stream(context.TODO())
 	if err != nil {
-		log.Fatal("err getting logs", err)
+		log.Fatal("err getting logs ", err)
 	}
 	defer stream.Close()
 
