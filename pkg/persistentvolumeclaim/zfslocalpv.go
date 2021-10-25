@@ -34,11 +34,12 @@ BOUND VOLUME       : {{.BoundVolume}}
 STORAGE CLASS      : {{.StorageClassName}}
 SIZE               : {{.Size}}
 PVC STATUS         : {{.PVCStatus}}
+MOUNTED BY         : {{.MountPods}}
 `
 )
 
 // DescribeZFSVolumeClaim describes a ZFS storage engine PersistentVolumeClaim
-func DescribeZFSVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
+func DescribeZFSVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, mountPods string) error {
 	zfsPVCinfo := util.ZFSPVCInfo{
 		Name:             pvc.Name,
 		Namespace:        pvc.Namespace,
@@ -47,6 +48,7 @@ func DescribeZFSVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCla
 		StorageClassName: *pvc.Spec.StorageClassName,
 		Size:             pvc.Spec.Resources.Requests.Storage().String(),
 		PVCStatus:        pvc.Status.Phase,
+		MountPods:        mountPods,
 	}
 
 	if pv != nil {

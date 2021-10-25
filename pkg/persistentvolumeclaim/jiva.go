@@ -44,11 +44,12 @@ STORAGE CLASS      : {{.StorageClassName}}
 SIZE               : {{.Size}}
 JV STATUS          : {{.JVStatus}}
 PV STATUS          : {{.PVStatus}}
+MOUNTED BY         : {{.MountPods}}
 `
 )
 
 // DescribeJivaVolumeClaim describes a jiva storage engine PersistentVolumeClaim
-func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, vol *corev1.PersistentVolume) error {
+func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, vol *corev1.PersistentVolume, mountPods string) error {
 	// 1. Get the JivaVolume Corresponding to the pvc name
 	jv, err := c.GetJV(pvc.Spec.VolumeName)
 	if err != nil {
@@ -63,6 +64,7 @@ func DescribeJivaVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeCl
 		BoundVolume:      pvc.Spec.VolumeName,
 		StorageClassName: *pvc.Spec.StorageClassName,
 		Size:             pvc.Spec.Resources.Requests.Storage().String(),
+		MountPods:        mountPods,
 	}
 	if jv != nil {
 		jivaPvcInfo.AttachedToNode = jv.Labels["nodeID"]

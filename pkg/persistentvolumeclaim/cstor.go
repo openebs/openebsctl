@@ -43,6 +43,7 @@ SIZE             : {{.Size}}
 USED             : {{.Used}}
 CV STATUS	 : {{.CVStatus}}
 PV STATUS        : {{.PVStatus}}
+MOUNTED BY       : {{.MountPods}}
 `
 
 	detailsFromCVC = `
@@ -57,7 +58,7 @@ UPGRADING     : {{if eq .versionDetails.status.current .versionDetails.desired}}
 )
 
 // DescribeCstorVolumeClaim describes a cstor storage engine PersistentVolumeClaim
-func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
+func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, mountPods string) error {
 	// Create Empty template objects and fill gradually when underlying sub CRs are identified.
 	pvcInfo := util.CstorPVCInfo{}
 
@@ -66,6 +67,7 @@ func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeC
 	pvcInfo.BoundVolume = pvc.Spec.VolumeName
 	pvcInfo.CasType = util.CstorCasType
 	pvcInfo.StorageClassName = *pvc.Spec.StorageClassName
+	pvcInfo.MountPods = mountPods
 
 	if pv != nil {
 		pvcInfo.PVStatus = pv.Status.Phase

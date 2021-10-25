@@ -133,6 +133,7 @@ type CstorPVCInfo struct {
 	Used             string
 	CVStatus         v1.CStorVolumePhase
 	PVStatus         corev1.PersistentVolumePhase
+	MountPods        string
 }
 
 // JivaPVCInfo struct will have all the details we want to give in the output for describe pvc
@@ -148,6 +149,7 @@ type JivaPVCInfo struct {
 	Size             string
 	JVStatus         string
 	PVStatus         corev1.PersistentVolumePhase
+	MountPods        string
 }
 
 // LVMPVCInfo struct will have all the details we want to give in the output for describe pvc
@@ -160,6 +162,7 @@ type LVMPVCInfo struct {
 	StorageClassName string
 	Size             string
 	PVCStatus        corev1.PersistentVolumeClaimPhase
+	MountPods        string
 }
 
 // ZFSPVCInfo struct will have all the details we want to give in the output for describe pvc
@@ -172,6 +175,7 @@ type ZFSPVCInfo struct {
 	StorageClassName string
 	Size             string
 	PVCStatus        corev1.PersistentVolumeClaimPhase
+	MountPods        string
 }
 
 // PVCInfo struct will have all the details we want to give in the output for describe pvc
@@ -184,6 +188,7 @@ type PVCInfo struct {
 	StorageClassName string
 	Size             string
 	PVStatus         corev1.PersistentVolumePhase
+	MountPods        string
 }
 
 // PoolInfo struct will have all the details we want to give in the output for describe pool
