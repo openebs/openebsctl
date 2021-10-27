@@ -85,7 +85,7 @@ func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 		nodeToBD[bd.Labels["kubernetes.io/hostname"]] = append(nodeToBD[bd.Labels["kubernetes.io/hostname"]], bd)
 	}
 	// 4. Select disks and create the PoolSpec
-	p, err := makePools(poolType, devs, nodeToBD)
+	p, err := makePools(poolType, devs, nodeToBD, nodes)
 	if err != nil {
 		return nil, "", err
 	}
@@ -118,7 +118,7 @@ func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
 	for _, l := range strings.Split(yaml, "\n") {
 		if strings.Contains(l, "- blockDeviceName:") {
 			name := strings.Trim(strings.Split(l, ":")[1], " ")
-			finalYaml = finalYaml + getBDComment(name, bdList) + "GB\n"
+			finalYaml = finalYaml + getBDComment(name, bdList) + "\n"
 		}
 		finalYaml = finalYaml + l + "\n"
 	}
@@ -130,8 +130,7 @@ func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
 func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 	for _, bd := range bdList.Items {
 		if bd.Name == name {
-			return "      # " + bd.Spec.Path + "  " +
-				strconv.FormatUint(bd.Spec.Capacity.Storage/(1024*1024*1024), 10)
+			return "      # " + bd.Spec.Path + "  " + util.ConvertToIBytes(strconv.FormatUint(bd.Spec.Capacity.Storage, 10))
 		}
 	}
 	return ""
@@ -139,19 +138,19 @@ func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 
 // makePools creates a poolSpec based on the poolType, number of devices per
 // pool instance and a collection of blockdevices by nodes
-func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice) (*[]cstorv1.PoolSpec, error) {
+func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice, nodes []string) (*[]cstorv1.PoolSpec, error) {
 	var spec []cstorv1.PoolSpec
 	if poolType == string(cstorv1.PoolStriped) {
 		// always a single RAID-group with nDevices patched together, cannot disk replace,
 		// no redundancy in a pool, redundancy possible across pool instances
 
 		// for each eligible set of BDs from each eligible node, take nDevices number of BDs
-		for node, bds := range bd {
+		for _, node := range nodes {
+			bds := bd[node]
 			var raid cstorv1.RaidGroup
 			for d := 0; d < nDevices; d++ {
-				raid = cstorv1.RaidGroup{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{
-					{BlockDeviceName: bds[d].Name},
-				}}
+				raid = cstorv1.RaidGroup{
+					CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: bds[d].Name}}}
 			}
 			spec = append(spec, cstorv1.PoolSpec{
 				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
@@ -185,8 +184,10 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
 		// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
 	} else if poolType == string(cstorv1.PoolRaidz) {
+		return nil, fmt.Errorf("%s is not supported yet", poolType)
 		// 2ⁿ+1 devices per RaidGroup
 	} else if poolType == string(cstorv1.PoolRaidz2) {
+		return nil, fmt.Errorf("%s is not supported yet", poolType)
 		// 2ⁿ+2 devices per RaidGroup
 	}
 	return nil, fmt.Errorf("unknown pool-type")
