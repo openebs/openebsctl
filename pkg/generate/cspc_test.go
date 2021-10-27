@@ -23,8 +23,11 @@ import (
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	cstorfake "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
 )
+
+
 
 func TestCSPC(t *testing.T) {
 	type args struct {
@@ -49,24 +52,62 @@ func TestCSPC(t *testing.T) {
 			"", true,
 		},
 		{
-			"stripe kind CSPC with one block-device",
+			"cstor present, no suggested nodes present",
 			args{
-				c:     &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(), OpenebsCS: cstorfake.NewSimpleClientset()},
-				nodes: []string{"node1"}, devs: 1, poolType: ""}, &cstorv1.CStorPoolCluster{},
-			"", false,
+				c:     &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod), OpenebsCS: cstorfake.NewSimpleClientset()},
+				nodes: []string{"node1"}, devs: 1, poolType: ""}, nil,
+			"", true,
 		},
 		{
-			"stripe kind CSPC with two block-device on different nodes",
+			"cstor present, suggested nodes present, blockdevices absent",
 			args{
-				c:     &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(), OpenebsCS: cstorfake.NewSimpleClientset()},
-				nodes: []string{"node1"}, devs: 1, poolType: ""}, &cstorv1.CStorPoolCluster{},
-			"", false,
+				c:     &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1), OpenebsCS: cstorfake.NewSimpleClientset()},
+				nodes: []string{"node1"}, devs: 1, poolType: ""}, nil,
+			"", true,
+		},
+		{
+			"cstor present, suggested nodes present, blockdevices present but incompatible",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1),
+					OpenebsCS: cstorfake.NewSimpleClientset(&activeBDwEXT4, &inactiveBDwEXT4)},
+				nodes: []string{"node1"}, devs: 1, poolType: ""}, nil,
+			"", true,
+		},
+		{
+			"cstor present, suggested nodes present, blockdevices present and compatible",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1),
+					OpenebsCS: cstorfake.NewSimpleClientset(&activeUnclaimedUnforattedBD)},
+				nodes: []string{"node1"}, devs: 1, poolType: "stripe"}, &cspc1Struct, cspc1, false,
+		},
+		{
+			"all good config, CSTOR_NAMESPACE is correctly identified each time",
+			args{
+				c: &client.K8sClient{Ns: "randomNamespaceWillGetReplaced", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1),
+					OpenebsCS: cstorfake.NewSimpleClientset(&activeUnclaimedUnforattedBD)},
+				nodes: []string{"node1"}, devs: 1, poolType: "stripe"}, &cspc1Struct, cspc1, false,
+		},
+		{
+			"good config, no BDs",
+			args{
+				c: &client.K8sClient{Ns: "randomNamespaceWillGetReplaced", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1),
+					OpenebsCS: cstorfake.NewSimpleClientset(&inactiveBDwEXT4)},
+				nodes: []string{"node1"}, devs: 5, poolType: "stripe"}, nil, "", true,
+		},
+		{
+			"all good mirror pool gets provisioned, 2 nodes of same size on 3 nodes",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2, &node3),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD2N1, &goodBD1N2, &goodBD2N2, &goodBD1N3, &goodBD2N3)},
+				nodes: []string{"node1", "node2", "node3"}, devs: 2, poolType: "mirror"}, &mirrorCSPC, mirrorCSPCstr, false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// tt.args.GB,
 			got, got1, err := CSPC(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
+			assert.YAMLEq(t, tt.str, got1, "stringified YAML is not the same as expected")
+			assert.Equal(t, got, tt.want, "struct is not same")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CSPC() error = %v, wantErr %v", err, tt.wantErr)
 				return

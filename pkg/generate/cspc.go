@@ -167,20 +167,21 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
 		}
 		for node, bds := range bd {
-			var raid cstorv1.RaidGroup
+			var raids []cstorv1.CStorPoolInstanceBlockDevice
+			// add all BDs to a CSPCs CSPI spec
 			for d := 0; d < nDevices; d++ {
-				raid = cstorv1.RaidGroup{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{
-					{BlockDeviceName: bds[d].Name},
-				}}
+				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
+			// add the CSPI BD spec inside CSPC to a PoolSpec
 			spec = append(spec, cstorv1.PoolSpec{
 				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
-				DataRaidGroups: []cstorv1.RaidGroup{raid},
+				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
-					DataRaidGroupType: string(cstorv1.PoolStriped),
+					DataRaidGroupType: string(cstorv1.PoolMirrored),
 				},
 			})
 		}
+		return &spec, nil
 		// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
 		// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
 	} else if poolType == string(cstorv1.PoolRaidz) {
