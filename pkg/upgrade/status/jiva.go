@@ -64,7 +64,7 @@ func getPodLogs(k *client.K8sClient, name string, namespace string) {
 	// get pods created by the job
 	podList, err := k.GetPods(fmt.Sprintf("job-name=%s", name), "", namespace)
 	if err != nil {
-		printColoredText(fmt.Sprintf("error getting pods of job %s, err: %s", name, err), util.Orange)
+		printColoredText(fmt.Sprintf("error getting pods of job %s, err: %s", name, err), util.Red)
 		return
 	}
 
@@ -93,7 +93,7 @@ func startLogStream(k *client.K8sClient, jobList *batchV1.JobList) {
 	// get pods created by the job
 	podList, err := k.GetPods(fmt.Sprintf("job-name=%s", jobName), "", upgrade.OpenebsNs)
 	if err != nil {
-		printColoredText(fmt.Sprintf("error getting pods of job %s, err: %s", jobName, err), util.Orange)
+		printColoredText(fmt.Sprintf("error getting pods of job %s, err: %s", jobName, err), util.Red)
 		return
 	}
 
