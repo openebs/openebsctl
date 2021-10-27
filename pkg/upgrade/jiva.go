@@ -83,10 +83,6 @@ func InstantiateJivaUpgrade() {
 			return
 		}
 
-		//  GetJobStatus()
-		// fmt.Println(k.GetPodLogs(pods.Items[0], openebsNs))
-		// k.StartPodLogsStream(pods.Items[0], openebsNs)
-
 		ToVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 

@@ -48,8 +48,10 @@ type Color int
 
 // Defines basic ANSI colors.
 const (
-	Red   Color = iota + 31 // 31
-	Green                   // 32
+	Red    Color = iota + 31 // 31
+	Green                    // 32
+	Orange                   // 33
+	Blue                     // 34
 )
 
 // ColorText returns an ASCII colored string based on given color.

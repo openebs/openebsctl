@@ -473,7 +473,7 @@ func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, err
 	return job, nil
 }
 
-// GetBatchJobs returns batch jobs running in the namespacec with the label
+// GetBatchJobs returns batch jobs running in the namespace with the label
 func (k K8sClient) GetBatchJobs(namespace string, labelSelector string) (*batchV1.JobList, error) {
 	list, err := k.K8sCS.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
@@ -489,9 +489,8 @@ func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
 }
 
 // GetPodLogs returns logs from the containers running in the pod
-func (k K8sClient) GetPodLogs(pod corev1.Pod, ns string) string {
-	podLogOPts := corev1.PodLogOptions{}
-	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
+func (k K8sClient) GetPodLogs(podName string, ns string) string {
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
 	podLogs, err := req.Stream(context.TODO())
 	if err != nil {
 		log.Fatal("err getting logs ", err)
@@ -508,9 +507,8 @@ func (k K8sClient) GetPodLogs(pod corev1.Pod, ns string) string {
 }
 
 // StartPodLogsStream starts stream of logs for the given pod
-func (k K8sClient) StartPodLogsStream(pod corev1.Pod, ns string) {
-	podLogOPts := corev1.PodLogOptions{}
-	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(pod.Name, &podLogOPts)
+func (k K8sClient) StartPodLogsStream(podName string, ns string) {
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
 	stream, err := req.Stream(context.TODO())
 	if err != nil {
 		log.Fatal("err getting logs ", err)
@@ -541,6 +539,6 @@ func (k K8sClient) StartPodLogsStream(pod corev1.Pod, ns string) {
 		}
 
 		message := string(buf[:numBytes])
-		fmt.Print(message)
+		fmt.Print(util.ColorText(message, util.Blue))
 	}
 }

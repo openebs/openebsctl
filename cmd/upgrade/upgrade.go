@@ -68,7 +68,7 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&upgrade.OpenebsNs, "openebs-namespace", "", "", "provide openebs-namespace")
 	cmd.PersistentFlags().StringVarP(&upgrade.CasType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.PersistentFlags().StringVarP(&upgrade.ToVersion, "to-version", "", "", "the version to which the resources need to be upgraded")
-	cmd.PersistentFlags().StringVarP(&upgrade.File, "file", "f", "", "provide path/url to the menifest file")
+	cmd.PersistentFlags().StringVarP(&upgrade.File, "file", "f", "", "provide path/url to the manifest file")
 	cmd.PersistentFlags().StringVarP(&upgrade.ImagePrefix, "image-prefix", "", "", "provide image prefix for the volume deployments")
 	cmd.PersistentFlags().StringVarP(&upgrade.ImageTag, "image-tag", "", "", "provide custom image tag for the volume deployments")
 	return cmd
