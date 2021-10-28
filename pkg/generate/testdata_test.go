@@ -185,6 +185,65 @@ spec:
       dataRaidGroupType: stripe
 
 `
+var StripeThreeNodeTwoDev = `apiVersion: cstor.openebs.io/v1
+kind: CStorPoolCluster
+metadata:
+  creationTimestamp: null
+  generateName: cstor
+  namespace: openebs
+spec:
+  pools:
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n1
+    nodeSelector:
+      kubernetes.io/hostname: node1
+    poolConfig:
+      dataRaidGroupType: stripe
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n2
+    nodeSelector:
+      kubernetes.io/hostname: node2
+    poolConfig:
+      dataRaidGroupType: stripe
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n3
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n3
+    nodeSelector:
+      kubernetes.io/hostname: node3
+    poolConfig:
+      dataRaidGroupType: stripe
+
+`
+var threeNodeTwoDevCSPC = cstorv1.CStorPoolCluster{
+	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
+	ObjectMeta: metav1.ObjectMeta{GenerateName: "cstor", Namespace: "openebs"},
+	Spec: cstorv1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{{
+		NodeSelector: map[string]string{"kubernetes.io/hostname": "node1"},
+		DataRaidGroups: []cstorv1.RaidGroup{{
+			CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n1"}, {BlockDeviceName: "bd2-n1"}}}},
+		PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolStriped)}},
+		{
+			NodeSelector: map[string]string{"kubernetes.io/hostname": "node2"},
+			DataRaidGroups: []cstorv1.RaidGroup{{
+				CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n2"}, {BlockDeviceName: "bd2-n2"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolStriped)}},
+		{
+			NodeSelector: map[string]string{"kubernetes.io/hostname": "node3"},
+			DataRaidGroups: []cstorv1.RaidGroup{{
+				CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n3"}, {BlockDeviceName: "bd2-n3"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolStriped)}}}},
+}
 
 var cspc1Struct = cstorv1.CStorPoolCluster{
 	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},

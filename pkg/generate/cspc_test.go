@@ -27,8 +27,6 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 )
 
-
-
 func TestCSPC(t *testing.T) {
 	type args struct {
 		c        *client.K8sClient
@@ -86,6 +84,13 @@ func TestCSPC(t *testing.T) {
 				c: &client.K8sClient{Ns: "randomNamespaceWillGetReplaced", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1),
 					OpenebsCS: cstorfake.NewSimpleClientset(&activeUnclaimedUnforattedBD)},
 				nodes: []string{"node1"}, devs: 1, poolType: "stripe"}, &cspc1Struct, cspc1, false,
+		},
+		{
+			"all good config, 2 disk stripe pool for 3 nodes",
+			args{
+				c: &client.K8sClient{Ns: "", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2, &node3),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD1N2, &goodBD1N3, &goodBD2N1, &goodBD2N2, &goodBD2N3)},
+				nodes: []string{"node1", "node2", "node3"}, devs: 2, poolType: "stripe"}, &threeNodeTwoDevCSPC, StripeThreeNodeTwoDev, false,
 		},
 		{
 			"good config, no BDs",

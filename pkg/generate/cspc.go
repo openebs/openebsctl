@@ -147,14 +147,13 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		// for each eligible set of BDs from each eligible node, take nDevices number of BDs
 		for _, node := range nodes {
 			bds := bd[node]
-			var raid cstorv1.RaidGroup
+			var raids []cstorv1.CStorPoolInstanceBlockDevice
 			for d := 0; d < nDevices; d++ {
-				raid = cstorv1.RaidGroup{
-					CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: bds[d].Name}}}
+				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
 			spec = append(spec, cstorv1.PoolSpec{
 				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
-				DataRaidGroups: []cstorv1.RaidGroup{raid},
+				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
 					DataRaidGroupType: string(cstorv1.PoolStriped),
 				},
