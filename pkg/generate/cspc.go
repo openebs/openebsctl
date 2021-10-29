@@ -140,10 +140,14 @@ func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 // pool instance and a collection of blockdevices by nodes
 func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice, nodes []string) (*[]cstorv1.PoolSpec, error) {
 	var spec []cstorv1.PoolSpec
-	if poolType == string(cstorv1.PoolStriped) {
+	if poolType == string(cstorv1.PoolStriped) || poolType == string(cstorv1.PoolMirrored) {
 		// always a single RAID-group with nDevices patched together, cannot disk replace,
 		// no redundancy in a pool, redundancy possible across pool instances
-
+		if poolType == string(cstorv1.PoolMirrored) && nDevices%2 != 0 {
+			// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
+			// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
+			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
+		}
 		// for each eligible set of BDs from each eligible node, take nDevices number of BDs
 		for _, node := range nodes {
 			bds := bd[node]
@@ -155,33 +159,11 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
 				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
-					DataRaidGroupType: string(cstorv1.PoolStriped),
+					DataRaidGroupType: poolType,
 				},
 			})
 		}
 		return &spec, nil
-	} else if poolType == string(cstorv1.PoolMirrored) {
-		if nDevices%2 != 0 {
-			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
-		}
-		for node, bds := range bd {
-			var raids []cstorv1.CStorPoolInstanceBlockDevice
-			// add all BDs to a CSPCs CSPI spec
-			for d := 0; d < nDevices; d++ {
-				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
-			}
-			// add the CSPI BD spec inside CSPC to a PoolSpec
-			spec = append(spec, cstorv1.PoolSpec{
-				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
-				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
-				PoolConfig: cstorv1.PoolConfig{
-					DataRaidGroupType: string(cstorv1.PoolMirrored),
-				},
-			})
-		}
-		return &spec, nil
-		// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
-		// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
 	} else if poolType == string(cstorv1.PoolRaidz) {
 		return nil, fmt.Errorf("%s is not supported yet", poolType)
 		// 2ⁿ+1 devices per RaidGroup
