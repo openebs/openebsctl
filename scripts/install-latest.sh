@@ -39,6 +39,9 @@ else
     exit 1
 fi
 
+# bool function to test if the user is root or not (POSIX only)
+is_user_root () { [ "$(id -u)" -eq 0 ]; }
+
 echo -e "\n\nGetting Latest Release ----->"
 
 # GET Request to github API to fetch latest release tag
@@ -63,7 +66,11 @@ tar -xvf openebsctl.tar.gz
 
 echo -e "\n\nExtracted Latest Release ----->"
 
-sudo cp kubectl-openebs /usr/local/bin
+if is_user_root; then
+    cp kubectl-openebs /usr/local/bin
+else
+    sudo cp kubectl-openebs /usr/local/bin
+fi
 
 echo -e "\n\nCopied Latest Release to usr/local/bin ----->"
 
