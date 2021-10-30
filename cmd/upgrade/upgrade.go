@@ -53,11 +53,10 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 		Short:   "Upgrade Volumes, storage engines, and interfaces in openebs application",
 		Aliases: []string{"update"},
 		Run: func(cmd *cobra.Command, args []string) {
-			openebsNs, _ := cmd.Flags().GetString("openebs-namespace")
 			if !util.IsValidCasType(upgrade.CasType) {
 				fmt.Fprintf(os.Stderr, "cas-type %s not supported\n", upgrade.CasType)
 			} else if upgrade.CasType == util.JivaCasType {
-				upgrade.InstantiateJivaUpgrade(openebsNs)
+				upgrade.InstantiateJivaUpgrade()
 			} else {
 				fmt.Println("Only Jiva upgrades are available at this point")
 				fmt.Println("To upgrade other cas-types follow: https://github.com/openebs/upgrade#upgrading-openebs-reources")
@@ -65,6 +64,8 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 		},
 	}
 	cmd.SetUsageTemplate(upgradeCmdHelp)
+	// using openebs as default value to namespace
+	cmd.PersistentFlags().StringVarP(&upgrade.OpenebsNs, "openebs-namespace", "", "openebs", "provide openebs-namespace")
 	cmd.PersistentFlags().StringVarP(&upgrade.CasType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.PersistentFlags().StringVarP(&upgrade.ToVersion, "to-version", "", "", "the version to which the resources need to be upgraded")
 	cmd.PersistentFlags().StringVarP(&upgrade.File, "file", "f", "", "provide path/url to the menifest file")

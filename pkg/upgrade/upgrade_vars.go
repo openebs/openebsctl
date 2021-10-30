@@ -16,4 +16,4 @@ limitations under the License.
 package upgrade
 
 // The variables that is to be used by the CLI for volume-upgrade-jobs
-var CasType, ToVersion, File, ImagePrefix, ImageTag string
+var CasType, ToVersion, File, ImagePrefix, ImageTag, OpenebsNs string

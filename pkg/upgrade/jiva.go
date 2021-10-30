@@ -50,8 +50,18 @@ type jobInfo struct {
 }
 
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade(openebsNs string) {
+func InstantiateJivaUpgrade() {
 	k := client.NewK8sClient()
+
+	// assign namespace
+	if OpenebsNs == "openebs" {
+		// namespace equals to default val -> not provided by CLI flags
+		// auto-determine jiva namespace
+		ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
+		if err == nil {
+			OpenebsNs = ns
+		}
+	}
 
 	// If manifest Files is provided, apply the file to create a new upgrade-job
 	if File != "" {
@@ -86,17 +96,11 @@ func InstantiateJivaUpgrade(openebsNs string) {
 		ToVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 
-	// assign namespace
-	if openebsNs == "" {
-		fmt.Println(`No Namespace Provided, using "default" as a namespace`)
-		openebsNs = "default"
-	}
-
 	// create configuration
 	cfg := jivaUpdateConfig{
 		fromVersion:        fromVersion,
 		toVersion:          ToVersion,
-		namespace:          openebsNs,
+		namespace:          OpenebsNs,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
@@ -250,7 +254,7 @@ func getContainerArguments(cfg *jivaUpdateConfig) []string {
 }
 
 func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
-	jobs, err := k.GetBatchJobs()
+	jobs, err := k.GetBatchJobs("", "cas-type=jiva,name=jiva-upgrade")
 	if err != nil {
 		return false, err
 	}
