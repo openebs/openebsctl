@@ -57,7 +57,7 @@ func InstantiateJivaUpgrade() {
 	if OpenebsNs == "openebs" {
 		// namespace equals to default val -> not provided by CLI flags
 		// auto-determine jiva namespace
-		ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
+		ns, err := k.GetOpenEBSNamespace(util.JivaCasType)
 		if err == nil {
 			OpenebsNs = ns
 		}
