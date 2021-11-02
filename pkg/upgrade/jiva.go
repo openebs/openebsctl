@@ -53,7 +53,6 @@ type jobInfo struct {
 func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	k := client.NewK8sClient()
 
-	// namespace equals to default val -> not provided by CLI flags
 	// auto-determine jiva namespace
 	ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
 	if err != nil {
