@@ -34,7 +34,6 @@ const (
   Flags:
   -h, --help                   help for openebs upgrade command
   -f, --file                   provide menifest file containing job upgrade information
-      --openebs-namespace      upgrade by a fixed openEBS namespace
       --cas-type               [jiva | cStor | LocalPv] specify the cas-type to upgrade
       --to-version             the desired version for upgradation
       --image-prefix           if required the image prefix of the volume deployments can be

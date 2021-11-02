@@ -50,7 +50,7 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	k := client.NewK8sClient()
 
 	// auto-determine jiva namespace
-	ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
+	ns, err := k.GetOpenEBSNamespace(util.JivaCasType)
 	if err != nil {
 		fmt.Println(`Error determining namespace! using "openebs" as namespace`)
 		ns = "openebs"
