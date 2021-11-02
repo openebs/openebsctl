@@ -190,12 +190,7 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	if err != nil || len(pods.Items) == 0 {
 		return "", errors.New("unable to determine openebs namespace")
 	}
-	ns := pods.Items[0].Namespace
-	if ns == "" {
-		return "", fmt.Errorf("namespace not found")
-	}
-
-	return ns, nil
+	return pods.Items[0].Namespace, nil
 }
 
 // GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[cstor] = cstor-ns

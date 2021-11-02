@@ -50,27 +50,15 @@ type jobInfo struct {
 }
 
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade() {
+func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	k := client.NewK8sClient()
 
-	// assign namespace
-	if OpenebsNs == "openebs" {
-		// namespace equals to default val -> not provided by CLI flags
-		// auto-determine jiva namespace
-		ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
-		if err == nil {
-			OpenebsNs = ns
-		}
-	}
-
-	// If manifest Files is provided, apply the file to create a new upgrade-job
-	if File != "" {
-		yamlFile, err := yamlToJobSpec(File)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error in Job: %s", err)
-		}
-		k.CreateBatchJob(yamlFile, yamlFile.Namespace)
-		return
+	// namespace equals to default val -> not provided by CLI flags
+	// auto-determine jiva namespace
+	ns, err := k.GetOpenEBSNamespace(util.ZFSCasType)
+	if err != nil {
+		fmt.Println(`Error determining namespace! using "openebs" as namespace`)
+		ns = "openebs"
 	}
 
 	// get running volumes from cluster
@@ -81,7 +69,7 @@ func InstantiateJivaUpgrade() {
 	}
 
 	// assign to-version
-	if ToVersion == "" {
+	if upgradeOpts.ToVersion == "" {
 		pods, e := k.GetPods("name=jiva-operator", "", "")
 		if e != nil {
 			fmt.Println("Failed to get operator-version, err: ", e)
@@ -93,19 +81,19 @@ func InstantiateJivaUpgrade() {
 			return
 		}
 
-		ToVersion = pods.Items[0].Labels["openebs.io/version"]
+		upgradeOpts.ToVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 
 	// create configuration
 	cfg := jivaUpdateConfig{
 		fromVersion:        fromVersion,
-		toVersion:          ToVersion,
-		namespace:          OpenebsNs,
+		toVersion:          upgradeOpts.ToVersion,
+		namespace:          ns,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
 		logLevel:           4,
-		additionalArgs:     addArgs(),
+		additionalArgs:     addArgs(upgradeOpts),
 	}
 
 	// Check if a job is running with underlying PV
@@ -153,14 +141,14 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
 }
 
 // Returns additional arguments like image-prefix and image-tags
-func addArgs() []string {
+func addArgs(upgradeOpts UpgradeOpts) []string {
 	var result []string
-	if ImagePrefix != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", ImagePrefix))
+	if upgradeOpts.ImagePrefix != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", upgradeOpts.ImagePrefix))
 	}
 
-	if ImageTag != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", ImageTag))
+	if upgradeOpts.ImageTag != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", upgradeOpts.ImageTag))
 	}
 
 	return result
