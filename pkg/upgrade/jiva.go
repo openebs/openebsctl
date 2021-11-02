@@ -18,11 +18,8 @@ package upgrade
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	core "github.com/openebs/api/v2/pkg/kubernetes/core"
@@ -30,7 +27,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type jivaUpdateConfig struct {
@@ -151,43 +147,6 @@ func addArgs(upgradeOpts UpgradeOpts) []string {
 	}
 
 	return result
-}
-
-func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
-	job := batchV1.Job{}
-	// Check if the filepath is a remote-url
-	if strings.HasPrefix(filePath, "http") {
-		res, err := http.Get(filePath)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file into struct
-		err = yaml.Unmarshal(body, &job)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// A file path is given located on local-disk of host
-		yamlFile, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file to structs
-		err = yaml.Unmarshal(yamlFile, &job)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &job, nil
 }
 
 // BuildJivaBatchJob returns Job to be build
