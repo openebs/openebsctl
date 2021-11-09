@@ -18,11 +18,8 @@ package upgrade
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	core "github.com/openebs/api/v2/pkg/kubernetes/core"
@@ -30,7 +27,6 @@ import (
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 type jivaUpdateConfig struct {
@@ -50,17 +46,14 @@ type jobInfo struct {
 }
 
 // Jiva Data-plane Upgrade Job instantiator
-func InstantiateJivaUpgrade(openebsNs string) {
+func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	k := client.NewK8sClient()
 
-	// If manifest Files is provided, apply the file to create a new upgrade-job
-	if File != "" {
-		yamlFile, err := yamlToJobSpec(File)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error in Job: %s", err)
-		}
-		k.CreateBatchJob(yamlFile, yamlFile.Namespace)
-		return
+	// auto-determine jiva namespace
+	ns, err := k.GetOpenEBSNamespace(util.JivaCasType)
+	if err != nil {
+		fmt.Println(`Error determining namespace! using "openebs" as namespace`)
+		ns = "openebs"
 	}
 
 	// get running volumes from cluster
@@ -71,7 +64,7 @@ func InstantiateJivaUpgrade(openebsNs string) {
 	}
 
 	// assign to-version
-	if ToVersion == "" {
+	if upgradeOpts.ToVersion == "" {
 		pods, e := k.GetPods("name=jiva-operator", "", "")
 		if e != nil {
 			fmt.Println("Failed to get operator-version, err: ", e)
@@ -83,25 +76,19 @@ func InstantiateJivaUpgrade(openebsNs string) {
 			return
 		}
 
-		ToVersion = pods.Items[0].Labels["openebs.io/version"]
-	}
-
-	// assign namespace
-	if openebsNs == "" {
-		fmt.Println(`No Namespace Provided, using "default" as a namespace`)
-		openebsNs = "default"
+		upgradeOpts.ToVersion = pods.Items[0].Labels["openebs.io/version"]
 	}
 
 	// create configuration
 	cfg := jivaUpdateConfig{
 		fromVersion:        fromVersion,
-		toVersion:          ToVersion,
-		namespace:          openebsNs,
+		toVersion:          upgradeOpts.ToVersion,
+		namespace:          ns,
 		pvNames:            volNames,
 		serviceAccountName: "jiva-operator",
 		backOffLimit:       4,
 		logLevel:           4,
-		additionalArgs:     addArgs(),
+		additionalArgs:     addArgs(upgradeOpts),
 	}
 
 	// Check if a job is running with underlying PV
@@ -149,54 +136,17 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
 }
 
 // Returns additional arguments like image-prefix and image-tags
-func addArgs() []string {
+func addArgs(upgradeOpts UpgradeOpts) []string {
 	var result []string
-	if ImagePrefix != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", ImagePrefix))
+	if upgradeOpts.ImagePrefix != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", upgradeOpts.ImagePrefix))
 	}
 
-	if ImageTag != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", ImageTag))
+	if upgradeOpts.ImageTag != "" {
+		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", upgradeOpts.ImageTag))
 	}
 
 	return result
-}
-
-func yamlToJobSpec(filePath string) (*batchV1.Job, error) {
-	job := batchV1.Job{}
-	// Check if the filepath is a remote-url
-	if strings.HasPrefix(filePath, "http") {
-		res, err := http.Get(filePath)
-		if err != nil {
-			return nil, err
-		}
-		defer res.Body.Close()
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file into struct
-		err = yaml.Unmarshal(body, &job)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// A file path is given located on local-disk of host
-		yamlFile, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			return nil, err
-		}
-
-		// unmarshal yaml file to structs
-		err = yaml.Unmarshal(yamlFile, &job)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &job, nil
 }
 
 // BuildJivaBatchJob returns Job to be build
@@ -250,7 +200,7 @@ func getContainerArguments(cfg *jivaUpdateConfig) []string {
 }
 
 func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
-	jobs, err := k.GetBatchJobs()
+	jobs, err := k.GetBatchJobs("", "cas-type=jiva,name=jiva-upgrade")
 	if err != nil {
 		return false, err
 	}

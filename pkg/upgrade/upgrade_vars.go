@@ -15,5 +15,11 @@ limitations under the License.
 */
 package upgrade
 
-// The variables that is to be used by the CLI for volume-upgrade-jobs
-var CasType, ToVersion, File, ImagePrefix, ImageTag string
+// UpgradeOpts are the upgrade options that are provided
+// with the CLI flags
+type UpgradeOpts struct {
+	CasType     string
+	ToVersion   string
+	ImagePrefix string
+	ImageTag    string
+}

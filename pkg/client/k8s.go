@@ -479,9 +479,9 @@ func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, err
 	return job, nil
 }
 
-// GetBatchJobs returns all the batch jobs running in all-namespaces
-func (k K8sClient) GetBatchJobs() (*batchV1.JobList, error) {
-	list, err := k.K8sCS.BatchV1().Jobs("").List(context.Background(), metav1.ListOptions{})
+// GetBatchJobs returns batch jobs running in the namespace with the label
+func (k K8sClient) GetBatchJobs(namespace string, labelSelector string) (*batchV1.JobList, error) {
+	list, err := k.K8sCS.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
 	if err != nil {
 		return nil, err
 	}
