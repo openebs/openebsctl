@@ -92,7 +92,7 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	}
 
 	// Check if a job is running with underlying PV
-	res, err := checkIfJobIsAlreadyRunning(k, &cfg)
+	res, err := getRunningJivaUpgradeJobs(k, &cfg)
 	// If error or upgrade job is already running return
 	if err != nil || res {
 		log.Fatal("An upgrade job is already running with the underlying volume!")
@@ -199,7 +199,7 @@ func getJivaContainerArguments(cfg *jivaUpdateConfig) []string {
 	return args
 }
 
-func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
+func getRunningJivaUpgradeJobs(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
 	jobs, err := k.GetBatchJobs("", "cas-type=jiva,name=jiva-upgrade")
 	if err != nil {
 		return false, err
@@ -222,6 +222,11 @@ func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (boo
 			}
 		}
 	}()
+
+	return checkIfJobIsAlreadyRunning(k, runningJob)
+}
+
+func checkIfJobIsAlreadyRunning(k *client.K8sClient, runningJob *batchV1.Job) (bool, error) {
 
 	if runningJob != nil {
 		jobCondition := runningJob.Status.Conditions

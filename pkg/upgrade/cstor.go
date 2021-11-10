@@ -84,6 +84,13 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 		break
 	}
 
+	// Check if a job is running with underlying PV
+	res, err := getRunningCspcUgradeJobs(k, &cfg)
+	// If error or upgrade job is already running return
+	if err != nil || res {
+		log.Fatal("An upgrade job is already running with the underlying volume!")
+	}
+
 	// Create upgrade job
 	k.CreateBatchJob(buildCspcbatchJob(&cfg), k.Ns)
 }
@@ -162,4 +169,31 @@ func getCstorCspcContainerArgs(cfg *cstorUpdateConfig) []string {
 	}, cfg.poolNames...)
 	args = append(args, cfg.additionalArgs...)
 	return args
+}
+
+func getRunningCspcUgradeJobs(k *client.K8sClient, cfg *cstorUpdateConfig) (bool, error) {
+	jobs, err := k.GetBatchJobs("", "")
+	if err != nil {
+		return false, err
+	}
+
+	// runningJob holds the information about the jobs that are in use by the PV
+	// that has an upgrade-job progress(any status) already going
+	var runningJob *batchV1.Job
+	func() {
+		for _, job := range jobs.Items { // JobItems
+			for _, pvName := range cfg.poolNames { // running pvs in control plane
+				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
+					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
+						if args == pvName {
+							runningJob = &job
+							return
+						}
+					}
+				}
+			}
+		}
+	}()
+
+	return checkIfJobIsAlreadyRunning(k, runningJob)
 }
