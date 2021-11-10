@@ -23,3 +23,14 @@ type UpgradeOpts struct {
 	ImagePrefix string
 	ImageTag    string
 }
+
+type UpgradeJobCfg struct {
+	fromVersion        string
+	toVersion          string
+	namespace          string
+	pvNames            []string
+	backOffLimit       int32
+	serviceAccountName string
+	logLevel           int32
+	additionalArgs     []string
+}

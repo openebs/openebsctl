@@ -18,7 +18,6 @@ package upgrade
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/openebs/openebsctl/pkg/upgrade"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -54,7 +53,8 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 		Aliases: []string{"update"},
 		Run: func(cmd *cobra.Command, args []string) {
 			if !util.IsValidCasType(upgradeOpts.CasType) {
-				fmt.Fprintf(os.Stderr, "cas-type %s not supported\n", upgradeOpts.CasType)
+				upgrade.InstantiateCspcUpgrade(upgradeOpts)
+				// fmt.Fprintf(os.Stderr, "cas-type %s not supported\n", upgradeOpts.CasType)
 			} else if upgradeOpts.CasType == util.JivaCasType {
 				upgrade.InstantiateJivaUpgrade(upgradeOpts)
 			} else {

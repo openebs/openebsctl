@@ -57,7 +57,7 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	}
 
 	// get running volumes from cluster
-	volNames, fromVersion, err := GetJivaVolumes(k)
+	volNames, fromVersion, err := GetJivaVolumesVersion(k)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -101,8 +101,8 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	k.CreateBatchJob(BuildJivaBatchJob(&cfg), cfg.namespace)
 }
 
-// GetJivaVolumes returns the Jiva volumes list and current version
-func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
+// GetJivaVolumesVersion returns the Jiva volumes list and current version
+func GetJivaVolumesVersion(k *client.K8sClient) ([]string, string, error) {
 	// 1. Fetch all jivavolumes CRs in all namespaces
 	_, jvMap, err := k.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	if err != nil {
@@ -164,7 +164,7 @@ func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 						func() *core.Container {
 							return core.NewContainer().
 								WithName("upgrade-jiva-go").
-								WithArgumentsNew(getContainerArguments(cfg)).
+								WithArgumentsNew(getJivaContainerArguments(cfg)).
 								WithEnvsNew(
 									[]corev1.EnvVar{
 										{
@@ -187,7 +187,7 @@ func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 		Job
 }
 
-func getContainerArguments(cfg *jivaUpdateConfig) []string {
+func getJivaContainerArguments(cfg *jivaUpdateConfig) []string {
 	// Set container arguments
 	args := append([]string{
 		"jiva-volume",
