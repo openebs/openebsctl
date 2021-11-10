@@ -61,6 +61,31 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 		additionalArgs:     addArgs(options),
 	}
 
+	// Handle versioning details
+	for _, name := range poolNames {
+		cspc, err := k.GetCSPC(name)
+		if err != nil {
+			fmt.Println("Error detecting version of Cstor Pool Cluster")
+			continue
+		}
+
+		fmt.Println("Fetching CSPC control plane and Data Plane Version")
+		cfg.fromVersion = cspc.VersionDetails.Status.Current // Assigning from Version
+		fmt.Println("Current Version:", cfg.fromVersion)
+		if options.ToVersion == "" {
+			cfg.toVersion = cspc.VersionDetails.Desired // Assigning to-version
+			if cfg.toVersion == "" {
+				continue
+			}
+		} else {
+			cfg.toVersion = options.ToVersion // use cli flag instead
+		}
+		fmt.Println("Desired Version:", cfg.toVersion)
+		break
+	}
+
+	// Create upgrade job
+	k.CreateBatchJob(buildCspcbatchJob(&cfg), k.Ns)
 }
 
 func getCSPCPoolNames(k *client.K8sClient) []string {
@@ -89,8 +114,8 @@ func getCSPCPoolNames(k *client.K8sClient) []string {
 	return poolnames
 }
 
-// buildCspcJobConfig returns CSPC Job to be build
-func buildCspcJobConfig(cfg *cstorUpdateConfig) *batchV1.Job {
+// buildCspcbatchJob returns CSPC Job to be build
+func buildCspcbatchJob(cfg *cstorUpdateConfig) *batchV1.Job {
 	return NewJob().
 		WithGeneratedName("cstor-cspc-upgrade").
 		WithLabel(map[string]string{"name": "cstor-cspc-upgrade", "cas-type": "cstor"}). // sets labels for job discovery
