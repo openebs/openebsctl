@@ -27,16 +27,16 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type cstorUpdateConfig struct {
-	fromVersion        string
-	toVersion          string
-	namespace          string
-	poolNames          []string
-	backOffLimit       int32
-	serviceAccountName string
-	logLevel           int32
-	additionalArgs     []string
-}
+// type cstorUpdateConfig struct {
+// 	fromVersion        string
+// 	toVersion          string
+// 	namespace          string
+// 	poolNames          []string
+// 	backOffLimit       int32
+// 	serviceAccountName string
+// 	logLevel           int32
+// 	additionalArgs     []string
+// }
 
 func InstantiateCspcUpgrade(options UpgradeOpts) {
 	k := client.NewK8sClient()
@@ -50,11 +50,11 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 	}
 
 	poolNames := getCSPCPoolNames(k)
-	cfg := cstorUpdateConfig{
+	cfg := UpgradeJobCfg{
 		fromVersion:        "",
 		toVersion:          "",
 		namespace:          k.Ns,
-		poolNames:          poolNames,
+		resources:          poolNames,
 		serviceAccountName: "openebs-maya-operator",
 		backOffLimit:       4,
 		logLevel:           4,
@@ -85,7 +85,7 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 	}
 
 	// Check if a job is running with underlying PV
-	res, err := getRunningCspcUgradeJobs(k, &cfg)
+	res, err := inspectRunningUpgradeJobs(k, &cfg)
 	// If error or upgrade job is already running return
 	if err != nil || res {
 		log.Fatal("An upgrade job is already running with the underlying volume!")
@@ -122,7 +122,7 @@ func getCSPCPoolNames(k *client.K8sClient) []string {
 }
 
 // buildCspcbatchJob returns CSPC Job to be build
-func buildCspcbatchJob(cfg *cstorUpdateConfig) *batchV1.Job {
+func buildCspcbatchJob(cfg *UpgradeJobCfg) *batchV1.Job {
 	return NewJob().
 		WithGeneratedName("cstor-cspc-upgrade").
 		WithLabel(map[string]string{"name": "cstor-cspc-upgrade", "cas-type": "cstor"}). // sets labels for job discovery
@@ -159,41 +159,14 @@ func buildCspcbatchJob(cfg *cstorUpdateConfig) *batchV1.Job {
 		Job
 }
 
-func getCstorCspcContainerArgs(cfg *cstorUpdateConfig) []string {
+func getCstorCspcContainerArgs(cfg *UpgradeJobCfg) []string {
 	// Set container arguments
 	args := append([]string{
 		"cstor-cspc",
 		fmt.Sprintf("--from-version=%s", cfg.fromVersion),
 		fmt.Sprintf("--to-version=%s", cfg.toVersion),
 		"--v=4", // can be taken from flags
-	}, cfg.poolNames...)
+	}, cfg.resources...)
 	args = append(args, cfg.additionalArgs...)
 	return args
-}
-
-func getRunningCspcUgradeJobs(k *client.K8sClient, cfg *cstorUpdateConfig) (bool, error) {
-	jobs, err := k.GetBatchJobs("", "")
-	if err != nil {
-		return false, err
-	}
-
-	// runningJob holds the information about the jobs that are in use by the PV
-	// that has an upgrade-job progress(any status) already going
-	var runningJob *batchV1.Job
-	func() {
-		for _, job := range jobs.Items { // JobItems
-			for _, pvName := range cfg.poolNames { // running pvs in control plane
-				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
-					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
-						if args == pvName {
-							runningJob = &job
-							return
-						}
-					}
-				}
-			}
-		}
-	}()
-
-	return checkIfJobIsAlreadyRunning(k, runningJob)
 }
