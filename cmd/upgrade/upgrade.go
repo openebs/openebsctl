@@ -52,14 +52,22 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 		Short:   "Upgrade Volumes, storage engines, and interfaces in openebs application",
 		Aliases: []string{"update"},
 		Run: func(cmd *cobra.Command, args []string) {
-			if !util.IsValidCasType(upgradeOpts.CasType) {
-				upgrade.InstantiateCspcUpgrade(upgradeOpts)
-				// fmt.Fprintf(os.Stderr, "cas-type %s not supported\n", upgradeOpts.CasType)
-			} else if upgradeOpts.CasType == util.JivaCasType {
-				upgrade.InstantiateJivaUpgrade(upgradeOpts)
-			} else {
-				fmt.Println("Only Jiva upgrades are available at this point")
-				fmt.Println("To upgrade other cas-types follow: https://github.com/openebs/upgrade#upgrading-openebs-reources")
+			switch upgradeOpts.CasType {
+			case util.JivaCasType:
+				{
+					upgrade.InstantiateJivaUpgrade(upgradeOpts)
+					break
+				}
+			case util.CstorCasType:
+				{
+					upgrade.InstantiateCspcUpgrade(upgradeOpts)
+					break
+				}
+			default:
+				{
+					fmt.Println("No or Wrong cas-type provided")
+					fmt.Println("To upgrade other cas-types follow: https://github.com/openebs/upgrade#upgrading-openebs-reources")
+				}
 			}
 		},
 	}
