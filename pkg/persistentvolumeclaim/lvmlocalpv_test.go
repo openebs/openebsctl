@@ -31,10 +31,11 @@ import (
 
 func TestDescribeLVMVolumeClaim(t *testing.T) {
 	type args struct {
-		c       *client.K8sClient
-		pvc     *corev1.PersistentVolumeClaim
-		pv      *corev1.PersistentVolume
-		lvmfunc func(sClient *client.K8sClient)
+		c         *client.K8sClient
+		pvc       *corev1.PersistentVolumeClaim
+		pv        *corev1.PersistentVolume
+		mountPods string
+		lvmfunc   func(sClient *client.K8sClient)
 	}
 	tests := []struct {
 		name    string
@@ -44,25 +45,28 @@ func TestDescribeLVMVolumeClaim(t *testing.T) {
 		{
 			"Test with all valid values",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(&lvmVol1), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:  &lvmPV1,
-				pvc: &lvmPVC1,
+				pv:        &lvmPV1,
+				pvc:       &lvmPVC1,
+				mountPods: "",
 			},
 			false,
 		},
 		{
 			"Test with PV missing",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(&lvmVol1), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:  nil,
-				pvc: &lvmPVC1,
+				pv:        nil,
+				pvc:       &lvmPVC1,
+				mountPods: "",
 			},
 			false,
 		},
 		{
 			"Test with LVM Vol missing",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", LVMCS: fake.NewSimpleClientset(), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:      &lvmPV1,
-				pvc:     &lvmPVC1,
-				lvmfunc: lvmVolNotExists,
+				pv:        &lvmPV1,
+				pvc:       &lvmPVC1,
+				mountPods: "",
+				lvmfunc:   lvmVolNotExists,
 			},
 			false,
 		},
@@ -72,7 +76,7 @@ func TestDescribeLVMVolumeClaim(t *testing.T) {
 			if tt.args.lvmfunc != nil {
 				tt.args.lvmfunc(tt.args.c)
 			}
-			if err := DescribeLVMVolumeClaim(tt.args.c, tt.args.pvc, tt.args.pv); (err != nil) != tt.wantErr {
+			if err := DescribeLVMVolumeClaim(tt.args.c, tt.args.pvc, tt.args.pv, tt.args.mountPods); (err != nil) != tt.wantErr {
 				t.Errorf("DescribeLVMVolumeClaim() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

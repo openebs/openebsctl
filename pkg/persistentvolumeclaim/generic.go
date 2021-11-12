@@ -32,11 +32,12 @@ BOUND VOLUME     : {{.BoundVolume}}
 STORAGE CLASS    : {{.StorageClassName}}
 SIZE             : {{.Size}}
 PV STATUS    	 : {{.PVStatus}}
+MOUNTED BY       : {{.MountPods}}
 `
 )
 
 // DescribeGenericVolumeClaim describes a any PersistentVolumeClaim, if the cas type is not discovered.
-func DescribeGenericVolumeClaim(pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, casType string) error {
+func DescribeGenericVolumeClaim(pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume, casType string, mountPods string) error {
 	// Incase a not known casType pvc is entered show minimal details pertaining to the PVC
 	// 1. Fill in the PVC details.
 	pvcInfo := util.PVCInfo{}
@@ -50,6 +51,7 @@ func DescribeGenericVolumeClaim(pvc *corev1.PersistentVolumeClaim, pv *corev1.Pe
 		pvcInfo.PVStatus = pv.Status.Phase
 	}
 	pvcInfo.CasType = casType
+	pvcInfo.MountPods = mountPods
 	// 2. Print the details
 	_ = util.PrintByTemplate("pvc", genericPvcInfoTemplate, pvcInfo)
 

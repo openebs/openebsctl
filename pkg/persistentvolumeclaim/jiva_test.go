@@ -24,9 +24,10 @@ import (
 
 func TestDescribeJivaVolumeClaim(t *testing.T) {
 	type args struct {
-		c   *client.K8sClient
-		pvc *corev1.PersistentVolumeClaim
-		vol *corev1.PersistentVolume
+		c         *client.K8sClient
+		pvc       *corev1.PersistentVolumeClaim
+		vol       *corev1.PersistentVolume
+		mountPods string
 	}
 	tests := []struct {
 		name    string
@@ -37,7 +38,7 @@ func TestDescribeJivaVolumeClaim(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := DescribeJivaVolumeClaim(tt.args.c, tt.args.pvc, tt.args.vol); (err != nil) != tt.wantErr {
+			if err := DescribeJivaVolumeClaim(tt.args.c, tt.args.pvc, tt.args.vol, tt.args.mountPods); (err != nil) != tt.wantErr {
 				t.Errorf("DescribeJivaVolumeClaim() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

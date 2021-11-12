@@ -27,7 +27,8 @@ func NewCmdUpgradeStatus() *cobra.Command {
 		Aliases: []string{"Status"},
 		Short:   "Display Upgrade-status for a running upgrade-job",
 		Run: func(cmd *cobra.Command, args []string) {
-			status.GetJobStatus()
+			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
+			status.GetJobStatus(openebsNS)
 		},
 	}
 	cmd.PersistentFlags().BoolVar(&status.WaitFlag, "wait", false, "Wait for the logs stream")

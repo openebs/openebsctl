@@ -31,10 +31,11 @@ import (
 
 func TestDescribeZFSVolumeClaim(t *testing.T) {
 	type args struct {
-		c       *client.K8sClient
-		pvc     *corev1.PersistentVolumeClaim
-		pv      *corev1.PersistentVolume
-		zfsfunc func(sClient *client.K8sClient)
+		c         *client.K8sClient
+		pvc       *corev1.PersistentVolumeClaim
+		pv        *corev1.PersistentVolume
+		mountPods string
+		zfsfunc   func(sClient *client.K8sClient)
 	}
 	tests := []struct {
 		name    string
@@ -44,25 +45,28 @@ func TestDescribeZFSVolumeClaim(t *testing.T) {
 		{
 			"Test with all valid values",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(&zfsVol1), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:  &zfsPV1,
-				pvc: &zfsPVC1,
+				pv:        &zfsPV1,
+				pvc:       &zfsPVC1,
+				mountPods: "",
 			},
 			false,
 		},
 		{
 			"Test with PV missing",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(&zfsVol1), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:  nil,
-				pvc: &zfsPVC1,
+				pv:        nil,
+				pvc:       &zfsPVC1,
+				mountPods: "",
 			},
 			false,
 		},
 		{
 			"Test with ZFS Vol missing",
 			args{c: &client.K8sClient{Ns: "lvmlocalpv", ZFCS: fake.NewSimpleClientset(), K8sCS: k8sfake.NewSimpleClientset()},
-				pv:      &zfsPV1,
-				pvc:     &zfsPVC1,
-				zfsfunc: zfsVolNotExists,
+				pv:        &zfsPV1,
+				pvc:       &zfsPVC1,
+				mountPods: "",
+				zfsfunc:   zfsVolNotExists,
 			},
 			false,
 		},
@@ -72,7 +76,7 @@ func TestDescribeZFSVolumeClaim(t *testing.T) {
 			if tt.args.zfsfunc != nil {
 				tt.args.zfsfunc(tt.args.c)
 			}
-			if err := DescribeZFSVolumeClaim(tt.args.c, tt.args.pvc, tt.args.pv); (err != nil) != tt.wantErr {
+			if err := DescribeZFSVolumeClaim(tt.args.c, tt.args.pvc, tt.args.pv, tt.args.mountPods); (err != nil) != tt.wantErr {
 				t.Errorf("DescribeZFSVolumeClaim() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
