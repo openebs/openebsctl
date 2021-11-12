@@ -54,15 +54,9 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			switch upgradeOpts.CasType {
 			case util.JivaCasType:
-				{
-					upgrade.InstantiateJivaUpgrade(upgradeOpts)
-					break
-				}
+				upgrade.InstantiateJivaUpgrade(upgradeOpts)
 			case util.CstorCasType:
-				{
-					upgrade.InstantiateCspcUpgrade(upgradeOpts)
-					break
-				}
+				upgrade.InstantiateCspcUpgrade(upgradeOpts)
 			default:
 				{
 					fmt.Println("No or Wrong cas-type provided")
