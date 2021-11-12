@@ -27,17 +27,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-// type cstorUpdateConfig struct {
-// 	fromVersion        string
-// 	toVersion          string
-// 	namespace          string
-// 	poolNames          []string
-// 	backOffLimit       int32
-// 	serviceAccountName string
-// 	logLevel           int32
-// 	additionalArgs     []string
-// }
-
 func InstantiateCspcUpgrade(options UpgradeOpts) {
 	k := client.NewK8sClient()
 
