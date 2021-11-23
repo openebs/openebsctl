@@ -506,7 +506,7 @@ func (k K8sClient) GetNodes(nodes []string, label, field string) (*corev1.NodeLi
 	if len(nodes) == 0 {
 		return n, err
 	}
-	// 2. Put them in a map[string]*corev1.Node
+	// 2. Put them in a map[string]corev1.Node
 	nodeMap := make(map[string]corev1.Node)
 	for _, item := range n.Items {
 		nodeMap[item.Name] = item

@@ -17,6 +17,7 @@ limitations under the License.
 package generate
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/openebs/openebsctl/pkg/generate"
@@ -28,32 +29,62 @@ import (
 func NewCmdGenerate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "generate",
+		Short:     "Generate one or more OpenEBS resource like cspc",
 		ValidArgs: []string{"cspc"},
-		Short:     "Generate one or more OpenEBS resources based on flags",
 	}
-	cmd.AddCommand(NewCmdGenerateStorage())
+	cmd.AddCommand(NewCmdGenerateCStorStoragePoolCluster())
 	return cmd
 }
 
-func NewCmdGenerateStorage() *cobra.Command {
+// NewCmdGenerateCStorStoragePoolCluster provides options for generating cspc
+// NOTE: When other custom resources need to be generated, the function
+// should be renamed appropriately, as of now it made no sense to generically
+// state pools when other pools aren't supported.
+func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
 	var nodes, raidType string
 	var devices int
 	cmd := &cobra.Command{
-		Use:   "cspc",
-		Short: "Displays status information about Volume(s)",
+		Use:     "cspc",
+		Short:   "Generates cspc resources YAML/configuration which can be used to provision cStor storage pool clusters",
 		Run: func(cmd *cobra.Command, args []string) {
 			node, _ := cmd.Flags().GetString("nodes")
-			devs, _ := cmd.Flags().GetInt("number-of-devices")
 			raid, _ := cmd.Flags().GetString("raidtype")
-			Nodes := strings.Split(node, ",")
-			util.CheckErr(generate.Pool(Nodes, devs, raid), util.Fatal)
+			devs := numDevices(cmd)
+			nodeList := strings.Split(node, ",")
+			util.CheckErr(generate.CSPC(nodeList, devs, raid), util.Fatal)
 		},
 	}
 	cmd.PersistentFlags().StringVarP(&nodes, "nodes", "", "",
 		"comma separated set of nodes for pool creation --nodes=node1,node2,node3,node4")
 	_ = cmd.MarkPersistentFlagRequired("nodes")
-	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "number of devices per node")
 	cmd.PersistentFlags().StringVarP(&raidType, "raidtype", "", "stripe",
 		"allowed RAID configuration such as, stripe, mirror, raid, raidz2")
+	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "number of devices per node, selects default based on raid-type")
 	return cmd
+}
+
+// numDevices figures out the number of devices based on the raid type
+func numDevices(cmd *cobra.Command) int {
+	// if number-of-devices is not set, set it to appropriate value
+	if !cmd.Flag("number-of-devices").Changed {
+		var devCount = map[string]int{
+			"stripe": 1,
+			"mirror": 2,
+			"raidz":  3,
+			"raidz2": 4}
+		switch cmd.Flag("raidtype").Value.String() {
+		case "stripe", "mirror", "raidz", "raidz2":
+			c := devCount[cmd.Flag("raidtype").Value.String()]
+			err := cmd.Flags().Set("number-of-devices", strconv.Itoa(c))
+			if err != nil {
+				return 1
+			}
+			return c
+		}
+	} else {
+		d, _ := cmd.Flags().GetInt("number-of-devices")
+		return d
+	}
+	// setting default value to 1
+	return 1
 }

@@ -39,7 +39,7 @@ Available Commands:
   completion    Outputs shell completion code for the specified shell (bash or zsh)
   describe      Provide detailed information about an OpenEBS resource
   generate      Helps generate a storage custom resource
-  get           Provides fetching operations related to a Volume/Pool
+  get           Provides fetching operations related to a Volume/CSPC
   help          Help about any command
   version       Shows openebs kubectl plugin's version
   cluster-info  Show component version, status and running components for each installed engine
