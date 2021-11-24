@@ -72,27 +72,27 @@ func cspc(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 	// 1.1 Translate nodeNames to node's hostNames to fetch disks
 	// while they might seem equivalent, they aren't equal, this quirk is
 	// visible clearly for EKS clusters
-	var hostNames string
+	var hostnames []string
 	for _, node := range nodeList.Items {
 		// I hope it is unlikely for a K8s node to have an empty hostname
-		hostNames += node.Labels["kubernetes.io/hostname"] + ","
+		hostnames = append(hostnames, node.Labels["kubernetes.io/hostname"])
 	}
 	// 2. Fetch BD's from the eligible/valid nodes by hostname labels
-	bds, err := c.GetBDs(nil, "kubernetes.io/hostname in (" + hostNames +")")
+	bds, err := c.GetBDs(nil, "kubernetes.io/hostname in ("+strings.Join(hostnames, ",")+")")
 	if err != nil || len(bds.Items) == 0 {
-		return nil, "", fmt.Errorf("no blockdevices found in nodes with %v hostnames", hostNames)
+		return nil, "", fmt.Errorf("no blockdevices found in nodes with %v hostnames", hostnames)
 	}
 	_, err = filterCStorCompatible(bds)
 	if err != nil {
 		return nil, "", fmt.Errorf("(server error) unable to fetch bds from %v nodes", nodes)
 	}
-	// 3. Choose devices at the valid nodes
+	// 3. Choose devices at the valid BDs by hostname
 	hostToBD := make(map[string][]v1alpha1.BlockDevice)
 	for _, bd := range bds.Items {
 		hostToBD[bd.Labels["kubernetes.io/hostname"]] = append(hostToBD[bd.Labels["kubernetes.io/hostname"]], bd)
 	}
 	// 4. Select disks and create the PoolSpec
-	p, err := makePools(poolType, devs, hostToBD, nodes)
+	p, err := makePools(poolType, devs, hostToBD, nodes, hostnames)
 	if err != nil {
 		return nil, "", err
 	}
@@ -111,12 +111,12 @@ func cspc(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 		fmt.Printf("err: %v\n", err)
 		return nil, "", err
 	}
-	yaml := string(y)
+	specStr := string(y)
 	// 7. removing status and versionDetails field
-	yaml = yaml[:strings.Index(yaml, "status: {}")]
+	specStr = specStr[:strings.Index(specStr, "status: {}")]
 	// 8. Split the string by the newlines/carriage returns and insert the BD's link
-	yaml = addBDDetailComments(yaml, bds)
-	return &cspc, yaml, nil
+	specStr = addBDDetailComments(specStr, bds)
+	return &cspc, specStr, nil
 }
 
 // addBDDetailComments adds more information about the blockdevice in a cspc YAML string
@@ -145,21 +145,35 @@ func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 
 // makePools creates a poolSpec based on the poolType, number of devices per
 // pool instance and a collection of blockdevices by nodes
-func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice, nodes []string) (*[]cstorv1.PoolSpec, error) {
+func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice, nodes []string, hosts []string) (*[]cstorv1.PoolSpec, error) {
+	// IMPORTANT: User is more likely to see the nodeNames, so the errors
+	// should preferably be shown in terms of nodeNames and not hostNames
 	var spec []cstorv1.PoolSpec
 	if poolType == string(cstorv1.PoolStriped) {
-		// always a single RAID-group with nDevices patched together, cannot disk replace,
+		// always single RAID-group with nDevices patched together, cannot disk replace,
 		// no redundancy in a pool, redundancy possible across pool instances
 
-		// for each eligible set of BDs from each eligible node, take nDevices number of BDs
-		for _, node := range nodes {
-			bds := bd[node]
+		// for each eligible set of BDs from each eligible nodes with hostname
+		// "host", take nDevices number of BDs
+		for i, host := range hosts {
+			bds, ok := bd[host]
+			if !ok {
+				// DOUBT: Do 0 or lesser number of BDs demand a separate error string?
+				// I can ask to create a stripe pool with 1 disk and my
+				// choice of node might not have eligible BDs
+				return nil, fmt.Errorf("no eligible blockdevices found in node %s", nodes[i])
+			}
+			if len(bds) < nDevices {
+				// the node might have lesser number of BDs
+				return nil, fmt.Errorf("not enough blockdevices found on node %s, want %d, found %d", nodes[i], nDevices, len(bds))
+			}
 			var raids []cstorv1.CStorPoolInstanceBlockDevice
+
 			for d := 0; d < nDevices; d++ {
 				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
 			spec = append(spec, cstorv1.PoolSpec{
-				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
+				NodeSelector:   map[string]string{"kubernetes.io/hostname": host},
 				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
 					DataRaidGroupType: string(cstorv1.PoolStriped),
@@ -171,15 +185,19 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		if nDevices%2 != 0 {
 			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
 		}
-		for hostName, bds := range bd {
+		for i, host := range hosts {
 			var raids []cstorv1.CStorPoolInstanceBlockDevice
 			// add all BDs to a CSPCs CSPI spec
+			bds := bd[host]
+			if len(bds) < nDevices {
+				return nil, fmt.Errorf("not enough eligible blockdevices found on node %s, want %d, found %d", nodes[i], nDevices, len(bds))
+			}
 			for d := 0; d < nDevices; d++ {
 				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
 			// add the CSPI BD spec inside cspc to a PoolSpec
 			spec = append(spec, cstorv1.PoolSpec{
-				NodeSelector:   map[string]string{"kubernetes.io/hostname": hostName},
+				NodeSelector:   map[string]string{"kubernetes.io/hostname": host},
 				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
 					DataRaidGroupType: string(cstorv1.PoolMirrored),

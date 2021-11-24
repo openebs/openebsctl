@@ -17,6 +17,7 @@ limitations under the License.
 package generate
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -154,6 +155,7 @@ func Test_makePools(t *testing.T) {
 		nDevices int
 		bd       map[string][]v1alpha1.BlockDevice
 		nodes    []string
+		hosts 	 []string
 	}
 	tests := []struct {
 		name    string
@@ -164,24 +166,27 @@ func Test_makePools(t *testing.T) {
 		{"stripe, three node, two disks", args{"stripe", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}}, &threeNodeTwoDevCSPC.Spec.Pools, false},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, &threeNodeTwoDevCSPC.Spec.Pools, false},
 		{"mirror, three node, two disks", args{"mirror", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}}, &mirrorCSPC.Spec.Pools, false},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, &mirrorCSPC.Spec.Pools, false},
 		{"mirror, three node, one disk", args{"mirror", 1,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := makePools(tt.args.poolType, tt.args.nDevices, tt.args.bd, tt.args.nodes)
+			got, err := makePools(tt.args.poolType, tt.args.nDevices, tt.args.bd, tt.args.nodes, tt.args.hosts)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("makePools() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			assert.EqualValues(t, tt.want, got, "", nil)
+			if (tt.want == got) {
+				fmt.Println("yay")
+			}
+			assert.Equal(t, tt.want, got, "", nil)
 		})
 	}
 }
