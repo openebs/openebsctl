@@ -33,19 +33,18 @@ import (
 func isPoolTypeValid(raid string) bool {
 	if raid == "stripe" || raid == "mirror" || raid == "raidz" || raid == "raidz2" {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
-// Pool calls the generate routine for different cas-types
-func Pool(nodes []string, devs int, raid string) error {
+// CSPC calls the generate routine for different cas-types
+func CSPC(nodes []string, devs int, raid string) error {
 	c := client.NewK8sClient()
 	if !isPoolTypeValid(strings.ToLower(raid)) {
 		// TODO: Use the well defined pool constant types from openebs/api when added there
 		return fmt.Errorf("invalid pool type %s", raid)
 	}
-	_, str, err := CSPC(c, nodes, devs, strings.ToLower(raid))
+	_, str, err := cspc(c, nodes, devs, strings.ToLower(raid))
 	if err != nil {
 		return err
 	}
@@ -53,47 +52,55 @@ func Pool(nodes []string, devs int, raid string) error {
 	return nil
 }
 
-// CSPC takes eligible nodes, number of devices and poolType to create a pool cluster template
-func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*cstorv1.CStorPoolCluster, string, error) {
+// cspc takes eligible nodes, number of devices and poolType to create a pool cluster template
+func cspc(c *client.K8sClient, nodes []string, devs int, poolType string) (*cstorv1.CStorPoolCluster, string, error) {
 	// 0. Figure out the OPENEBS_NAMESPACE for CStor
 	cstorNS, err := c.GetOpenEBSNamespace(util.CstorCasType)
 	// assume CSTOR's OPENEBS_NAMESPACE has all the relevant blockdevices
 	c.Ns = cstorNS
 	if err != nil {
-		return nil, "", fmt.Errorf("cannot find an active cstor installation")
+		return nil, "", fmt.Errorf("unable to determine the cStor namespace error: %v", err)
 	}
 	// 1. Validate nodes & poolType, fetch disks
 	nodeList, err := c.GetNodes(nodes, "", "")
 	if err != nil {
-		return nil, "", fmt.Errorf("(server error) unable to fetch nodes %s", err)
+		return nil, "", fmt.Errorf("(server error) unable to fetch node information %s", err)
 	}
 	if len(nodeList.Items) != len(nodes) {
-		return nil, "", fmt.Errorf("not all worker nodes are available for provisioning a CSPC")
+		return nil, "", fmt.Errorf("not all worker nodes are available for provisioning a cspc")
 	}
-	// 2. Fetch BD's from the eligible/valid nodes
-	bds, err := c.GetBDs(nil, "kubernetes.io/hostname in ("+strings.Join(nodes, ",")+")")
+	// 1.1 Translate nodeNames to node's hostNames to fetch disks
+	// while they might seem equivalent, they aren't equal, this quirk is
+	// visible clearly for EKS clusters
+	var hostNames string
+	for _, node := range nodeList.Items {
+		// I hope it is unlikely for a K8s node to have an empty hostname
+		hostNames += node.Labels["kubernetes.io/hostname"] + ","
+	}
+	// 2. Fetch BD's from the eligible/valid nodes by hostname labels
+	bds, err := c.GetBDs(nil, "kubernetes.io/hostname in (" + hostNames +")")
 	if err != nil || len(bds.Items) == 0 {
-		return nil, "", fmt.Errorf("no blockdevices found in %s nodes", nodes)
+		return nil, "", fmt.Errorf("no blockdevices found in nodes with %v hostnames", hostNames)
 	}
 	_, err = filterCStorCompatible(bds)
 	if err != nil {
-		return nil, "", fmt.Errorf("(server error) unable to fetch bds from %s nodes", nodes)
+		return nil, "", fmt.Errorf("(server error) unable to fetch bds from %v nodes", nodes)
 	}
 	// 3. Choose devices at the valid nodes
-	nodeToBD := make(map[string][]v1alpha1.BlockDevice)
+	hostToBD := make(map[string][]v1alpha1.BlockDevice)
 	for _, bd := range bds.Items {
-		nodeToBD[bd.Labels["kubernetes.io/hostname"]] = append(nodeToBD[bd.Labels["kubernetes.io/hostname"]], bd)
+		hostToBD[bd.Labels["kubernetes.io/hostname"]] = append(hostToBD[bd.Labels["kubernetes.io/hostname"]], bd)
 	}
 	// 4. Select disks and create the PoolSpec
-	p, err := makePools(poolType, devs, nodeToBD, nodes)
+	p, err := makePools(poolType, devs, hostToBD, nodes)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// 5. Write the CSPC object with a dummy name
+	// 5. Write the cspc object with a dummy name
 	cspc := cstorv1.CStorPoolCluster{
 		TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
-		ObjectMeta: metav1.ObjectMeta{Name: "", Namespace: cstorNS, GenerateName: "cstor"},
+		ObjectMeta: metav1.ObjectMeta{Namespace: cstorNS, GenerateName: "cstor"},
 		Spec: cstorv1.CStorPoolClusterSpec{
 			Pools: *p,
 		},
@@ -112,7 +119,7 @@ func CSPC(c *client.K8sClient, nodes []string, devs int, poolType string) (*csto
 	return &cspc, yaml, nil
 }
 
-// addBDDetailComments adds more information about the blockdevice in a CSPC YAML string
+// addBDDetailComments adds more information about the blockdevice in a cspc YAML string
 func addBDDetailComments(yaml string, bdList *v1alpha1.BlockDeviceList) string {
 	finalYaml := ""
 	for _, l := range strings.Split(yaml, "\n") {
@@ -164,15 +171,15 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		if nDevices%2 != 0 {
 			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
 		}
-		for node, bds := range bd {
+		for hostName, bds := range bd {
 			var raids []cstorv1.CStorPoolInstanceBlockDevice
 			// add all BDs to a CSPCs CSPI spec
 			for d := 0; d < nDevices; d++ {
 				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
-			// add the CSPI BD spec inside CSPC to a PoolSpec
+			// add the CSPI BD spec inside cspc to a PoolSpec
 			spec = append(spec, cstorv1.PoolSpec{
-				NodeSelector:   map[string]string{"kubernetes.io/hostname": node},
+				NodeSelector:   map[string]string{"kubernetes.io/hostname": hostName},
 				DataRaidGroups: []cstorv1.RaidGroup{{CStorPoolInstanceBlockDevices: raids}},
 				PoolConfig: cstorv1.PoolConfig{
 					DataRaidGroupType: string(cstorv1.PoolMirrored),

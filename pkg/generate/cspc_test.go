@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
+	"github.com/openebs/api/v2/pkg/apis/openebs.io/v1alpha1"
 	cstorfake "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/stretchr/testify/assert"
@@ -110,18 +111,18 @@ func TestCSPC(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// tt.args.GB,
-			got, got1, err := CSPC(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
+			got, got1, err := cspc(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
 			assert.YAMLEq(t, tt.str, got1, "stringified YAML is not the same as expected")
-			assert.Equal(t, got, tt.want, "struct is not same")
+			assert.EqualValues(t, got, tt.want, "struct is not same")
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CSPC() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("cspc() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CSPC() got = %v, want %v", got, tt.want)
+				t.Errorf("cspc() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.str {
-				t.Errorf("CSPC() got1 = %v, want %v", got1, tt.str)
+				t.Errorf("cspc() got1 = %v, want %v", got1, tt.str)
 			}
 		})
 	}
@@ -143,6 +144,44 @@ func Test_isPoolTypeValid(t *testing.T) {
 					t.Errorf("isPoolTypeValid() = %v, want %v", got, tt.want)
 				}
 			}
+		})
+	}
+}
+
+func Test_makePools(t *testing.T) {
+	type args struct {
+		poolType string
+		nDevices int
+		bd       map[string][]v1alpha1.BlockDevice
+		nodes    []string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *[]cstorv1.PoolSpec
+		wantErr bool
+	}{
+		{"stripe, three node, two disks", args{"stripe", 2,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
+				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
+			[]string{"node1", "node2", "node3"}}, &threeNodeTwoDevCSPC.Spec.Pools, false},
+		{"mirror, three node, two disks", args{"mirror", 2,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
+				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
+			[]string{"node1", "node2", "node3"}}, &mirrorCSPC.Spec.Pools, false},
+		{"mirror, three node, one disk", args{"mirror", 1,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
+				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
+			[]string{"node1", "node2", "node3"}}, nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := makePools(tt.args.poolType, tt.args.nDevices, tt.args.bd, tt.args.nodes)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("makePools() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			assert.EqualValues(t, tt.want, got, "", nil)
 		})
 	}
 }

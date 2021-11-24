@@ -31,15 +31,15 @@ var cstorCSIpod = corev1.Pod{
 }
 
 var node1 = corev1.Node{
-	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node1"},
+	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node1", Labels: map[string]string{"kubernetes.io/hostname": "node1"}},
 	Status: corev1.NodeStatus{Phase: corev1.NodeRunning}}
 
 var node2 = corev1.Node{
-	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node2"},
+	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node2", Labels: map[string]string{"kubernetes.io/hostname": "node2"}},
 	Status: corev1.NodeStatus{Phase: corev1.NodeRunning}}
 
 var node3 = corev1.Node{
-	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node3"},
+	TypeMeta: metav1.TypeMeta{Kind: "Node", APIVersion: "v1"}, ObjectMeta: metav1.ObjectMeta{Name: "node3", Labels: map[string]string{"kubernetes.io/hostname": "node3"}},
 	Status: corev1.NodeStatus{Phase: corev1.NodeRunning}}
 
 var activeBDwEXT4 = v1alpha1.BlockDevice{
