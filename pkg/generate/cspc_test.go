@@ -171,6 +171,11 @@ func Test_makePools(t *testing.T) {
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
 			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, &mirrorCSPC.Spec.Pools, false},
+		{"mirror, two node, four disks", args{"mirror", 4,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1},
+				"node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2}, "node3": {goodBD1N3, goodBD2N3}},
+				// in the above example, presence of node3 BDs don't matter
+			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &mirrorCSPCFourBDs.Spec.Pools, false},
 		{"mirror, three node, one disk", args{"mirror", 1,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
@@ -183,7 +188,7 @@ func Test_makePools(t *testing.T) {
 				t.Errorf("makePools() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if (tt.want == got) {
+			if tt.want == got {
 				fmt.Println("yay")
 			}
 			assert.Equal(t, tt.want, got, "", nil)
