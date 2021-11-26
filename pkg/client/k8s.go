@@ -267,18 +267,6 @@ func (k K8sClient) GetAllPods(namespace string) (*corev1.PodList, error) {
 	return pods, nil
 }
 
-// GetDeploymentList returns the deployment-list with a specific
-// label selector query
-func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
-	if pv, err := k.K8sCS.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: labelSelector,
-	}); err == nil && len(pv.Items) >= 1 {
-		return pv, nil
-	} else {
-		return nil, fmt.Errorf("got 0 deployments with label-Selector as %s", labelSelector)
-	}
-}
-
 // GetSC returns a StorageClass object using the scName passed.
 func (k K8sClient) GetSC(scName string) (*v1.StorageClass, error) {
 	sc, err := k.K8sCS.StorageV1().StorageClasses().Get(context.TODO(), scName, metav1.GetOptions{})
@@ -492,4 +480,45 @@ func (k K8sClient) GetBatchJobs(namespace string, labelSelector string) (*batchV
 // Delete a Batch Job by name
 func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
 	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+}
+
+/*
+	LOCAL VOLUMES SPECIFIC METHODS
+*/
+
+// GetDeploymentList returns the deployment-list with a specific
+// label selector query
+func (k K8sClient) GetDeploymentList(labelSelector string) (*appsv1.DeploymentList, error) {
+	if pv, err := k.K8sCS.AppsV1().Deployments("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labelSelector,
+	}); err == nil && len(pv.Items) >= 1 {
+		return pv, nil
+	}
+	return nil, fmt.Errorf("got 0 deployments with label-Selector as %s", labelSelector)
+}
+
+// GetNodes returns a list of nodes with the name of nodes
+func (k K8sClient) GetNodes(nodes []string, label, field string) (*corev1.NodeList, error) {
+	// 1. Get all nodes
+	n, err := k.K8sCS.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: label,
+		FieldSelector: field})
+	if len(nodes) == 0 {
+		return n, err
+	}
+	// 2. Put them in a map[string]corev1.Node
+	nodeMap := make(map[string]corev1.Node)
+	for _, item := range n.Items {
+		nodeMap[item.Name] = item
+	}
+	// 3. Get the nodes by the name nodes
+	var items []corev1.Node
+	for _, name := range nodes {
+		if _, ok := nodeMap[name]; ok {
+			items = append(items, nodeMap[name])
+		}
+	}
+	return &corev1.NodeList{
+		Items: items,
+	}, nil
 }
