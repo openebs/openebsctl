@@ -225,8 +225,9 @@ func TestDebugCSPCNode(t *testing.T) {
 			fmt.Errorf(`no change in the storage node`)},
 		// it'd make sense to evaluate the error in the above Test suite somehow
 		{"CSPC exists, two BD's loc changed to other node", args{
-			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc2, &goodBD1N1, &goodBD2N1, &goodBD1N2, &goodBD2N2)}, cspc: "cspc1"},
-			map[string]string{"node2": "node3"}, false, nil},
+			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc2, &goodBD1N1, &goodBD2N1,
+				&goodBD1N2, &goodBD2N2)}, cspc: "cspc1"},
+			map[string]string{"node3": "node2"}, false, nil},
 		{"CSPC exists, BD nodes swapped", args{
 			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc3, &goodBD1N1, &goodBD2N1,
 				&goodBD1N2, &goodBD2N2)}, cspc: "cspc1"}, nil, true,
