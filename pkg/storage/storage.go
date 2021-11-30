@@ -143,15 +143,37 @@ func CasDescribeList() []func(*client.K8sClient, string) error {
 }
 
 // Update is the entrypoint to manage the Update of storage resources of a particular cas-type
-func Update(namespace, storageName, initial, final string) error {
-	// 1. Currently only Cstor's node patch is supported
+func Update(namespace, storageName, initial, final string, debug bool) error {
+	// 1. Currently, only Cstor's node patch is supported
 	k := client.NewK8sClient(namespace)
 	if namespace == "" {
 		ns, err := k.GetOpenEBSNamespace(util.CstorCasType)
-		k.Ns = ns
 		if err != nil {
 			return fmt.Errorf("unable to detect cstor, please specify cstor's --openebs-namespace")
+		} else {
+			k.Ns = ns
 		}
 	}
-	return CSPCnodeChange(k, storageName, initial, final)
+	if debug {
+		// find appropriate storage node for the initial node
+		nodeMaps, err := DebugCSPCNode(k, storageName)
+		if err.Error() == fmt.Errorf("no change in the storage node").Error() {
+			fmt.Println("the expected Blockdevices are in-place, no change required")
+		} else if err != nil {
+			return err
+		} else if err == nil {
+			// NOTE: Currently only one node swaps are considered
+			for k, v := range nodeMaps {
+				initial = k
+				final = v
+			}
+			fmt.Println("the BDs seem to have moved from " + initial + " to " + final)
+			// AWESOME: While this isn't a good practice, the CSPCnodeChange
+			// function can be automatically called with the right arguments
+		}
+	} else if initial != "" {
+		// since this is an else-if, the value of `debug` is FALSE
+		return CSPCnodeChange(k, storageName, initial, final)
+	}
+	return fmt.Errorf("unable to find appropriate storage node for %s", storageName)
 }

@@ -27,6 +27,7 @@ import (
 
 	"github.com/docker/go-units"
 	"github.com/manifoldco/promptui"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/cli-runtime/pkg/printers"
@@ -203,5 +204,17 @@ func PromptToStartAgain(label string, defaultOption bool) bool {
 		return true
 	}
 
+	return false
+}
+
+// IsNodeReady returns true if the node is ready
+func IsNodeReady(node *corev1.Node) bool {
+	if node != nil && len(node.Status.Conditions) > 0 {
+		for _, condition := range node.Status.Conditions {
+			if condition.Type == corev1.NodeReady {
+				return condition.Status == corev1.ConditionTrue
+			}
+		}
+	}
 	return false
 }

@@ -65,7 +65,8 @@ func NewCmdCSPCNodePatch() *cobra.Command {
 				ns, _ := cmd.Flags().GetString("openebs-namespace")
 				fromNode, _ := cmd.Flags().GetString("from-node")
 				toNode, _ := cmd.Flags().GetString("to-node")
-				util.CheckErr(storage.Update(ns, args[0], fromNode, toNode), util.Fatal)
+				debug, _ := cmd.Flags().GetBool("debug")
+				util.CheckErr(storage.Update(ns, args[0], fromNode, toNode, debug), util.Fatal)
 			} else {
 				fmt.Println(cspcPatchHelp)
 			}
@@ -75,5 +76,6 @@ func NewCmdCSPCNodePatch() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&toNode, "to-node", "", "", "--to-node flag has the name of the new node")
 	cmd.PersistentFlags().StringVarP(&fromNode, "from-node", "", "",
 		"--from-node has the name of the old/unhealthy node")
+	cmd.PersistentFlags().Bool("debug", false, "--debug flag to enable debug mode and figure out node automatically")
 	return cmd
 }
