@@ -129,6 +129,7 @@ func TestCSPCnodeChange(t *testing.T) {
 	}
 }
 
+
 var cspc1 = cstorv1.CStorPoolCluster{
 	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "cspc1", Namespace: "openebs"},
@@ -186,21 +187,6 @@ var goodBD2N2 = v1alpha1.BlockDevice{
 		Path: "/dev/sda"},
 	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
 
-var badBD1N2 = v1alpha1.BlockDevice{
-	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
-	ObjectMeta: metav1.ObjectMeta{Name: "bd1n2", Namespace: "openebs",
-		Labels: map[string]string{"kubernetes.io/hostname": "node3"}},
-	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
-		Path: "/dev/sda"},
-	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
-var badBD2N2 = v1alpha1.BlockDevice{
-	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
-	ObjectMeta: metav1.ObjectMeta{Name: "bd2n2", Namespace: "openebs",
-		Labels: map[string]string{"kubernetes.io/hostname": "node3"}},
-	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
-		Path: "/dev/sda"},
-	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
-
 var cspc3 = cstorv1.CStorPoolCluster{
 	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "cspc1", Namespace: "openebs"},
@@ -239,7 +225,7 @@ func TestDebugCSPCNode(t *testing.T) {
 			fmt.Errorf(`no change in the storage node`)},
 		// it'd make sense to evaluate the error in the above Test suite somehow
 		{"CSPC exists, two BD's loc changed to other node", args{
-			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc1, &goodBD1N1, &goodBD2N1, &badBD1N2, &badBD2N2)}, cspc: "cspc1"},
+			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc2, &goodBD1N1, &goodBD2N1, &goodBD1N2, &goodBD2N2)}, cspc: "cspc1"},
 			map[string]string{"node2": "node3"}, false, nil},
 		{"CSPC exists, BD nodes swapped", args{
 			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc3, &goodBD1N1, &goodBD2N1,

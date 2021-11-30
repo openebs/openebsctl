@@ -84,7 +84,7 @@ func DebugCSPCNode(k *client.K8sClient, cspc string) (map[string]string, error) 
 		}
 	}
 	// 3. Fetch all the BDs
-	bds, err := k.GetBDs(devices, "")
+	bds, _ := k.GetBDs(devices, "")
 	actualBDToHost := make(map[string]string)
 	for _, bd := range bds.Items {
 		actualBDToHost[bd.Name] = bd.Labels["kubernetes.io/hostname"]
