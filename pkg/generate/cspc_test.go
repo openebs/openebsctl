@@ -37,6 +37,7 @@ func TestCSPC(t *testing.T) {
 		GB       int
 		poolType string
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -92,7 +93,7 @@ func TestCSPC(t *testing.T) {
 			args{
 				c: &client.K8sClient{Ns: "", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2, &node3),
 					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD1N2, &goodBD1N3, &goodBD2N1, &goodBD2N2, &goodBD2N3)},
-					// Stripe pools can have only one RaidGroup per instance, i.e.
+				// Stripe pools can have only one RaidGroup per instance, i.e.
 				nodes: []string{"node1", "node2", "node3"}, devs: 2, poolType: "stripe"}, &threeNodeTwoDevCSPC, StripeThreeNodeTwoDev, false,
 		},
 		{
@@ -109,17 +110,43 @@ func TestCSPC(t *testing.T) {
 					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD2N1, &goodBD1N2, &goodBD2N2, &goodBD1N3, &goodBD2N3)},
 				nodes: []string{"node1", "node2", "node3"}, devs: 2, poolType: "mirror"}, &mirrorCSPC, mirrorCSPCstr, false,
 		},
+		{
+			"all good raidz pool gets provisioned, 3 nodes of same size on 2 nodes",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD2N1, &goodBD3N1, &goodBD1N2, &goodBD2N2, &goodBD3N2)},
+				nodes: []string{"node1", "node2"}, devs: 3, poolType: "raidz"}, &raidzCSPCThreeBDTwoNode, raidzCSPCstr, false,
+		},
+		{
+			"all good raidz2 pool does not gets provisioned, insufficient BDs 3 nodes of same size on 2 nodes",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1,
+						&goodBD2N1, &goodBD3N1, &goodBD4N1, &goodBD1N2,
+						&goodBD2N2, &goodBD3N2, &goodBD4N2)},
+				nodes: []string{"node1", "node2"}, devs: 3, poolType: "raidz2"}, nil, "", true,
+		},
+		{
+			"all good raidz2 pool gets provisioned, 3 nodes of same size on 2 nodes",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1,
+						&goodBD2N1, &goodBD3N1, &goodBD4N1, &goodBD1N2,
+						&goodBD2N2, &goodBD3N2, &goodBD4N2)},
+				nodes: []string{"node1", "node2"}, devs: 4, poolType: "raidz2"}, &raidz2CSPCThreeBDTwoNode, raidz2CSPCstr, false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// tt.args.GB,
 			got, got1, err := cspc(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
-			assert.YAMLEq(t, tt.str, got1, "stringified YAML is not the same as expected")
-			assert.EqualValues(t, got, tt.want, "struct is not same")
 			if (err != nil) != tt.wantErr {
 				t.Errorf("cspc() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
+			assert.YAMLEq(t, tt.str, got1, "stringified YAML is not the same as expected")
+			assert.Exactlyf(t, got, tt.want, "struct is not same")
+			// these redundant checks can be removed later
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("cspc() got = %v, want %v", got, tt.want)
 			}
@@ -137,7 +164,7 @@ func Test_isPoolTypeValid(t *testing.T) {
 		want      bool
 	}{
 		{name: "valid pools", poolNames: []string{"stripe", "mirror", "raidz", "raidz2"}, want: true},
-		{name: "invalid pools", poolNames: []string{"striped", "mirrored", "raid-z", "raid-z2", "lvm"}, want: false},
+		{name: "invalid pools", poolNames: []string{"striped", "mirrored", "raid-z", "raid-z2", "lvm", "raidz1", "raidz0"}, want: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -181,6 +208,12 @@ func Test_makePools(t *testing.T) {
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
 			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
+		{"raidz, two node, three disk", args{"raidz", 3,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2}},
+			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &raidzCSPCThreeBDTwoNode.Spec.Pools, false},
+		{"raidz2, two node, three disk", args{"raidz2", 4,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2}},
+			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &raidz2CSPCThreeBDTwoNode.Spec.Pools, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -192,7 +225,7 @@ func Test_makePools(t *testing.T) {
 			if tt.want == got {
 				fmt.Println("yay")
 			}
-			assert.Equal(t, tt.want, got, "", nil)
+			assert.Equal(t, tt.want, got, "pool specs differ for %s", tt.name)
 		})
 	}
 }
