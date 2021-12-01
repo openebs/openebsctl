@@ -129,7 +129,6 @@ func TestCSPCnodeChange(t *testing.T) {
 	}
 }
 
-
 var cspc1 = cstorv1.CStorPoolCluster{
 	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "cspc1", Namespace: "openebs"},
@@ -158,6 +157,19 @@ var cspc2 = cstorv1.CStorPoolCluster{
 			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolMirrored)}}}},
 }
 
+var cspc4 = cstorv1.CStorPoolCluster{
+	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "cspc1", Namespace: "openebs"},
+	Spec: cstorv1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{{
+		NodeSelector: map[string]string{"kubernetes.io/hostname": "node1"},
+		DataRaidGroups: []cstorv1.RaidGroup{{
+			CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1n1"}, {BlockDeviceName: "bd2n1"}}}},
+		PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolMirrored)}},
+		{NodeSelector: map[string]string{"kubernetes.io/hostname": "node2"},
+			DataRaidGroups: []cstorv1.RaidGroup{{
+				CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1n2"}, {BlockDeviceName: "bd2n2"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolMirrored)}}}},
+}
 var goodBD1N1 = v1alpha1.BlockDevice{
 	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "bd1n1", Namespace: "openebs",
@@ -165,10 +177,24 @@ var goodBD1N1 = v1alpha1.BlockDevice{
 	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
 		Path: "/dev/sda"},
 	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
+var badBD1N1 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd1n1", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node29"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
 var goodBD2N1 = v1alpha1.BlockDevice{
 	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "bd2n1", Namespace: "openebs",
 		Labels: map[string]string{"kubernetes.io/hostname": "node1"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
+var badBD2N1 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd2n1", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node30"}},
 	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd1n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
 		Path: "/dev/sda"},
 	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
@@ -232,6 +258,23 @@ func TestDebugCSPCNode(t *testing.T) {
 			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc3, &goodBD1N1, &goodBD2N1,
 				&goodBD1N2, &goodBD2N2)}, cspc: "cspc1"}, nil, true,
 			fmt.Errorf(`more than one node change in the storage instance`)},
+		{"CSPC exists, one instance's BDs got moved to different node", args{
+			// the user needs to move the badBD2N1 via some tool to another node(N1) from N30
+			// updating the node-selectors in CSPC spec won't help quantitatively
+			// (i.e. 1 out of 4 disks in the wrong pool-instance)
+			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc4, &goodBD1N1, &badBD2N1,
+				&goodBD1N2, &goodBD2N2)}, cspc: "cspc1"}, nil, true,
+			fmt.Errorf(`more than one node change in the storage instance`)},
+
+		// TODO: Should a completely different error be thrown if one instance's two BDs are in two different nodes?
+		// Should the error messages be different when one of the instances has the majority of the BDs?
+		{"CSPC exists, one instance's two BDs got moved to different nodes each", args{
+			// the user needs to move the badBD2N1 via some tool to another node(N1) from N30
+			// updating the node-selectors in CSPC spec won't help quantitatively
+			// (i.e. 1 out of 4 disks in the wrong pool-instance)
+			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc4, &badBD1N1, &badBD2N1,
+				&goodBD1N2, &goodBD2N2)}, cspc: "cspc1"}, nil, true,
+			fmt.Errorf(`multiple bds have switched to different nodes`)},
 		{"CSPC exists, all 4 BDs are missing", args{
 			k: &client.K8sClient{Ns: "openebs", OpenebsCS: fakecstor.NewSimpleClientset(&cspc3)}, cspc: "cspc1"}, nil, true,
 			fmt.Errorf("%d blockdevices are missing from the cluster", 4)},
@@ -243,7 +286,7 @@ func TestDebugCSPCNode(t *testing.T) {
 				t.Errorf("DebugCSPCNode() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			} else if err != nil && !reflect.DeepEqual(err.Error(), tt.err.Error()) {
-				t.Logf("DebugCSPCNode() Got %v error, wanted %v error", err, tt.err)
+				t.Errorf("DebugCSPCNode() Got %v error, wanted %v error", err, tt.err)
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DebugCSPCNode() got = %v, want %v", got, tt.want)
