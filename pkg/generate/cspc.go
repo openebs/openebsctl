@@ -149,7 +149,8 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 	// IMPORTANT: User is more likely to see the nodeNames, so the errors
 	// should preferably be shown in terms of nodeNames and not hostNames
 	var spec []cstorv1.PoolSpec
-	if poolType == string(cstorv1.PoolStriped) {
+	switch poolType {
+	case string(cstorv1.PoolStriped):
 		// always single RAID-group with nDevices patched together, cannot disk replace,
 		// no redundancy in a pool, redundancy possible across pool instances
 
@@ -181,10 +182,14 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 			})
 		}
 		return &spec, nil
-	} else if poolType == string(cstorv1.PoolMirrored) {
-		if nDevices%2 != 0 {
-			return nil, fmt.Errorf("mirrored pool requires multiples of two block device")
+	case string(cstorv1.PoolMirrored), string(cstorv1.PoolRaidz), string(cstorv1.PoolRaidz2):
+		// 1. Check for devices per node count against the fixed minimum
+		min := minCount()[poolType]
+		if nDevices < min {
+			return nil, fmt.Errorf("%s pool requires a minimum of %d block device per node",
+				poolType, min)
 		}
+		// 2. Start filling in the devices in their RAID-groups per the hostnames
 		for i, host := range hosts {
 			var raidGroups []cstorv1.RaidGroup
 			// add all BDs to a CSPCs CSPI spec
@@ -193,32 +198,36 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 				return nil, fmt.Errorf("not enough eligible blockdevices found on node %s, want %d, found %d", nodes[i], nDevices, len(bds))
 			}
 			index := 0
-			for d := 0; d < nDevices/2; d++ {
-				raids := []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: bds[index].Name},
-					{BlockDeviceName: bds[index+1].Name}}
+			for d := 0; d < nDevices/min; d++ {
+				var raids []cstorv1.CStorPoolInstanceBlockDevice
+				for j := 0; j < min; j++ {
+					raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[index].Name})
+					index++
+				}
 				raidGroups = append(raidGroups, cstorv1.RaidGroup{CStorPoolInstanceBlockDevices: raids})
-				index += 2
 			}
 			// add the CSPI BD spec inside cspc to a PoolSpec
 			spec = append(spec, cstorv1.PoolSpec{
 				NodeSelector:   map[string]string{"kubernetes.io/hostname": host},
 				DataRaidGroups: raidGroups,
 				PoolConfig: cstorv1.PoolConfig{
-					DataRaidGroupType: string(cstorv1.PoolMirrored),
+					DataRaidGroupType: poolType,
 				},
 			})
 		}
 		return &spec, nil
-		// 2ⁿ devices per RaidGroup, (confirm) not more than 2 devices per RaidGroup
-		// DOUBT: Should this throw an error if nDevices isn't 2ⁿ?
-	} else if poolType == string(cstorv1.PoolRaidz) {
-		return nil, fmt.Errorf("%s is not supported yet", poolType)
-		// 2ⁿ+1 devices per RaidGroup
-	} else if poolType == string(cstorv1.PoolRaidz2) {
-		return nil, fmt.Errorf("%s is not supported yet", poolType)
-		// 2ⁿ+2 devices per RaidGroup
+	default:
+		return nil, fmt.Errorf("unknown pool-type")
 	}
-	return nil, fmt.Errorf("unknown pool-type")
+}
+
+// minCount states the minimum number of BDs for a pool type
+func minCount() map[string]int {
+	return map[string]int{
+		string(cstorv1.PoolMirrored): 2,
+		string(cstorv1.PoolRaidz):    3,
+		string(cstorv1.PoolRaidz2):   4,
+	}
 }
 
 // filterCStorCompatible takes a list of BDs and gives out a list of BDs which can be used to provision a pool

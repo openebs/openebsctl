@@ -92,6 +92,7 @@ func TestCSPC(t *testing.T) {
 			args{
 				c: &client.K8sClient{Ns: "", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2, &node3),
 					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1, &goodBD1N2, &goodBD1N3, &goodBD2N1, &goodBD2N2, &goodBD2N3)},
+					// Stripe pools can have only one RaidGroup per instance, i.e.
 				nodes: []string{"node1", "node2", "node3"}, devs: 2, poolType: "stripe"}, &threeNodeTwoDevCSPC, StripeThreeNodeTwoDev, false,
 		},
 		{
