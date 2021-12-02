@@ -17,8 +17,6 @@ limitations under the License.
 package generate
 
 import (
-	"fmt"
-	"reflect"
 	"testing"
 
 	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
@@ -146,13 +144,6 @@ func TestCSPC(t *testing.T) {
 			}
 			assert.YAMLEq(t, tt.str, got1, "stringified YAML is not the same as expected")
 			assert.Exactlyf(t, got, tt.want, "struct is not same")
-			// these redundant checks can be removed later
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("cspc() got = %v, want %v", got, tt.want)
-			}
-			if got1 != tt.str {
-				t.Errorf("cspc() got1 = %v, want %v", got1, tt.str)
-			}
 		})
 	}
 }
@@ -237,9 +228,6 @@ func Test_makePools(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("makePools() error = %v, wantErr %v", err, tt.wantErr)
 				return
-			}
-			if tt.want == got {
-				fmt.Println("yay")
 			}
 			assert.Equal(t, tt.want, got, "pool specs differ for %s", tt.name)
 		})
