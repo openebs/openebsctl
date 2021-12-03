@@ -188,7 +188,7 @@ func homeDir() string {
 func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	pods, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{FieldSelector: "status.phase=Running", LabelSelector: fmt.Sprintf("openebs.io/component-name=%s", util.CasTypeAndComponentNameMap[strings.ToLower(casType)])})
 	if err != nil || len(pods.Items) == 0 {
-		return "", errors.New("unable to determine openebs namespace")
+		return "", fmt.Errorf("unable to determine openebs namespace, err: %v", err)
 	}
 	return pods.Items[0].Namespace, nil
 }

@@ -24,6 +24,7 @@ import (
 	cstorfake "github.com/openebs/api/v2/pkg/client/clientset/versioned/fake"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/stretchr/testify/assert"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -137,7 +138,7 @@ func TestCSPC(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// tt.args.GB,
-			got, got1, err := cspc(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType)
+			got, got1, err := cspc(tt.args.c, tt.args.nodes, tt.args.devs, tt.args.poolType, resource.MustParse("1Gi"))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("cspc() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -214,6 +215,7 @@ func Test_makePools(t *testing.T) {
 		{"mirror, three node, one disk", args{"mirror", 1,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
+			// one cannot create a mirror pool with just one disk per node
 			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
 		{"raidz, two node, three disk", args{"raidz", 3,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2}},
