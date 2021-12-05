@@ -30,3 +30,4 @@ enable:
     - goimports
     - golint
     - misspell
+    - goheader
