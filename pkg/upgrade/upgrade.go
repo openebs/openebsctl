@@ -23,6 +23,7 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	batchV1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // UpgradeOpts are the upgrade options that are provided
@@ -32,6 +33,7 @@ type UpgradeOpts struct {
 	ToVersion   string
 	ImagePrefix string
 	ImageTag    string
+	ServiceAccountName string
 }
 
 // UpgradeJobCfg holds upgrade job confiogurations while creating a new Job
@@ -179,4 +181,16 @@ func addArgs(upgradeOpts UpgradeOpts) []string {
 	}
 
 	return result
+}
+
+// getServiceAccountName returns service account Name for the openEBS resource
+func getServiceAccountName(podList *corev1.PodList) string {
+	var serviceAccountName string
+	for _, pod := range podList.Items {
+		svname := pod.Spec.ServiceAccountName
+		if svname != "" {
+			serviceAccountName = svname
+		}
+	}
+	return serviceAccountName
 }
