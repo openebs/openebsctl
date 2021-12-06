@@ -104,7 +104,7 @@ func runningJobHandler(k *client.K8sClient, runningJob *batchV1.Job) error {
 
 		if runningJob.Status.Succeeded > 0 {
 			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
-			shouldRestartJob(k, info)
+			return shouldRestartJob(k, info)
 		}
 	}
 
