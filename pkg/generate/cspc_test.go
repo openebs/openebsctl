@@ -155,7 +155,7 @@ func Test_makePools(t *testing.T) {
 		nDevices int
 		bd       map[string][]v1alpha1.BlockDevice
 		nodes    []string
-		hosts 	 []string
+		hosts    []string
 	}
 	tests := []struct {
 		name    string
@@ -174,7 +174,7 @@ func Test_makePools(t *testing.T) {
 		{"mirror, two node, four disks", args{"mirror", 4,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1},
 				"node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2}, "node3": {goodBD1N3, goodBD2N3}},
-				// in the above example, presence of node3 BDs don't matter
+			// in the above example, presence of node3 BDs don't matter
 			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &mirrorCSPCFourBDs.Spec.Pools, false},
 		{"mirror, three node, one disk", args{"mirror", 1,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},

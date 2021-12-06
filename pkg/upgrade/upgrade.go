@@ -29,10 +29,10 @@ import (
 // UpgradeOpts are the upgrade options that are provided
 // with the CLI flags
 type UpgradeOpts struct {
-	CasType     string
-	ToVersion   string
-	ImagePrefix string
-	ImageTag    string
+	CasType            string
+	ToVersion          string
+	ImagePrefix        string
+	ImageTag           string
 	ServiceAccountName string
 }
 

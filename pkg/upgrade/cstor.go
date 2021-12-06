@@ -17,9 +17,11 @@ limitations under the License.
 package upgrade
 
 import (
+	"errors"
 	"fmt"
 	"log"
 
+	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	"github.com/openebs/api/v2/pkg/kubernetes/core"
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
@@ -38,40 +40,39 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 		k.Ns = "openebs"
 	}
 
-	poolNames := getCSPCPoolNames(k)
+	cspcList, err := k.ListCSPC()
+	if err != nil {
+		log.Fatal("err listing CSPC ", err)
+	}
+
+	fmt.Printf("%+v", cspcList)
+
+	poolNames := getCSPCPoolNames(cspcList)
 	cfg := UpgradeJobCfg{
 		fromVersion:        "",
 		toVersion:          "",
 		namespace:          k.Ns,
 		resources:          poolNames,
-		serviceAccountName: "openebs-maya-operator",
+		serviceAccountName: "",
 		backOffLimit:       4,
 		logLevel:           4,
 		additionalArgs:     addArgs(options),
 	}
 
-	// Handle versioning details
-	for _, name := range poolNames {
-		cspc, err := k.GetCSPC(name)
-		if err != nil {
-			fmt.Println("Error detecting version of Cstor Pool Cluster")
-			continue
-		}
-
-		fmt.Println("Fetching CSPC control plane and Data Plane Version")
-		cfg.fromVersion = cspc.VersionDetails.Status.Current // Assigning from Version
-		fmt.Println("Current Version:", cfg.fromVersion)
-		if options.ToVersion == "" {
-			cfg.toVersion = cspc.VersionDetails.Desired // Assigning to-version
-			if cfg.toVersion == "" {
-				continue
-			}
-		} else {
-			cfg.toVersion = options.ToVersion // use cli flag instead
-		}
-		fmt.Println("Desired Version:", cfg.toVersion)
-		break
+	cfg.fromVersion, cfg.toVersion, err = getCstorVersionDetails(cspcList)
+	if err != nil {
+		fmt.Println("error: ", err)
 	}
+	if options.ToVersion != "" { // overriding the desired version from the cli flag
+		cfg.toVersion = options.ToVersion
+	}
+
+	operator, err := k.GetCSPCOperator()
+	if err != nil {
+		fmt.Println("err: ", err)
+		return
+	}
+	cfg.serviceAccountName = operator.Spec.ServiceAccountName
 
 	// Check if a job is running with underlying PV
 	res, err := inspectRunningUpgradeJobs(k, &cfg)
@@ -82,32 +83,6 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 
 	// Create upgrade job
 	k.CreateBatchJob(buildCspcbatchJob(&cfg), k.Ns)
-}
-
-func getCSPCPoolNames(k *client.K8sClient) []string {
-	scList, err := k.GetScWithCasType(util.CstorCasType)
-	if err != nil {
-		log.Fatal("err listing storage classes: ", err)
-	}
-
-	// Set to contain cspc names
-	cspcNames := make(map[string]bool)
-	for _, sc := range scList {
-		cspcName := sc.Parameters["cstorPoolCluster"]
-		if cspcName != "" {
-			cspcNames[cspcName] = true
-		}
-	}
-
-	// create slice and return it
-	poolnames := make([]string, len(cspcNames))
-	i := 0
-	for pool := range cspcNames {
-		poolnames[i] = pool
-		i++
-	}
-
-	return poolnames
 }
 
 // buildCspcbatchJob returns CSPC Job to be build
@@ -158,4 +133,31 @@ func getCstorCspcContainerArgs(cfg *UpgradeJobCfg) []string {
 	}, cfg.resources...)
 	args = append(args, cfg.additionalArgs...)
 	return args
+}
+
+func getCSPCPoolNames(cspcList *cstorv1.CStorPoolClusterList) []string {
+	var poolNames []string
+	for _, cspc := range cspcList.Items {
+		poolNames = append(poolNames, cspc.Name)
+	}
+
+	return poolNames
+}
+
+// getCstorVersionDetails returns cstor versioning details for upgrade job cfg
+// It returns fromVersion, toVersion, or error
+func getCstorVersionDetails(cspcList *cstorv1.CStorPoolClusterList) (fromVersion string, toVersion string, err error) {
+	fmt.Println("Fetching CSPC control plane and Data Plane Version")
+	for _, cspc := range cspcList.Items {
+		fromVersion = cspc.VersionDetails.Status.Current
+		toVersion = cspc.VersionDetails.Desired
+
+		if fromVersion != "" && toVersion != "" {
+			fmt.Println("Current Version:", fromVersion)
+			fmt.Println("Desired Version:", toVersion)
+			return
+		}
+	}
+
+	return "", "", errors.New("problems fetching versioning details")
 }

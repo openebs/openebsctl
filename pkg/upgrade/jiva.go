@@ -62,7 +62,7 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 			fmt.Println("Jiva-operator is not running!")
 			return
 		}
-				
+
 		upgradeOpts.ToVersion = pods.Items[0].Labels["openebs.io/version"]
 		upgradeOpts.ServiceAccountName = getServiceAccountName(pods)
 	}
