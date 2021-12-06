@@ -49,7 +49,7 @@ type UpgradeJobCfg struct {
 }
 
 // inspectRunningUpgradeJobs inspects all the jobs running in the cluster
-// and returns if the job updating the resource is already available
+// and returns if even one of the the jobs updating the resource is already scheduled/running
 func inspectRunningUpgradeJobs(k *client.K8sClient, cfg *UpgradeJobCfg) error {
 	jobs, err := k.GetBatchJobs("", "")
 	if err != nil {
