@@ -50,10 +50,10 @@ type UpgradeJobCfg struct {
 
 // inspectRunningUpgradeJobs inspects all the jobs running in the cluster
 // and returns if the job updating the resource is already available
-func inspectRunningUpgradeJobs(k *client.K8sClient, cfg *UpgradeJobCfg) (bool, error) {
+func inspectRunningUpgradeJobs(k *client.K8sClient, cfg *UpgradeJobCfg) error {
 	jobs, err := k.GetBatchJobs("", "")
 	if err != nil {
-		return false, err
+		return err
 	}
 
 	// runningJob holds the information about the jobs that are in use by the PV
@@ -79,7 +79,7 @@ func inspectRunningUpgradeJobs(k *client.K8sClient, cfg *UpgradeJobCfg) (bool, e
 
 // runningJobHandler checks the status of the job and takes action on it
 // to modify or delete it based on the status of the Job
-func runningJobHandler(k *client.K8sClient, runningJob *batchV1.Job) (bool, error) {
+func runningJobHandler(k *client.K8sClient, runningJob *batchV1.Job) error {
 
 	if runningJob != nil {
 		jobCondition := runningJob.Status.Conditions
@@ -92,33 +92,23 @@ func runningJobHandler(k *client.K8sClient, runningJob *batchV1.Job) (bool, erro
 			// Job found thus delete the job and return false so that further process can be started
 			if err := startDeletionTask(k, &info); err != nil {
 				fmt.Println("error deleting job:", err)
-				return true, err
+				return err
 			}
 		}
 
 		if runningJob.Status.Active > 0 {
-			fmt.Println("A job is already active with the name ", runningJob.Name, " that is upgrading the PV.")
+			fmt.Println("A job is already active with the name", runningJob.Name, " that is upgrading the PV.")
 			// TODO:  Check the POD underlying the PV if their is any error inside
-			return true, nil
+			os.Exit(0)
 		}
 
 		if runningJob.Status.Succeeded > 0 {
 			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
-			// Provide the option to restart the Job
-			shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
-			if shouldStart {
-				// Delete previous successful task
-				if err := startDeletionTask(k, &info); err != nil {
-					return true, err
-				}
-			} else {
-				os.Exit(0)
-			}
+			shouldRestartJob(k, info)
 		}
-		return false, nil
 	}
 
-	return false, nil
+	return nil
 }
 
 // getReason returns the reason for the current status of Job
@@ -193,4 +183,21 @@ func getServiceAccountName(podList *corev1.PodList) string {
 		}
 	}
 	return serviceAccountName
+}
+
+// shouldRestartJob prompts if the job should be restarted after deleting
+// the traces of previous one
+func shouldRestartJob(k *client.K8sClient, info jobInfo) error {
+	// Provide the option to restart the Job
+	shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
+	if shouldStart {
+		// Delete previous successful task
+		if err := startDeletionTask(k, &info); err != nil {
+			return err
+		}
+	} else {
+		os.Exit(0)
+	}
+
+	return nil
 }

@@ -45,8 +45,6 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 		log.Fatal("err listing CSPC ", err)
 	}
 
-	fmt.Printf("%+v", cspcList)
-
 	poolNames := getCSPCPoolNames(cspcList)
 	cfg := UpgradeJobCfg{
 		fromVersion:        "",
@@ -75,10 +73,10 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 	cfg.serviceAccountName = operator.Spec.ServiceAccountName
 
 	// Check if a job is running with underlying PV
-	res, err := inspectRunningUpgradeJobs(k, &cfg)
+	err = inspectRunningUpgradeJobs(k, &cfg)
 	// If error or upgrade job is already running return
-	if err != nil || res {
-		log.Fatal("An upgrade job is already running with the underlying volume!")
+	if err != nil {
+		log.Fatal("An upgrade job is already running with the underlying volume!, More: ", err)
 	}
 
 	// Create upgrade job

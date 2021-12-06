@@ -80,10 +80,10 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	}
 
 	// Check if a job is running with underlying PV
-	res, err := inspectRunningUpgradeJobs(k, &cfg)
+	err = inspectRunningUpgradeJobs(k, &cfg)
 	// If error or upgrade job is already running return
-	if err != nil || res {
-		log.Fatal("An upgrade job is already running with the underlying volume!")
+	if err != nil {
+		log.Fatal("An upgrade job is already running with the underlying volume!, More: ", err)
 	}
 
 	k.CreateBatchJob(BuildJivaBatchJob(&cfg), cfg.namespace)
