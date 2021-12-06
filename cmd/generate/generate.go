@@ -44,8 +44,8 @@ func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
 	var nodes, raidType string
 	var devices int
 	cmd := &cobra.Command{
-		Use:     "cspc",
-		Short:   "Generates cspc resources YAML/configuration which can be used to provision cStor storage pool clusters",
+		Use:   "cspc",
+		Short: "Generates cspc resources YAML/configuration which can be used to provision cStor storage pool clusters",
 		Run: func(cmd *cobra.Command, args []string) {
 			node, _ := cmd.Flags().GetString("nodes")
 			raid, _ := cmd.Flags().GetString("raidtype")

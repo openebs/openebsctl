@@ -21,7 +21,6 @@ import (
 
 	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	cstortypes "github.com/openebs/api/v2/pkg/apis/types"
-	"github.com/openebs/jiva-operator/pkg/apis/openebs/v1alpha1"
 	lvm "github.com/openebs/lvm-localpv/pkg/apis/openebs.io/lvm/v1alpha1"
 	"github.com/openebs/openebsctl/pkg/util"
 	zfs "github.com/openebs/zfs-localpv/pkg/apis/openebs.io/zfs/v1"
@@ -611,49 +610,49 @@ var localpvzfsCSICtrlSTS = appsv1.StatefulSet{
 //	},
 //}
 //// pvc-2 JivaVolume from jiva namespace attached on worker-node-2, two replicas & 2.10.0
-var jv2 = v1alpha1.JivaVolume{
-	TypeMeta: metav1.TypeMeta{},
-	ObjectMeta: metav1.ObjectMeta{
-		Name:      "pvc-2",
-		Namespace: "jiva",
-		Labels:    map[string]string{"nodeID": "worker-node-2"},
-	},
-	Spec: v1alpha1.JivaVolumeSpec{
-		PV:         "pvc-2",
-		Capacity:   "4Gi",
-		AccessType: "",
-		ISCSISpec: v1alpha1.ISCSISpec{
-			TargetIP:   "1.2.3.4",
-			TargetPort: 8080,
-			Iqn:        "nice-iqn",
-		},
-		MountInfo: v1alpha1.MountInfo{
-			StagingPath: "/home/staging/",
-			TargetPath:  "/home/target",
-			FSType:      "ext4",
-			DevicePath:  "",
-		},
-		Policy:                   v1alpha1.JivaVolumePolicySpec{},
-		DesiredReplicationFactor: 0,
-	},
-	Status: v1alpha1.JivaVolumeStatus{
-		Status:       "RO",
-		ReplicaCount: 2,
-		ReplicaStatuses: []v1alpha1.ReplicaStatus{
-			{Address: "tcp://192.168.2.7:9502", Mode: "RW"},
-			{Address: "tcp://192.168.2.8:9502", Mode: "RO"},
-		},
-		Phase: "Ready",
-	},
-	VersionDetails: v1alpha1.VersionDetails{
-		AutoUpgrade: false,
-		Desired:     "2.10.0",
-		Status: v1alpha1.VersionStatus{
-			DependentsUpgraded: false,
-			Current:            "2.10.0",
-		},
-	},
-}
+// var jv2 = v1alpha1.JivaVolume{
+// 	TypeMeta: metav1.TypeMeta{},
+// 	ObjectMeta: metav1.ObjectMeta{
+// 		Name:      "pvc-2",
+// 		Namespace: "jiva",
+// 		Labels:    map[string]string{"nodeID": "worker-node-2"},
+// 	},
+// 	Spec: v1alpha1.JivaVolumeSpec{
+// 		PV:         "pvc-2",
+// 		Capacity:   "4Gi",
+// 		AccessType: "",
+// 		ISCSISpec: v1alpha1.ISCSISpec{
+// 			TargetIP:   "1.2.3.4",
+// 			TargetPort: 8080,
+// 			Iqn:        "nice-iqn",
+// 		},
+// 		MountInfo: v1alpha1.MountInfo{
+// 			StagingPath: "/home/staging/",
+// 			TargetPath:  "/home/target",
+// 			FSType:      "ext4",
+// 			DevicePath:  "",
+// 		},
+// 		Policy:                   v1alpha1.JivaVolumePolicySpec{},
+// 		DesiredReplicationFactor: 0,
+// 	},
+// 	Status: v1alpha1.JivaVolumeStatus{
+// 		Status:       "RO",
+// 		ReplicaCount: 2,
+// 		ReplicaStatuses: []v1alpha1.ReplicaStatus{
+// 			{Address: "tcp://192.168.2.7:9502", Mode: "RW"},
+// 			{Address: "tcp://192.168.2.8:9502", Mode: "RO"},
+// 		},
+// 		Phase: "Ready",
+// 	},
+// 	VersionDetails: v1alpha1.VersionDetails{
+// 		AutoUpgrade: false,
+// 		Desired:     "2.10.0",
+// 		Status: v1alpha1.VersionStatus{
+// 			DependentsUpgraded: false,
+// 			Current:            "2.10.0",
+// 		},
+// 	},
+// }
 var jivaPV1 = corev1.PersistentVolume{
 	TypeMeta: metav1.TypeMeta{},
 	ObjectMeta: metav1.ObjectMeta{
