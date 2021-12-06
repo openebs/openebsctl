@@ -65,12 +65,7 @@ func InstantiateCspcUpgrade(options UpgradeOpts) {
 		cfg.toVersion = options.ToVersion
 	}
 
-	operator, err := k.GetCSPCOperator()
-	if err != nil {
-		fmt.Println("err: ", err)
-		return
-	}
-	cfg.serviceAccountName = operator.Spec.ServiceAccountName
+	cfg.serviceAccountName = GetCSPCOperatorServiceAccName(k)
 
 	// Check if a job is running with underlying PV
 	err = inspectRunningUpgradeJobs(k, &cfg)

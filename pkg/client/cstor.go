@@ -19,7 +19,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/pkg/errors"
@@ -292,17 +291,4 @@ func (k K8sClient) GetCSPIs(cspiNames []string, labelselector string) (*cstorv1.
 	return &cstorv1.CStorPoolInstanceList{
 		Items: list,
 	}, nil
-}
-
-func (k K8sClient) GetCSPCOperator() (*corev1.Pod, error) {
-	operator, err := k.K8sCS.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{LabelSelector: "openebs.io/component-name=cspc-operator"})
-	if err != nil {
-		log.Fatal("error occured while searching operator: ", err)
-	}
-
-	if len(operator.Items) == 0 {
-		return nil, errors.New("CSPC operator Not Found!")
-	}
-
-	return &operator.Items[0], nil
 }
