@@ -276,28 +276,6 @@ func (k K8sClient) GetSC(scName string) (*v1.StorageClass, error) {
 	return sc, nil
 }
 
-// GetScWithCasType returns storage classes with the given cas-types
-func (k K8sClient) GetScWithCasType(casType string) ([]v1.StorageClass, error) {
-	scList, err := k.K8sCS.StorageV1().StorageClasses().List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, errors.Wrap(err, "error while getting storage class")
-	}
-
-	var storageClasses []v1.StorageClass
-	if csiProvisioner, ok := util.CasTypeToCSIProvisionerMap[casType]; ok {
-		for _, sc := range scList.Items {
-			if sc.Provisioner == csiProvisioner {
-				storageClasses = append(storageClasses, sc)
-			}
-		}
-	}
-
-	if len(storageClasses) == 0 {
-		return nil, errors.New("No storage class found with cas-type " + casType)
-	}
-	return storageClasses, nil
-}
-
 // GetCSIControllerSTS returns the CSI controller sts with a specific
 // openebs-component-name label key
 func (k K8sClient) GetCSIControllerSTS(name string) (*appsv1.StatefulSet, error) {

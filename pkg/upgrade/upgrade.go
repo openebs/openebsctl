@@ -58,6 +58,9 @@ func inspectRunningUpgradeJobs(k *client.K8sClient, cfg *UpgradeJobCfg) error {
 
 	// runningJob holds the information about the jobs that are in use by the PV
 	// that has an upgrade-job progress(any status) already going
+	// This anonynomous function is used to ease-in the code logic to prevent
+	// using multiple booleans to get out of the loops once needed to exit
+	// return statement in anonymous functions helps us with preventing additional checks
 	var runningJob *batchV1.Job
 	func() {
 		for _, job := range jobs.Items { // JobItems
