@@ -245,6 +245,14 @@ func (k K8sClient) GetCSPC(poolName string) (*cstorv1.CStorPoolCluster, error) {
 	return cStorPool, nil
 }
 
+func (k K8sClient) ListCSPC() (*cstorv1.CStorPoolClusterList, error) {
+	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolClusters(k.Ns).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "Error while getting cspc")
+	}
+	return cStorPool, nil
+}
+
 // GetCSPI returns the CStorPoolInstance for cStor volume using the poolName passed.
 func (k K8sClient) GetCSPI(poolName string) (*cstorv1.CStorPoolInstance, error) {
 	cStorPool, err := k.OpenebsCS.CstorV1().CStorPoolInstances(k.Ns).Get(context.TODO(), poolName, metav1.GetOptions{})

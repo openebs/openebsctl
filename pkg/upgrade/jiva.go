@@ -19,8 +19,6 @@ package upgrade
 import (
 	"fmt"
 	"log"
-	"os"
-	"time"
 
 	core "github.com/openebs/api/v2/pkg/kubernetes/core"
 	"github.com/openebs/openebsctl/pkg/client"
@@ -28,17 +26,6 @@ import (
 	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 )
-
-type jivaUpdateConfig struct {
-	fromVersion        string
-	toVersion          string
-	namespace          string
-	pvNames            []string
-	backOffLimit       int32
-	serviceAccountName string
-	logLevel           int32
-	additionalArgs     []string
-}
 
 type jobInfo struct {
 	name      string
@@ -57,7 +44,7 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 	}
 
 	// get running volumes from cluster
-	volNames, fromVersion, err := GetJivaVolumes(k)
+	volNames, fromVersion, err := getJivaVolumesVersion(k)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -77,32 +64,33 @@ func InstantiateJivaUpgrade(upgradeOpts UpgradeOpts) {
 		}
 
 		upgradeOpts.ToVersion = pods.Items[0].Labels["openebs.io/version"]
+		upgradeOpts.ServiceAccountName = getServiceAccountName(pods)
 	}
 
 	// create configuration
-	cfg := jivaUpdateConfig{
+	cfg := UpgradeJobCfg{
 		fromVersion:        fromVersion,
 		toVersion:          upgradeOpts.ToVersion,
 		namespace:          ns,
-		pvNames:            volNames,
-		serviceAccountName: "jiva-operator",
+		resources:          volNames,
+		serviceAccountName: upgradeOpts.ServiceAccountName,
 		backOffLimit:       4,
 		logLevel:           4,
 		additionalArgs:     addArgs(upgradeOpts),
 	}
 
 	// Check if a job is running with underlying PV
-	res, err := checkIfJobIsAlreadyRunning(k, &cfg)
+	err = inspectRunningUpgradeJobs(k, &cfg)
 	// If error or upgrade job is already running return
-	if err != nil || res {
-		log.Fatal("An upgrade job is already running with the underlying volume!")
+	if err != nil {
+		log.Fatal("An upgrade job is already running with the underlying volume!, More: ", err)
 	}
 
 	k.CreateBatchJob(BuildJivaBatchJob(&cfg), cfg.namespace)
 }
 
-// GetJivaVolumes returns the Jiva volumes list and current version
-func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
+// getJivaVolumesVersion returns the Jiva volumes list and current version
+func getJivaVolumesVersion(k *client.K8sClient) ([]string, string, error) {
 	// 1. Fetch all jivavolumes CRs in all namespaces
 	_, jvMap, err := k.GetJVs(nil, util.Map, "", util.MapOptions{Key: util.Name})
 	if err != nil {
@@ -135,22 +123,8 @@ func GetJivaVolumes(k *client.K8sClient) ([]string, string, error) {
 	return volumeNames, version, nil
 }
 
-// Returns additional arguments like image-prefix and image-tags
-func addArgs(upgradeOpts UpgradeOpts) []string {
-	var result []string
-	if upgradeOpts.ImagePrefix != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-prefix=%s", upgradeOpts.ImagePrefix))
-	}
-
-	if upgradeOpts.ImageTag != "" {
-		result = append(result, fmt.Sprintf("--to-version-image-tag=%s", upgradeOpts.ImageTag))
-	}
-
-	return result
-}
-
 // BuildJivaBatchJob returns Job to be build
-func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
+func BuildJivaBatchJob(cfg *UpgradeJobCfg) *batchV1.Job {
 	return NewJob().
 		WithGeneratedName("jiva-upgrade").
 		WithLabel(map[string]string{"name": "jiva-upgrade", "cas-type": "jiva"}). // sets labels for job discovery
@@ -164,7 +138,7 @@ func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 						func() *core.Container {
 							return core.NewContainer().
 								WithName("upgrade-jiva-go").
-								WithArgumentsNew(getContainerArguments(cfg)).
+								WithArgumentsNew(getJivaContainerArguments(cfg)).
 								WithEnvsNew(
 									[]corev1.EnvVar{
 										{
@@ -187,125 +161,14 @@ func BuildJivaBatchJob(cfg *jivaUpdateConfig) *batchV1.Job {
 		Job
 }
 
-func getContainerArguments(cfg *jivaUpdateConfig) []string {
+func getJivaContainerArguments(cfg *UpgradeJobCfg) []string {
 	// Set container arguments
 	args := append([]string{
 		"jiva-volume",
 		fmt.Sprintf("--from-version=%s", cfg.fromVersion),
 		fmt.Sprintf("--to-version=%s", cfg.toVersion),
 		"--v=4", // can be taken from flags
-	}, cfg.pvNames...)
+	}, cfg.resources...)
 	args = append(args, cfg.additionalArgs...)
 	return args
-}
-
-func checkIfJobIsAlreadyRunning(k *client.K8sClient, cfg *jivaUpdateConfig) (bool, error) {
-	jobs, err := k.GetBatchJobs("", "cas-type=jiva,name=jiva-upgrade")
-	if err != nil {
-		return false, err
-	}
-
-	// runningJob holds the information about the jobs that are in use by the PV
-	// that has an upgrade-job progress(any status) already going
-	var runningJob *batchV1.Job
-	func() {
-		for _, job := range jobs.Items { // JobItems
-			for _, pvName := range cfg.pvNames { // running pvs in control plane
-				for _, container := range job.Spec.Template.Spec.Containers { // iterate on containers provided by the cfg
-					for _, args := range container.Args { // check if the running jobs (PVs) and the upcoming job(PVs) are common
-						if args == pvName {
-							runningJob = &job
-							return
-						}
-					}
-				}
-			}
-		}
-	}()
-
-	if runningJob != nil {
-		jobCondition := runningJob.Status.Conditions
-		info := jobInfo{name: runningJob.Name, namespace: runningJob.Namespace}
-		if runningJob.Status.Failed > 0 ||
-			len(jobCondition) > 0 && jobCondition[0].Type == "Failed" && jobCondition[0].Status == "True" {
-			fmt.Println("Previous job failed.")
-			fmt.Println("Reason: ", getReason(runningJob))
-			fmt.Println("Creating a new Job with name:", info.name)
-			// Job found thus delete the job and return false so that further process can be started
-			if err := startDeletionTask(k, &info); err != nil {
-				fmt.Println("error deleting job:", err)
-				return true, err
-			}
-		}
-
-		if runningJob.Status.Active > 0 {
-			fmt.Println("A job is already active with the name ", runningJob.Name, " that is upgrading the PV.")
-			// TODO:  Check the POD underlying the PV if their is any error inside
-			return true, nil
-		}
-
-		if runningJob.Status.Succeeded > 0 {
-			fmt.Println("Previous upgrade-job was successful for upgrading P.V.")
-			// Provide the option to restart the Job
-			shouldStart := util.PromptToStartAgain("Do you want to restart the Job?(no)", false)
-			if shouldStart {
-				// Delete previous successful task
-				if err := startDeletionTask(k, &info); err != nil {
-					return true, err
-				}
-			} else {
-				os.Exit(0)
-			}
-		}
-		return false, nil
-	}
-
-	return false, nil
-}
-
-func getReason(job *batchV1.Job) string {
-	reason := job.Status.Conditions[0].Reason
-	if len(reason) == 0 {
-		return "Reason Not Found, check by inspecting jobs"
-	}
-	return reason
-}
-
-// startDeletionTask instantiates a deletion process
-func startDeletionTask(k *client.K8sClient, info *jobInfo) error {
-	err := k.DeleteBatchJob(info.name, info.namespace)
-	if err != nil {
-		return err
-	}
-	confirmDeletion(k, info)
-	return nil
-}
-
-// confirmDeletion runs until the job is successfully done or reached threshhold duration
-func confirmDeletion(k *client.K8sClient, info *jobInfo) {
-	// create interval to call function periodically
-	interval := time.NewTicker(time.Second * 2)
-
-	// Create channel
-	channel := make(chan bool)
-
-	// Set threshhold time
-	go func() {
-		time.Sleep(time.Second * 10)
-		channel <- true
-	}()
-
-	for {
-		select {
-		case <-interval.C:
-			_, err := k.GetBatchJob(info.name, info.namespace)
-			// Job is deleted successfully
-			if err != nil {
-				return
-			}
-		case <-channel:
-			fmt.Println("Waiting time reached! Try Again!")
-			return
-		}
-	}
 }
