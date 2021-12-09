@@ -126,13 +126,23 @@ func TestCSPC(t *testing.T) {
 				nodes: []string{"node1", "node2"}, devs: 3, poolType: "raidz2"}, nil, "", true,
 		},
 		{
-			"all good raidz2 pool gets provisioned, 3 nodes of same size on 2 nodes",
+			"raidz2 pool provisioned, 2 nodes, 6 BDs",
+			args{
+				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2),
+					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1,
+						&goodBD2N1, &goodBD3N1, &goodBD4N1, &goodBD5N1,
+						&goodBD6N1, &goodBD1N2, &goodBD2N2, &goodBD3N2,
+						&goodBD4N2, &goodBD5N2, &goodBD6N2)},
+				nodes: []string{"node1", "node2"}, devs: 6, poolType: "raidz2"}, &raidz2CSPCSixBDTwoNode, raidz2CSPCstr, false,
+		},
+		{
+			"raidz2 not provisioned, requires 2 more BDs",
 			args{
 				c: &client.K8sClient{Ns: "openebs", K8sCS: fake.NewSimpleClientset(&cstorCSIpod, &node1, &node2),
 					OpenebsCS: cstorfake.NewSimpleClientset(&goodBD1N1,
 						&goodBD2N1, &goodBD3N1, &goodBD4N1, &goodBD1N2,
 						&goodBD2N2, &goodBD3N2, &goodBD4N2)},
-				nodes: []string{"node1", "node2"}, devs: 4, poolType: "raidz2"}, &raidz2CSPCThreeBDTwoNode, raidz2CSPCstr, false,
+				nodes: []string{"node1", "node2"}, devs: 4, poolType: "raidz2"}, nil, "", true,
 		},
 	}
 	for _, tt := range tests {
@@ -176,6 +186,7 @@ func Test_makePools(t *testing.T) {
 		bd       map[string][]v1alpha1.BlockDevice
 		nodes    []string
 		hosts    []string
+		minSize  resource.Quantity
 	}
 	tests := []struct {
 		name    string
@@ -186,47 +197,47 @@ func Test_makePools(t *testing.T) {
 		{"stripe, three node, two disks", args{"stripe", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, &threeNodeTwoDevCSPC.Spec.Pools, false},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, &threeNodeTwoDevCSPC.Spec.Pools, false},
 		{"stripe, three node, two disks, one node lacking disks", args{"stripe", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}},
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, nil, true},
 		{"stripe, three node, two disks, one node lacking required disks", args{"stripe", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2}, "node3": {goodBD1N3, goodBD2N2}}, []string{"node1", "node2", "node3"},
-			[]string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, nil, true},
 		{"raidz, three node, three disks but only two disks present in node3", args{"raidz", 3,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1},
 				"node2": {goodBD1N2, goodBD2N2, goodBD3N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, nil, true},
 		{"unknown pool, three node, two disks", args{"randompoolwhichmakesnosense", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, nil, true},
 		{"mirror, three node, two disks", args{"mirror", 2,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, &mirrorCSPC.Spec.Pools, false},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, &mirrorCSPC.Spec.Pools, false},
 		{"mirror, two node, four disks", args{"mirror", 4,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1},
 				"node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2}, "node3": {goodBD1N3, goodBD2N3}},
 			// in the above example, presence of node3 BDs don't matter
-			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &mirrorCSPCFourBDs.Spec.Pools, false},
+			[]string{"node1", "node2"}, []string{"node1", "node2"}, resource.MustParse("1Gi")}, &mirrorCSPCFourBDs.Spec.Pools, false},
 		{"mirror, three node, one disk", args{"mirror", 1,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1},
 				"node2": {goodBD1N2, goodBD2N2}, "node3": {goodBD1N3, goodBD2N3}},
 			// one cannot create a mirror pool with just one disk per node
-			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}}, nil, true},
+			[]string{"node1", "node2", "node3"}, []string{"node1", "node2", "node3"}, resource.MustParse("1Gi")}, nil, true},
 		{"raidz, two node, three disk", args{"raidz", 3,
 			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2}},
-			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &raidzCSPCThreeBDTwoNode.Spec.Pools, false},
-		{"raidz2, two node, three disk", args{"raidz2", 4,
-			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2}},
-			[]string{"node1", "node2"}, []string{"node1", "node2"}}, &raidz2CSPCThreeBDTwoNode.Spec.Pools, false},
+			[]string{"node1", "node2"}, []string{"node1", "node2"}, resource.MustParse("1Gi")}, &raidzCSPCThreeBDTwoNode.Spec.Pools, false},
+		{"raidz2, two node, three disk", args{"raidz2", 6,
+			map[string][]v1alpha1.BlockDevice{"node1": {goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1, goodBD5N1, goodBD6N1}, "node2": {goodBD1N2, goodBD2N2, goodBD3N2, goodBD4N2, goodBD5N2, goodBD6N2}},
+			[]string{"node1", "node2"}, []string{"node1", "node2"}, resource.MustParse("1Gi")}, &raidz2CSPCSixBDTwoNode.Spec.Pools, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := makePools(tt.args.poolType, tt.args.nDevices, tt.args.bd, tt.args.nodes, tt.args.hosts)
+			got, err := makePools(tt.args.poolType, tt.args.nDevices, tt.args.bd, tt.args.nodes, tt.args.hosts, tt.args.minSize)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("makePools() error = %v, wantErr %v", err, tt.wantErr)
 				return

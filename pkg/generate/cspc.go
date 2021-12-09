@@ -18,6 +18,7 @@ package generate
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -110,7 +111,7 @@ func cspc(c *client.K8sClient, nodes []string, devs int, poolType string, minSiz
 		hostToBD[bd.Labels["kubernetes.io/hostname"]] = append(hostToBD[bd.Labels["kubernetes.io/hostname"]], bd)
 	}
 	// 4. Select disks and create the PoolSpec
-	p, err := makePools(poolType, devs, hostToBD, nodes, hostnames)
+	p, err := makePools(poolType, devs, hostToBD, nodes, hostnames, minSize)
 	if err != nil {
 		return nil, "", err
 	}
@@ -163,7 +164,8 @@ func getBDComment(name string, bdList *v1alpha1.BlockDeviceList) string {
 
 // makePools creates a poolSpec based on the poolType, number of devices per
 // pool instance and a collection of blockdevices by nodes
-func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice, nodes []string, hosts []string) (*[]cstorv1.PoolSpec, error) {
+func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevice,
+	nodes []string, hosts []string, minsize resource.Quantity) (*[]cstorv1.PoolSpec, error) {
 	// IMPORTANT: User is more likely to see the nodeNames, so the errors
 	// should preferably be shown in terms of nodeNames and not hostNames
 	var spec []cstorv1.PoolSpec
@@ -187,7 +189,6 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 				return nil, fmt.Errorf("not enough blockdevices found on node %s, want %d, found %d", nodes[i], nDevices, len(bds))
 			}
 			var raids []cstorv1.CStorPoolInstanceBlockDevice
-
 			for d := 0; d < nDevices; d++ {
 				raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[d].Name})
 			}
@@ -202,6 +203,10 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		return &spec, nil
 	case string(cstorv1.PoolMirrored), string(cstorv1.PoolRaidz), string(cstorv1.PoolRaidz2):
 		min := minCount()[poolType]
+		if nDevices%min != 0 {
+			// there must be min number of devices per RaidGroup
+			return nil, fmt.Errorf("number of devices must be a multiple of %d", min)
+		}
 		if min > nDevices {
 			return nil, fmt.Errorf("insufficient blockdevices expected for %s", poolType)
 		}
@@ -213,6 +218,14 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 			if len(bds) < nDevices {
 				return nil, fmt.Errorf("not enough eligible blockdevices found on node %s, want %d, found %d", nodes[i], nDevices, len(bds))
 			}
+			// 1. sort the BDs by increasing order
+			sort.Slice(bds, func(i, j int) bool {
+				// sort by increasing order
+				return bds[i].Spec.Capacity.Storage < bds[j].Spec.Capacity.Storage
+			})
+			// 2. Check if close to the desired capacity of the pool can be achieved by minimising disk wastage
+
+			// 3. Suggest the start and end index for the BDs to be used for the raid group
 			index := 0
 			maxIndex := len(bds)
 			if maxIndex < nDevices {
@@ -242,13 +255,20 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 	}
 }
 
-// minCount states the minimum number of BDs for a pool type
+// minCount states the minimum number of BDs for a pool type in a RAID-group
+// this is an example of an immutable map
 func minCount() map[string]int {
 	return map[string]int{
-		string(cstorv1.PoolStriped):  1,
+		string(cstorv1.PoolStriped): 1,
+		// mirror: data is mirrored across even no of disks
 		string(cstorv1.PoolMirrored): 2,
-		string(cstorv1.PoolRaidz):    3,
-		string(cstorv1.PoolRaidz2):   4,
+		// raidz: data is spread across even no of disks and one disk is for parity^
+		// ^recovery information, metadata, etc
+		// can handle one device failing
+		string(cstorv1.PoolRaidz): 3,
+		// raidz2: data is spread across even no of disks and two disks are for parity
+		// can handle two devices failing
+		string(cstorv1.PoolRaidz2): 6,
 	}
 }
 
