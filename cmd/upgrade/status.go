@@ -31,6 +31,5 @@ func NewCmdUpgradeStatus() *cobra.Command {
 			status.GetJobStatus(openebsNS)
 		},
 	}
-	cmd.PersistentFlags().BoolVar(&status.WaitFlag, "wait", false, "Wait for the logs stream")
 	return cmd
 }

@@ -18,14 +18,10 @@ package status
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
-	batchV1 "k8s.io/api/batch/v1"
 )
-
-var WaitFlag bool // For opening wait stream for logs
 
 // Get job with the name -> apply selector to pod
 func GetJobStatus(namespace string) {
@@ -41,11 +37,6 @@ func GetJobStatus(namespace string) {
 	// No jobs found
 	if len(joblist.Items) == 0 {
 		fmt.Printf("No upgrade-jobs Found in %s namespace", namespace)
-		return
-	}
-
-	if WaitFlag {
-		startLogStream(k, joblist)
 		return
 	}
 
@@ -81,27 +72,6 @@ func getPodLogs(k *client.K8sClient, name string, namespace string) {
 	if len(podList.Items) == 0 {
 		printColoredText("No pods are running for this job", util.Red)
 	}
-}
-
-// startLogStream starts opens log stream for a pod
-func startLogStream(k *client.K8sClient, jobList *batchV1.JobList) {
-	// Stream opens for the first pod in the job
-	jobName := jobList.Items[0].Name
-
-	// get pods created by the job
-	podList, err := k.GetPods(fmt.Sprintf("job-name=%s", jobName), "", k.Ns)
-	if err != nil {
-		printColoredText(fmt.Sprintf("error getting pods of job %s, err: %s", jobName, err), util.Red)
-		return
-	}
-
-	// If no pods are running exit silently
-	if len(podList.Items) == 0 {
-		printColoredText(fmt.Sprintf("No pods are running for the job: %s", jobName), util.Red)
-		os.Exit(0)
-	}
-
-	k.StartPodLogsStream(podList.Items[0].Name, k.Ns)
 }
 
 func printColoredText(message string, color util.Color) {
