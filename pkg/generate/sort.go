@@ -36,16 +36,16 @@ func Generate(list v1alpha1.BlockDeviceList) *DeviceList {
 }
 
 // Select returns count number of Blockdevices from the DeviceList LinkedList
-func (head *DeviceList) Select(size resource.Quantity, count int) ([]v1alpha1.BlockDevice, error) {
+func (head *DeviceList) Select(size resource.Quantity, count int) (*DeviceList, []v1alpha1.BlockDevice, error) {
 	if size.Cmp(resource.MustParse("0")) == 0 {
-		return nil, fmt.Errorf("size is zero")
+		return nil, nil, fmt.Errorf("size is zero")
 	}
 	if count == 1 {
 		// there's only one way of selecting one disk such that losses are
 		// minimized in a single RaidGroup
 		curr := head
 		head = head.next
-		return []v1alpha1.BlockDevice{curr.item}, nil
+		return head, []v1alpha1.BlockDevice{curr.item}, nil
 	}
 	curr := head
 	fakeHead := &DeviceList{item: v1alpha1.BlockDevice{}, next: head}
@@ -55,7 +55,7 @@ func (head *DeviceList) Select(size resource.Quantity, count int) ([]v1alpha1.Bl
 	ahead := head
 	for i := 1; i < count; i++ {
 		if ahead == nil {
-			return nil, fmt.Errorf("wanted %d blockdevices, have %d to pick", count, i)
+			return head, nil, fmt.Errorf("wanted %d blockdevices, have %d to pick", count, i)
 		}
 		ahead = ahead.next
 	}
@@ -84,9 +84,9 @@ func (head *DeviceList) Select(size resource.Quantity, count int) ([]v1alpha1.Bl
 	}
 	head = fakeHead.next
 	if len(results) == 0 {
-		return nil, fmt.Errorf("no blockdevices of equal sizes to select in a RaidGroup")
+		return head, nil, fmt.Errorf("no blockdevices of equal sizes to select in a RaidGroup")
 	} else if len(results) < count {
-		return nil, fmt.Errorf("wanted %d blockdevices, have %d to pick", count, len(results))
+		return head, nil, fmt.Errorf("wanted %d blockdevices, have %d to pick", count, len(results))
 	}
-	return results, nil
+	return head, results, nil
 }

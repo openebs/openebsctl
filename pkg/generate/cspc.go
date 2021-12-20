@@ -233,7 +233,10 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 			devices := Generate(v1alpha1.BlockDeviceList{Items: bds})
 			for d := 0; d < nDevices/min; d++ {
 				var raids []cstorv1.CStorPoolInstanceBlockDevice
-				thisRaidGroup, err := devices.Select(minsize, min)
+				tmp, thisRaidGroup, err := devices.Select(minsize, min)
+				// re-assign the head node of the linked-list for next iteration
+				//
+				devices = tmp
 				if err != nil {
 					return nil, err
 				}

@@ -106,17 +106,19 @@ func TestDeviceList_Select(t *testing.T) {
 			[]v1alpha1.BlockDevice{bdGen(2, 4), bdGen(3, 4), bdGen(4, 4)}, false},
 		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{5, 10, 15, 20, 25, 30}), resource.MustParse("1G"), 3},
 			nil, true},
+		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{1, 1, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
+			[]v1alpha1.BlockDevice{bdGen(1, 1), bdGen(2, 1)}, false},
 		{"six node LinkedList, three BD required of 6G", args{bdLinkedList(6, []int{5, 10, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
 			[]v1alpha1.BlockDevice{bdGen(2, 10), bdGen(3, 10)}, false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := tt.args.head.Select(tt.args.size, tt.args.count)
+			newHead, got, err := tt.args.head.Select(tt.args.size, tt.args.count)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Select() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			_ = got
+			_ = newHead
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Select(...), got %v, want %v", len(got), len(tt.want))
 			}
