@@ -36,10 +36,7 @@ func Generate(list v1alpha1.BlockDeviceList) *DeviceList {
 }
 
 // Select returns count number of Blockdevices from the DeviceList LinkedList
-func Select(head *DeviceList, size resource.Quantity, count int) ([]v1alpha1.BlockDevice, error) {
-	if head == nil {
-		return nil, fmt.Errorf("no blockdevices to select, list is empty")
-	}
+func (head *DeviceList) Select(size resource.Quantity, count int) ([]v1alpha1.BlockDevice, error) {
 	if size.Cmp(resource.MustParse("0")) == 0 {
 		return nil, fmt.Errorf("size is zero")
 	}

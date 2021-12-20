@@ -64,7 +64,6 @@ func TestDeviceList_Select(t *testing.T) {
 		want    []v1alpha1.BlockDevice
 		wantErr bool
 	}{
-		{"empty node LinkedList", args{nil, resource.MustParse("1Gi"), 1}, nil, true},
 		{"one node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("0Ki"), 1}, nil, true},
 		{"single node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("1Gi"), 1},
 			[]v1alpha1.BlockDevice{goodBD1N1}, false},
@@ -113,7 +112,7 @@ func TestDeviceList_Select(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Select(tt.args.head, tt.args.size, tt.args.count)
+			got, err := tt.args.head.Select(tt.args.size, tt.args.count)
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("Select() error = %v, wantErr %v", err, tt.wantErr)
 			}

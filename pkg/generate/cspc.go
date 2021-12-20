@@ -224,18 +224,22 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 				return bds[i].Spec.Capacity.Storage < bds[j].Spec.Capacity.Storage
 			})
 			// 2. Check if close to the desired capacity of the pool can be achieved by minimising disk wastage
-
 			// 3. Suggest the start and end index for the BDs to be used for the raid group
 			index := 0
 			maxIndex := len(bds)
 			if maxIndex < nDevices {
 				return nil, fmt.Errorf("not enough eligible blockdevices found on node %s, want %d, found %d", nodes[i], min, maxIndex)
 			}
+			devices := Generate(v1alpha1.BlockDeviceList{Items: bds})
 			for d := 0; d < nDevices/min; d++ {
 				var raids []cstorv1.CStorPoolInstanceBlockDevice
+				thisRaidGroup, err := devices.Select(minsize, min)
+				if err != nil {
+					return nil, err
+				}
 				for j := 0; j < min; j++ {
 					// each RaidGroup has min number of devices
-					raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: bds[index].Name})
+					raids = append(raids, cstorv1.CStorPoolInstanceBlockDevice{BlockDeviceName: thisRaidGroup[j].ObjectMeta.Name})
 					index++
 				}
 				raidGroups = append(raidGroups, cstorv1.RaidGroup{CStorPoolInstanceBlockDevices: raids})
