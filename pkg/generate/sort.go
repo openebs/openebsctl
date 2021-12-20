@@ -63,11 +63,9 @@ func Select(head *DeviceList, size resource.Quantity, count int) ([]v1alpha1.Blo
 		ahead = ahead.next
 	}
 	for ahead != nil {
-		cap := resource.MustParse(fmt.Sprintf("%d", curr.item.Spec.Capacity.Storage))
-		if ahead == nil {
-		}
+		capFirst := resource.MustParse(fmt.Sprintf("%d", curr.item.Spec.Capacity.Storage))
 		capLast := resource.MustParse(fmt.Sprintf("%d", ahead.item.Spec.Capacity.Storage))
-		if cap.Cmp(capLast) == 0 {
+		if capFirst.Cmp(capLast) == 0 {
 			// add all the devices in the same group
 			for curr != ahead {
 				results = append(results, curr.item)

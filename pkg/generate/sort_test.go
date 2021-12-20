@@ -70,6 +70,8 @@ func TestDeviceList_Select(t *testing.T) {
 			[]v1alpha1.BlockDevice{goodBD1N1}, false},
 		{"two node LinkedList, one BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
 			resource.MustParse("1Gi"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
+		{"two node LinkedList, four BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
+			resource.MustParse("1Gi"), 4}, nil, true},
 		{"two node LinkedList, two BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
 			resource.MustParse("1Gi"), 2}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1}, false},
 		{"three node LinkedList, one BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, &DeviceList{goodBD3N1, nil}}},
@@ -101,6 +103,12 @@ func TestDeviceList_Select(t *testing.T) {
 			[]v1alpha1.BlockDevice{bdGen(5, 6), bdGen(6, 6)}, false},
 		{"six node LinkedList, two BD required of 1G", args{bdLinkedList(6, []int{1, 2, 4, 4, 6, 6}), resource.MustParse("1G"), 2},
 			[]v1alpha1.BlockDevice{bdGen(3, 4), bdGen(4, 4)}, false},
+		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{1, 4, 4, 4, 6, 6}), resource.MustParse("1G"), 3},
+			[]v1alpha1.BlockDevice{bdGen(2, 4), bdGen(3, 4), bdGen(4, 4)}, false},
+		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{5, 10, 15, 20, 25, 30}), resource.MustParse("1G"), 3},
+			nil, true},
+		{"six node LinkedList, three BD required of 6G", args{bdLinkedList(6, []int{5, 10, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
+			[]v1alpha1.BlockDevice{bdGen(2, 10), bdGen(3, 10)}, false},
 	}
 
 	for _, tt := range tests {
@@ -141,10 +149,11 @@ func bdLinkedList(limit int, size []int) *DeviceList {
 	if len(size) != limit {
 		return nil
 	}
-	head := &DeviceList{bdGen(1, size[0]), nil}
-	curr := head
-	for i := 2; i <= limit; i++ {
-		curr.next = New(bdGen(i, size[i-1]))
+	var head *DeviceList
+	for i := limit - 1; i >= 0; i-- {
+		tmp := New(bdGen(i+1, size[i]))
+		tmp.next = head
+		head = tmp
 	}
 	return head
 }
