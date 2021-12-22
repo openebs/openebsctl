@@ -61,7 +61,7 @@ func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&raidType, "raidtype", "", "stripe",
 		"allowed RAID configuration such as, stripe, mirror, raid, raidz2")
 	cmd.PersistentFlags().StringVarP(&cap, "capacity", "", "10Gi",
-		"allowed RAID configuration such as, stripe, mirror, raid, raidz2")
+		"minimum capacity of the blockdevices to pick up for pool creation")
 	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "number of devices per node, selects default based on raid-type")
 	return cmd
 }

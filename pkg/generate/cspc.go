@@ -208,7 +208,7 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 			return nil, fmt.Errorf("number of devices must be a multiple of %d", min)
 		}
 		if min > nDevices {
-			return nil, fmt.Errorf("insufficient blockdevices expected for %s", poolType)
+			return nil, fmt.Errorf("insufficient blockdevices require minimum %d devices for %s", min, poolType)
 		}
 		// 1. Start filling in the devices in their RAID-groups per the hostnames
 		for i, host := range hosts {
@@ -256,7 +256,7 @@ func makePools(poolType string, nDevices int, bd map[string][]v1alpha1.BlockDevi
 		}
 		return &spec, nil
 	default:
-		return nil, fmt.Errorf("unknown pool-type")
+		return nil, fmt.Errorf("unknown pool-type %s", poolType)
 	}
 }
 

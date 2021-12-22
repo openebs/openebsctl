@@ -69,23 +69,18 @@ func (head *DeviceList) Select(size resource.Quantity, count int) (*DeviceList, 
 				curr = curr.next
 			}
 			results = append(results, curr.item)
-			count = 0
 			// 1. Remove the set of BDs from the LinkedList
 			prev.next = ahead.next
-			if count == 0 {
+			if len(results) == count {
 				break
 			}
-		} else {
-			prev = curr
-			results = []v1alpha1.BlockDevice{}
 		}
+		prev = curr
 		curr = curr.next
 		ahead = ahead.next
 	}
 	head = fakeHead.next
-	if len(results) == 0 {
-		return head, nil, fmt.Errorf("no blockdevices of equal sizes to select in a RaidGroup")
-	} else if len(results) < count {
+	if len(results) != count {
 		return head, nil, fmt.Errorf("wanted %d blockdevices, have %d to pick", count, len(results))
 	}
 	return head, results, nil

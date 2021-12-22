@@ -106,10 +106,12 @@ func TestDeviceList_Select(t *testing.T) {
 			[]v1alpha1.BlockDevice{bdGen(2, 4), bdGen(3, 4), bdGen(4, 4)}, false},
 		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{5, 10, 15, 20, 25, 30}), resource.MustParse("1G"), 3},
 			nil, true},
-		{"six node LinkedList, three BD required of 1G", args{bdLinkedList(6, []int{1, 1, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
+		{"six node LinkedList, two BD required of 1G", args{bdLinkedList(6, []int{1, 1, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
 			[]v1alpha1.BlockDevice{bdGen(1, 1), bdGen(2, 1)}, false},
-		{"six node LinkedList, three BD required of 6G", args{bdLinkedList(6, []int{5, 10, 10, 20, 25, 30}), resource.MustParse("1G"), 2},
+		{"six node LinkedList, two BD required of 6G", args{bdLinkedList(6, []int{5, 10, 10, 20, 25, 30}), resource.MustParse("6G"), 2},
 			[]v1alpha1.BlockDevice{bdGen(2, 10), bdGen(3, 10)}, false},
+		{"six node LinkedList with unsorted BD sizes, two BD required of 1G", args{bdLinkedList(6, []int{25, 30, 6, 10, 20, 6}), resource.MustParse("1G"), 2},
+			nil, true},
 	}
 
 	for _, tt := range tests {
