@@ -64,7 +64,7 @@ func TestDeviceList_Select(t *testing.T) {
 		want    []v1alpha1.BlockDevice
 		wantErr bool
 	}{
-		{"one node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("0Ki"), 1}, nil, true},
+		{"one node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("0Ki"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
 		{"single node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("1Gi"), 1},
 			[]v1alpha1.BlockDevice{goodBD1N1}, false},
 		{"two node LinkedList, one BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},

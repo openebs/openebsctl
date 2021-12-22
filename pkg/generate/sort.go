@@ -7,16 +7,18 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+// DeviceList is a LinkedList of BlockDevices
 type DeviceList struct {
 	item v1alpha1.BlockDevice
 	next *DeviceList
 }
 
+// New returns a new DeviceList node with a bd device
 func New(bd v1alpha1.BlockDevice) *DeviceList {
 	return &DeviceList{bd, nil}
 }
 
-// New returns a new initialized DeviceList with the list of Blockdevices
+// Generate returns a new initialized *DeviceList(linked list) with the list of Blockdevices
 func Generate(list v1alpha1.BlockDeviceList) *DeviceList {
 	if len(list.Items) == 0 {
 		return nil
@@ -37,9 +39,6 @@ func Generate(list v1alpha1.BlockDeviceList) *DeviceList {
 
 // Select returns count number of Blockdevices from the DeviceList LinkedList
 func (head *DeviceList) Select(size resource.Quantity, count int) (*DeviceList, []v1alpha1.BlockDevice, error) {
-	if size.Cmp(resource.MustParse("0")) == 0 {
-		return nil, nil, fmt.Errorf("size is zero")
-	}
 	if count == 1 {
 		// there's only one way of selecting one disk such that losses are
 		// minimized in a single RaidGroup
