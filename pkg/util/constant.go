@@ -148,8 +148,8 @@ var (
 	// CstorReplicaColumnDefinations stores the Table headers for CVR Details
 	CstorReplicaColumnDefinations = []metav1.TableColumnDefinition{
 		{Name: "Name", Type: "string"},
-		{Name: "Total", Type: "string"},
-		{Name: "Used", Type: "string"},
+		{Name: "ZFS Used(compressed)", Type: "string"},
+		{Name: "LogicalReferenced", Type: "string"},
 		{Name: "Status", Type: "string"},
 		{Name: "Age", Type: "string"},
 	}
