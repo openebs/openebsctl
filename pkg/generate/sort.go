@@ -9,13 +9,13 @@ import (
 
 // DeviceList is a LinkedList of BlockDevices
 type DeviceList struct {
-	item v1alpha1.BlockDevice
+	item *v1alpha1.BlockDevice
 	next *DeviceList
 }
 
 // New returns a new DeviceList node with a bd device
 func New(bd v1alpha1.BlockDevice) *DeviceList {
-	return &DeviceList{bd, nil}
+	return &DeviceList{&bd, nil}
 }
 
 // Generate returns a new initialized *DeviceList(linked list) with the list of Blockdevices
@@ -44,10 +44,10 @@ func (head *DeviceList) Select(size resource.Quantity, count int) (*DeviceList, 
 		// minimized in a single RaidGroup
 		curr := head
 		head = head.next
-		return head, []v1alpha1.BlockDevice{curr.item}, nil
+		return head, []v1alpha1.BlockDevice{*curr.item}, nil
 	}
 	curr := head
-	fakeHead := &DeviceList{item: v1alpha1.BlockDevice{}, next: head}
+	fakeHead := &DeviceList{item: &v1alpha1.BlockDevice{}, next: head}
 	prev := fakeHead
 	results := []v1alpha1.BlockDevice{}
 	// ahead is count nodes ahead of curr
@@ -64,10 +64,10 @@ func (head *DeviceList) Select(size resource.Quantity, count int) (*DeviceList, 
 		if capFirst.Cmp(capLast) == 0 {
 			// add all the devices in the same group
 			for curr != ahead {
-				results = append(results, curr.item)
+				results = append(results, *curr.item)
 				curr = curr.next
 			}
-			results = append(results, curr.item)
+			results = append(results, *curr.item)
 			// 1. Remove the set of BDs from the LinkedList
 			prev.next = ahead.next
 			if len(results) == count {

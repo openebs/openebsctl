@@ -25,24 +25,24 @@ func TestGenerate(t *testing.T) {
 			args{list: v1alpha1.BlockDeviceList{Items: []v1alpha1.BlockDevice{}}}, nil},
 		{"single node LinkedList",
 			args{list: v1alpha1.BlockDeviceList{Items: []v1alpha1.BlockDevice{goodBD1N1}}},
-			&DeviceList{goodBD1N1, nil},
+			&DeviceList{&goodBD1N1, nil},
 		},
 		{
 			"two node LinkedList",
 			args{list: v1alpha1.BlockDeviceList{Items: []v1alpha1.BlockDevice{goodBD1N1, goodBD1N2}}},
-			&DeviceList{goodBD1N1, &DeviceList{goodBD1N2, nil}},
+			&DeviceList{&goodBD1N1, &DeviceList{&goodBD1N2, nil}},
 		},
 		{
 			"four node LinkedList",
 			args{list: v1alpha1.BlockDeviceList{Items: []v1alpha1.BlockDevice{goodBD1N1, goodBD1N2, goodBD1N3, goodBD2N1}}},
-			&DeviceList{goodBD1N1, &DeviceList{goodBD1N2, &DeviceList{goodBD1N3,
-				&DeviceList{goodBD2N1, nil}}}},
+			&DeviceList{&goodBD1N1, &DeviceList{&goodBD1N2, &DeviceList{&goodBD1N3,
+				&DeviceList{&goodBD2N1, nil}}}},
 		},
 		{
 			"five node LinkedList",
 			args{list: v1alpha1.BlockDeviceList{Items: []v1alpha1.BlockDevice{goodBD1N1, goodBD1N2, goodBD1N3, goodBD2N1, goodBD3N1}}},
-			&DeviceList{goodBD1N1, &DeviceList{goodBD1N2, &DeviceList{goodBD1N3,
-				&DeviceList{goodBD2N1, &DeviceList{goodBD3N1, nil}}}}},
+			&DeviceList{&goodBD1N1, &DeviceList{&goodBD1N2, &DeviceList{&goodBD1N3,
+				&DeviceList{&goodBD2N1, &DeviceList{&goodBD3N1, nil}}}}},
 		},
 	}
 	for _, tt := range tests {
@@ -64,38 +64,38 @@ func TestDeviceList_Select(t *testing.T) {
 		want    []v1alpha1.BlockDevice
 		wantErr bool
 	}{
-		{"one node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("0Ki"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
-		{"single node LinkedList", args{&DeviceList{goodBD1N1, nil}, resource.MustParse("1Gi"), 1},
+		{"one node LinkedList", args{&DeviceList{&goodBD1N1, nil}, resource.MustParse("0Ki"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
+		{"single node LinkedList", args{&DeviceList{&goodBD1N1, nil}, resource.MustParse("1Gi"), 1},
 			[]v1alpha1.BlockDevice{goodBD1N1}, false},
-		{"two node LinkedList, one BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
+		{"two node LinkedList, one BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, nil}},
 			resource.MustParse("1Gi"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
-		{"two node LinkedList, four BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
+		{"two node LinkedList, four BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, nil}},
 			resource.MustParse("1Gi"), 4}, nil, true},
-		{"two node LinkedList, two BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, nil}},
+		{"two node LinkedList, two BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, nil}},
 			resource.MustParse("1Gi"), 2}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1}, false},
-		{"three node LinkedList, one BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, &DeviceList{goodBD3N1, nil}}},
+		{"three node LinkedList, one BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, &DeviceList{&goodBD3N1, nil}}},
 			resource.MustParse("1Gi"), 1}, []v1alpha1.BlockDevice{goodBD1N1}, false},
-		{"three node LinkedList, two BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, &DeviceList{goodBD3N1, nil}}},
+		{"three node LinkedList, two BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, &DeviceList{&goodBD3N1, nil}}},
 			resource.MustParse("1Gi"), 2}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1}, false},
-		{"three node LinkedList, three BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1, &DeviceList{goodBD3N1, nil}}},
+		{"three node LinkedList, three BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1, &DeviceList{&goodBD3N1, nil}}},
 			resource.MustParse("1Gi"), 3}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1}, false},
-		{"four node LinkedList, four BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, nil}}}},
+		{"four node LinkedList, four BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, nil}}}},
 			resource.MustParse("1Gi"), 4}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1}, false},
-		{"four node LinkedList, three BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, nil}}}},
+		{"four node LinkedList, three BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, nil}}}},
 			resource.MustParse("1Gi"), 3}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1}, false},
-		{"five node LinkedList, five BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, &DeviceList{goodBD5N1, nil}}}}},
+		{"five node LinkedList, five BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, &DeviceList{&goodBD5N1, nil}}}}},
 			resource.MustParse("1Gi"), 5}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1, goodBD5N1}, false},
-		{"six node LinkedList, four BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, &DeviceList{goodBD5N1, &DeviceList{goodBD6N1, nil}}}}}},
+		{"six node LinkedList, four BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, &DeviceList{&goodBD5N1, &DeviceList{&goodBD6N1, nil}}}}}},
 			resource.MustParse("1Gi"), 4}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1}, false},
-		{"six node LinkedList, five BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, &DeviceList{goodBD5N1, &DeviceList{goodBD6N1, nil}}}}}},
+		{"six node LinkedList, five BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, &DeviceList{&goodBD5N1, &DeviceList{&goodBD6N1, nil}}}}}},
 			resource.MustParse("1Gi"), 5}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1, goodBD5N1}, false},
-		{"six node LinkedList, six BD required", args{&DeviceList{goodBD1N1, &DeviceList{goodBD2N1,
-			&DeviceList{goodBD3N1, &DeviceList{goodBD4N1, &DeviceList{goodBD5N1, &DeviceList{goodBD6N1, nil}}}}}},
+		{"six node LinkedList, six BD required", args{&DeviceList{&goodBD1N1, &DeviceList{&goodBD2N1,
+			&DeviceList{&goodBD3N1, &DeviceList{&goodBD4N1, &DeviceList{&goodBD5N1, &DeviceList{&goodBD6N1, nil}}}}}},
 			resource.MustParse("1Gi"), 6}, []v1alpha1.BlockDevice{goodBD1N1, goodBD2N1, goodBD3N1, goodBD4N1, goodBD5N1, goodBD6N1}, false},
 		{"six node LinkedList, two BD required of 1G", args{bdLinkedList(6, []int{1, 2, 3, 4, 5, 6}), resource.MustParse("1G"), 2}, nil, true},
 		{"six node LinkedList, two BD required of 1G", args{bdLinkedList(6, []int{1, 2, 3, 4, 6, 6}), resource.MustParse("1G"), 2},
@@ -159,4 +159,29 @@ func bdLinkedList(limit int, size []int) *DeviceList {
 		head = tmp
 	}
 	return head
+}
+
+func BenchmarkSelect(b *testing.B) {
+	type args struct {
+		head  *DeviceList
+		size  resource.Quantity
+		count int
+	}
+	benchmarks := []struct {
+		name string
+		args args
+		want []v1alpha1.BlockDevice
+	}{
+		{"six node LinkedList, two BD required of 6G", args{bdLinkedList(6, []int{5, 10, 10, 20, 25, 30}), resource.MustParse("6G"), 2},
+			[]v1alpha1.BlockDevice{bdGen(2, 10), bdGen(3, 10)}},
+		{"six node LinkedList with unsorted BD sizes, two BD required of 1G", args{bdLinkedList(6, []int{25, 30, 6, 10, 20, 6}), resource.MustParse("1G"), 2},
+			nil},
+	}
+	for _, bm := range benchmarks {
+		b.Run(bm.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				bm.args.head.Select(bm.args.size, bm.args.count)
+			}
+		})
+	}
 }
