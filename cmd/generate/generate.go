@@ -41,7 +41,7 @@ func NewCmdGenerate() *cobra.Command {
 // should be renamed appropriately, as of now it made no sense to generically
 // state pools when other pools aren't supported.
 func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
-	var nodes, raidType string
+	var nodes, raidType, cap string
 	var devices int
 	cmd := &cobra.Command{
 		Use:   "cspc",
@@ -49,9 +49,10 @@ func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			node, _ := cmd.Flags().GetString("nodes")
 			raid, _ := cmd.Flags().GetString("raidtype")
+			capacity, _ := cmd.Flags().GetString("capacity")
 			devs := numDevices(cmd)
 			nodeList := strings.Split(node, ",")
-			util.CheckErr(generate.CSPC(nodeList, devs, raid), util.Fatal)
+			util.CheckErr(generate.CSPC(nodeList, devs, raid, capacity), util.Fatal)
 		},
 	}
 	cmd.PersistentFlags().StringVarP(&nodes, "nodes", "", "",
@@ -59,6 +60,8 @@ func NewCmdGenerateCStorStoragePoolCluster() *cobra.Command {
 	_ = cmd.MarkPersistentFlagRequired("nodes")
 	cmd.PersistentFlags().StringVarP(&raidType, "raidtype", "", "stripe",
 		"allowed RAID configuration such as, stripe, mirror, raid, raidz2")
+	cmd.PersistentFlags().StringVarP(&cap, "capacity", "", "10Gi",
+		"minimum capacity of the blockdevices to pick up for pool creation")
 	cmd.PersistentFlags().IntVar(&devices, "number-of-devices", 1, "number of devices per node, selects default based on raid-type")
 	return cmd
 }

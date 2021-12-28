@@ -96,6 +96,21 @@ var goodBD4N1 = v1alpha1.BlockDevice{
 		Path: "/dev/sda"},
 	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
 
+var goodBD5N1 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd5-n1", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node1"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd5n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
+
+var goodBD6N1 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd6-n1", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node1"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd6n1"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
 var goodBD1N2 = v1alpha1.BlockDevice{
 	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
 	ObjectMeta: metav1.ObjectMeta{Name: "bd1-n2", Namespace: "openebs",
@@ -125,6 +140,22 @@ var goodBD4N2 = v1alpha1.BlockDevice{
 	ObjectMeta: metav1.ObjectMeta{Name: "bd4-n2", Namespace: "openebs",
 		Labels: map[string]string{"kubernetes.io/hostname": "node2"}},
 	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd4n2"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
+
+var goodBD5N2 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd5-n2", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node2"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd5n2"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
+		Path: "/dev/sda"},
+	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
+
+var goodBD6N2 = v1alpha1.BlockDevice{
+	TypeMeta: metav1.TypeMeta{Kind: "Blockdevice", APIVersion: "openebs.io/v1alpha1"},
+	ObjectMeta: metav1.ObjectMeta{Name: "bd6-n2", Namespace: "openebs",
+		Labels: map[string]string{"kubernetes.io/hostname": "node2"}},
+	Spec: v1alpha1.DeviceSpec{FileSystem: v1alpha1.FileSystemInfo{Type: "", Mountpoint: "/mnt/bd6n2"}, Capacity: v1alpha1.DeviceCapacity{Storage: 1074000000},
 		Path: "/dev/sda"},
 	Status: v1alpha1.DeviceStatus{ClaimState: v1alpha1.BlockDeviceUnclaimed, State: v1alpha1.BlockDeviceActive}}
 
@@ -209,6 +240,114 @@ spec:
       kubernetes.io/hostname: node3
     poolConfig:
       dataRaidGroupType: mirror
+
+`
+var raidzCSPCThreeBDTwoNode = cstorv1.CStorPoolCluster{
+	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
+	ObjectMeta: metav1.ObjectMeta{GenerateName: "cstor", Namespace: "openebs"},
+	Spec: cstorv1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{
+		{NodeSelector: map[string]string{"kubernetes.io/hostname": "node1"},
+			DataRaidGroups: []cstorv1.RaidGroup{
+				{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n1"}, {BlockDeviceName: "bd2-n1"}, {BlockDeviceName: "bd3-n1"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolRaidz)}},
+		{NodeSelector: map[string]string{"kubernetes.io/hostname": "node2"},
+			DataRaidGroups: []cstorv1.RaidGroup{
+				{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n2"}, {BlockDeviceName: "bd2-n2"}, {BlockDeviceName: "bd3-n2"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolRaidz)}}}}}
+
+var raidzCSPCstr = `apiVersion: cstor.openebs.io/v1
+kind: CStorPoolCluster
+metadata:
+  creationTimestamp: null
+  generateName: cstor
+  namespace: openebs
+spec:
+  pools:
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd3-n1
+    nodeSelector:
+      kubernetes.io/hostname: node1
+    poolConfig:
+      dataRaidGroupType: raidz
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd3-n2
+    nodeSelector:
+      kubernetes.io/hostname: node2
+    poolConfig:
+      dataRaidGroupType: raidz
+
+`
+var raidz2CSPCSixBDTwoNode = cstorv1.CStorPoolCluster{
+	TypeMeta:   metav1.TypeMeta{Kind: "CStorPoolCluster", APIVersion: "cstor.openebs.io/v1"},
+	ObjectMeta: metav1.ObjectMeta{GenerateName: "cstor", Namespace: "openebs"},
+	Spec: cstorv1.CStorPoolClusterSpec{Pools: []cstorv1.PoolSpec{
+		{NodeSelector: map[string]string{"kubernetes.io/hostname": "node1"},
+			DataRaidGroups: []cstorv1.RaidGroup{
+				{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n1"},
+					{BlockDeviceName: "bd2-n1"}, {BlockDeviceName: "bd3-n1"}, {BlockDeviceName: "bd4-n1"}, {BlockDeviceName: "bd5-n1"}, {BlockDeviceName: "bd6-n1"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolRaidz2)}},
+		{NodeSelector: map[string]string{"kubernetes.io/hostname": "node2"},
+			DataRaidGroups: []cstorv1.RaidGroup{
+				{CStorPoolInstanceBlockDevices: []cstorv1.CStorPoolInstanceBlockDevice{{BlockDeviceName: "bd1-n2"},
+					{BlockDeviceName: "bd2-n2"}, {BlockDeviceName: "bd3-n2"}, {BlockDeviceName: "bd4-n2"}, {BlockDeviceName: "bd5-n2"}, {BlockDeviceName: "bd6-n2"}}}},
+			PoolConfig: cstorv1.PoolConfig{DataRaidGroupType: string(cstorv1.PoolRaidz2)}}}}}
+
+var raidz2CSPCstr = `apiVersion: cstor.openebs.io/v1
+kind: CStorPoolCluster
+metadata:
+  creationTimestamp: null
+  generateName: cstor
+  namespace: openebs
+spec:
+  pools:
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd3-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd4-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd5-n1
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd6-n1
+    nodeSelector:
+      kubernetes.io/hostname: node1
+    poolConfig:
+      dataRaidGroupType: raidz2
+  - dataRaidGroups:
+    - blockDevices:
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd1-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd2-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd3-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd4-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd5-n2
+      # /dev/sda  1.0GiB
+      - blockDeviceName: bd6-n2
+    nodeSelector:
+      kubernetes.io/hostname: node2
+    poolConfig:
+      dataRaidGroupType: raidz2
 
 `
 
