@@ -1,6 +1,6 @@
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
-# CSTOR Storage Engine Components 
+# CSTOR Storage Engine Components
 
 ## Table of Contents
 * [cStor](#cstor)
@@ -10,6 +10,8 @@
     * [Describe cStor pool](#describe-cstor-pool)
     * [Describe cStor PVCs](#describe-cstor-pvcs)
     * [Debugging cStor Volumes](#debugging-cstor-volumes)
+    * [Generate CSPC](#generate-cspc)
+    * [Update CSPC Pools](#update-cspc-pools)
 * [BlockDevice](#blockdevice)
     * [Get BlockDevices by Nodes](#get-blockdevices-by-nodes)
 
@@ -140,21 +142,131 @@
       ```
       ![img.png](img.png)
 
+    * #### Generate CSPC
+
+      _NOTE: supported RAID Types include stripe, mirror, raidz, raidz2_
+      
+      ##### Supported flags
+
+      Flag Name | Purpose | Example Values | Default-Value
+      --- | --- | --- | ---
+      **--nodes**         | comma separated list of node's hostnames | `node1` `node1,node2,node3` | ""
+      --raidtype          | defaults to _stripe_, supports  | `stripe`, `mirror`, `raidz`, `raidz2` | stripe
+      --capacity          | minimum capacity of individual blockdevices in the CSPC | `10Gi`, `10G`, `10GB` | `10Gi`
+      --number-of-devices | number of blockdevices in each node | numbers above zero | _value depends on the raidType_
+
+
+      ```bash
+      # stripe pool example
+      $ kubectl openebs generate cspc --nodes=shubham
+      apiVersion: cstor.openebs.io/v1
+      kind: CStorPoolCluster
+      metadata:
+        creationTimestamp: null
+        generateName: cstor
+        namespace: openebs
+      spec:
+        pools:
+        - dataRaidGroups:
+          - blockDevices:
+            # /var/openebs/sparse/0-ndm-sparse.img  10GB
+            - blockDeviceName: sparse-6b277da87b7487e501c03ea0001d6d92
+          nodeSelector:
+            kubernetes.io/hostname: shubham
+          poolConfig:
+            dataRaidGroupType: stripe
+
+      # raidz pool example
+      $ kubectl openebs generate cspc --nodes=node1 --raidtype=raidz
+        apiVersion: cstor.openebs.io/v1
+        kind: CStorPoolCluster
+        metadata:
+          creationTimestamp: null
+          generateName: cstor
+          namespace: openebs
+        spec:
+          pools:
+          - dataRaidGroups:
+            - blockDevices:
+              # /dev/nvme2n1  100.0GiB
+              - blockDeviceName: blockdevice-8a5b69d8a2b23276f8daeac3c8179f9d
+              # /dev/nvme1n1  100.0GiB
+              - blockDeviceName: blockdevice-c21bc3b79a98c7e8508f47558cc94f36
+              # /dev/nvme10n1  100.0GiB
+              - blockDeviceName: blockdevice-e5a1c3c1b66c864588a66d0a7ff8ca58
+            nodeSelector:
+              kubernetes.io/hostname: node1
+            poolConfig:
+              dataRaidGroupType: raidz
+
+      # raidz2 failure example
+      $ kubectl openebs generate cspc --nodes=minikube --raidtype=raidz2
+        raidz2 pool requires a minimum of 6 block device per node
+      ```
+
+    * #### Update CSPC Pools
+
+    ```bash
+    $ kubectl openebs upgrade --cas-type cstor
+      Fetching CSPC control plane and Data Plane Version
+      Current Version: 2.12.0
+      Desired Version: 3.0.0
+      Previous job failed.
+      Reason:  BackoffLimitExceeded
+      Creating a new Job with name: cstor-cspc-upgrade-vfn87
+      Creating Dry-run job...
+      metadata:
+        creationTimestamp: null
+        generateName: cstor-cspc-upgrade-
+        labels:
+          cas-type: cstor
+          name: cstor-cspc-upgrade
+        namespace: openebs
+      spec:
+        backoffLimit: 4
+        template:
+          metadata:
+            creationTimestamp: null
+          spec:
+            containers:
+            - args:
+              - cstor-cspc
+              - --from-version=2.12.0
+              - --to-version=3.0.0
+              - --v=4
+              - cstor-storage
+              env:
+              - name: OPENEBS_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+              image: openebs/upgrade:3.0.0
+              imagePullPolicy: IfNotPresent
+              name: upgrade-cstor-cspc-go
+              resources: {}
+            restartPolicy: OnFailure
+            serviceAccountName: openebs-maya-operator
+      status: {}
+      Continue?: y
+      Creating a batch job...
+      Job Created successfully:
+      ```
+
 * #### `BlockDevice`
     * #### Get `BlockDevices` by Nodes
       ```bash
       $ kubectl openebs get bd
       NAME                                             PATH            SIZE      CLAIMSTATE   STATUS     FSTYPE       MOUNTPOINT
-      minikube-2                                                                                                      
+      minikube-2
       ├─blockdevice-94312c16fb24476c3a155c34f0c211c3   /dev/sdb1       50 GiB    Unclaimed    Inactive   ext4         /var/lib/kubelet/mntpt
       └─blockdevice-94312c16fb24476c3a155c34f0c2143c   /dev/sdb1       50 GiB    Claimed      Active
-      
-      minikube-1                                                                                                      
+
+      minikube-1
       ├─blockdevice-94312c16fb24476c3a155c34f0c6153a   /dev/sdb1       50 GiB    Claimed      Inactive   zfs_member   /var/openebs/zfsvol
-      ├─blockdevice-8a5b69d8a2b23276f8daeac3c8179f9d   /dev/nvme2n1    100 GiB   Claimed      Active                  
+      ├─blockdevice-8a5b69d8a2b23276f8daeac3c8179f9d   /dev/nvme2n1    100 GiB   Claimed      Active
       └─blockdevice-e5a1c3c1b66c864588a66d0a7ff8ca58   /dev/nvme10n1   100 GiB   Claimed      Active
-      
-      minikube-3                                                                                                      
-      └─blockdevice-94312c16fb24476c3a155c34f0c6199k   /dev/sdb1       50 GiB    Claimed      Active               
+
+      minikube-3
+      └─blockdevice-94312c16fb24476c3a155c34f0c6199k   /dev/sdb1       50 GiB    Claimed      Active
       ```
-    
+
