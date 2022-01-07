@@ -1,3 +1,41 @@
+# Release v0.5.0
+
+<img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
+
+## Notes
+
+Users are encouraged to install this tool, use it and help us know what can be better.<br/>
+You can checkout the [documentation](https://github.com/openebs/openebsctl#readme) for more information.<br/>
+
+## Notable Changes
+
+We have added more features for `Jiva`, `CStor` storage engines to make OpenEBS upgrades easier.<br/>
+* The Jiva data plane components can be upgraded via the CLI after the Jiva control-plane components are upgraded.
+* The Cstor CSPCs can be upgraded via the CLI, after the cstor control-plane components are upgraded.
+
+We have added some missing features which make understanding dynamically provisioned storage on Kubernetes easier for everyone.<br/>
+* The PVC describe output will now also show pods which are consuming the volume.
+* The CLI can generate optimised CStor Pool Volume specs using the existing blockdevices in a cluster.
+
+Other minor changes<br/>
+* Add config for a development environment in the cloud, [GitPod](https://www.gitpod.io/)
+
+## What's Next
+* Support for upgrading cstor volumes.
+* Support for moving the pool to new nodes, if the disks are already moved to new node.
+* Ability to generate raise GitHub issues with required troubleshooting information.
+* Support for performing sanity checks and flagging discrepancies like listing stale volumes or over-utilised pools.
+
+## Resolved Bugs
+
+* [#117](https://github.com/openebs/openebsctl/issues/117) Use kube-config from `--kubeconfig` flag and environment `KUBECONFIG`
+* [#56](https://github.com/openebs/openebsctl/issues/56) Handled error messages when no resources were found.
+
+## Shoutouts!
+
+* Many congratulations to @Abhishek-kumar09 for successful completion of the LFX Mentorship under @kmova & @vharsh.
+* Many thanks to our contributors @Abhishek-kumar09, @Amishakumari544, @daniel-shuy, @giovannitgl, @princerachit, @survivant and others who participated in making this release possible.
+
 # Release v0.4.0
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
 
