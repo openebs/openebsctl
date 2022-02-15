@@ -63,8 +63,8 @@ func NewCmdVolumeUpgrade(rootCmd *cobra.Command) *cobra.Command {
 			}
 		},
 	}
+	cmd.AddCommand(NewCmdUpgradeStatus())
 	cmd.SetUsageTemplate(upgradeCmdHelp)
-	// using openebs as default value to namespace
 	cmd.PersistentFlags().StringVarP(&upgradeOpts.CasType, "cas-type", "", "", "the cas-type filter option for fetching resources")
 	cmd.PersistentFlags().StringVarP(&upgradeOpts.ToVersion, "to-version", "", "", "the version to which the resources need to be upgraded")
 	cmd.PersistentFlags().StringVarP(&upgradeOpts.ImagePrefix, "image-prefix", "", "", "provide image prefix for the volume deployments")

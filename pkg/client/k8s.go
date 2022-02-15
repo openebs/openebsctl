@@ -17,12 +17,15 @@ limitations under the License.
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/ghodss/yaml"
 
@@ -482,9 +485,60 @@ func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
 	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
-/*
-	LOCAL VOLUMES SPECIFIC METHODS
-*/
+// GetPodLogs returns logs from the containers running in the pod
+func (k K8sClient) GetPodLogs(podName string, ns string) string {
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
+	podLogs, err := req.Stream(context.TODO())
+	if err != nil {
+		log.Fatal("err getting logs ", err)
+	}
+	defer podLogs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, podLogs)
+	if err != nil {
+		log.Fatal("err converting log buffer", err)
+	}
+
+	return buf.String()
+}
+
+// StartPodLogsStream starts stream of logs for the given pod
+func (k K8sClient) StartPodLogsStream(podName string, ns string) {
+	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
+	stream, err := req.Stream(context.TODO())
+	if err != nil {
+		log.Fatal("err getting logs ", err)
+	}
+	defer stream.Close()
+
+	fmt.Println("Waiting for the Pod Logs...")
+
+	for {
+		buf := make([]byte, 2000)
+		numBytes, err := stream.Read(buf)
+
+		// No newer logs
+		if numBytes == 0 {
+			// sleeping for 2 seconds to save CPU power of host running infinite loop
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		// Logs stream ended
+		if err == io.EOF {
+			break
+		}
+
+		// Err fetching logs
+		if err != nil {
+			log.Fatal("stopping pod logs stream, err:", err)
+		}
+
+		message := string(buf[:numBytes])
+		fmt.Print(util.ColorText(message, util.Blue))
+	}
+}
 
 // GetDeploymentList returns the deployment-list with a specific
 // label selector query
