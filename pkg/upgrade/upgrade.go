@@ -133,7 +133,7 @@ func startDeletionTask(k *client.K8sClient, info *jobInfo) error {
 	return nil
 }
 
-// confirmDeletion runs until the job is successfully done or reached threshhold duration
+// confirmDeletion runs until the job is successfully done or reached threshold duration
 func confirmDeletion(k *client.K8sClient, info *jobInfo) {
 	// create interval to call function periodically
 	interval := time.NewTicker(time.Second * 2)
@@ -141,7 +141,7 @@ func confirmDeletion(k *client.K8sClient, info *jobInfo) {
 	// Create channel
 	channel := make(chan bool)
 
-	// Set threshhold time
+	// Set threshold time
 	go func() {
 		time.Sleep(time.Second * 10)
 		channel <- true

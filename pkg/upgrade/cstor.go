@@ -158,7 +158,7 @@ func getCstorVersionDetails(cspcList *cstorv1.CStorPoolClusterList) (fromVersion
 func GetCSPCOperatorServiceAccName(k *client.K8sClient) string {
 	pods, err := k.GetPods("openebs.io/component-name=cspc-operator", "", k.Ns)
 	if err != nil || len(pods.Items) == 0 {
-		log.Fatal("error occured while searching operator, or no operator is found: ", err)
+		log.Fatal("error occurred while searching operator, or no operator is found: ", err)
 	}
 
 	return pods.Items[0].Spec.ServiceAccountName

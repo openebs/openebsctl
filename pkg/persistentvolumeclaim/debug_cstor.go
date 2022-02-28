@@ -30,7 +30,7 @@ import (
 
 // DebugCstorVolumeClaim is used to debug a cstor volume by calling various modules
 func DebugCstorVolumeClaim(k *client.K8sClient, pvc *corev1.PersistentVolumeClaim, pv *corev1.PersistentVolume) error {
-	// 1. Main Struture Creation which contains all cstor CRs, this structure will be passed accross all modules.
+	// 1. Main Struture Creation which contains all cstor CRs, this structure will be passed across all modules.
 	var cstorResources util.CstorVolumeResources
 	cstorResources.PVC = pvc
 	cstorResources.PV = pv
