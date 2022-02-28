@@ -43,8 +43,8 @@ const (
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
 	StorageKey = "storage"
-	//NotAttached to show when CVA is not present
-	NotAttached = "N/A"
+	//NotAvailable to show when CVA is not present
+	NotAvailable = "N/A"
 	// CVAVolnameKey present in label of CVA
 	CVAVolnameKey = "Volname"
 	// UnicodeCross stores the character representation of U+2718

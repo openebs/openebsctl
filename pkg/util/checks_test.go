@@ -41,7 +41,7 @@ func TestCheckForVol(t *testing.T) {
 		{
 			"volume_not_attached_to_storage_class",
 			args{name: "cstor_volume", vols: map[string]*Volume{"cstor_volume_two": {CSIVolumeAttachmentName: "volume_one"}}},
-			&Volume{StorageClass: NotAttached, Node: NotAttached, AttachementStatus: NotAttached, AccessMode: NotAttached},
+			&Volume{StorageClass: NotAvailable, Node: NotAvailable, AttachementStatus: NotAvailable, AccessMode: NotAvailable},
 		},
 	}
 	for _, tt := range tests {

@@ -61,7 +61,7 @@ func GetLocalHostpath(c *client.K8sClient, pvList *corev1.PersistentVolumeList, 
 			storageVersion = deploy.Items[0].Labels["openebs.io/version"]
 			ns = deploy.Items[0].Namespace
 		} else {
-			storageVersion = "N/A"
+			storageVersion = util.NotAvailable
 		}
 
 		accessMode := pv.Spec.AccessModes[0]

@@ -96,7 +96,7 @@ func DescribeCstorVolumeClaim(c *client.K8sClient, pvc *corev1.PersistentVolumeC
 	// if the CStorVolumeAttachment is not found.
 	cva, err := c.GetCVA(util.CVAVolnameKey + "=" + pvc.Spec.VolumeName)
 	if err != nil {
-		pvcInfo.AttachedToNode = util.NotAttached
+		pvcInfo.AttachedToNode = util.NotAvailable
 		fmt.Println("Underlying CstorVolumeAttachment is not found for: ", pvc.Name)
 	} else {
 		pvcInfo.AttachedToNode = cva.Spec.Volume.OwnerNodeID

@@ -132,7 +132,7 @@ func DescribeCstorVolume(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	node, err := c.GetCVA(util.CVAVolnameKey + "=" + vol.Name)
 	var nodeName string
 	if err != nil {
-		nodeName = util.NotAttached
+		nodeName = util.NotAvailable
 		_, _ = fmt.Fprintf(os.Stderr, "failed to get CStorVolumeAttachments for %s\n", vol.Name)
 	} else {
 		nodeName = node.Spec.Volume.OwnerNodeID

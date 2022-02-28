@@ -53,7 +53,7 @@ func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, ope
 		version = CSIctrl.Labels["openebs.io/version"]
 	}
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 	for _, pv := range pvList.Items {
 		var attachedNode, customStatus, ns string
@@ -95,7 +95,7 @@ func DescribeLVMLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 	// Assign N/A if not found
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 	// 2. Fill the details using the Persistent Volume
 	v := util.LVMVolDesc{

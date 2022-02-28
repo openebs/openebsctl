@@ -38,10 +38,10 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 	}
 	// create & return an empty object to display details as Not Available
 	errVol := &Volume{
-		StorageClass:      NotAttached,
-		Node:              NotAttached,
-		AttachementStatus: NotAttached,
-		AccessMode:        NotAttached,
+		StorageClass:      NotAvailable,
+		Node:              NotAvailable,
+		AttachementStatus: NotAvailable,
+		AccessMode:        NotAvailable,
 	}
 	return errVol
 }

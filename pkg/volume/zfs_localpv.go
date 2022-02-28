@@ -60,7 +60,7 @@ func GetZFSLocalPVs(c *client.K8sClient, pvList *corev1.PersistentVolumeList, op
 		version = CSIctrl.Labels["openebs.io/version"]
 	}
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 
 	var rows []metav1.TableRow
@@ -110,7 +110,7 @@ func DescribeZFSLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 	// Assign N/A if not found
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 	// 2. Fill the details using the Persistent Volume
 	v := util.ZFSVolDesc{
