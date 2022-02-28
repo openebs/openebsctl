@@ -1,5 +1,6 @@
 run:
-  timeout: 2m
+  deadline: 2m
+  issues-exit-code: 1
 
 linters-settings:
   goheader:
@@ -19,7 +20,8 @@ linters-settings:
       See the License for the specific language governing permissions and
       limitations under the License.
 
-enable:
+linters:
+  enable:
     - bodyclose
     - deadcode
     - errcheck
@@ -28,6 +30,14 @@ enable:
     - gocyclo
     - gofmt
     - goimports
-    - golint
+    - unused
+    - revive
     - misspell
     - goheader
+
+issues:
+  # Maximum issue count per one linter
+  max-issues-per-linter: 0
+  #
+  max-same-issues: 0
+  exclude-use-default: false
