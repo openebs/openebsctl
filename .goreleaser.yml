@@ -44,7 +44,7 @@ checksum:
 release:
   name_template: "{{.ProjectName}}-{{.Tag}}"
   header: '# Welcome to this new release!'
-  footer: '<img src="https://avatars.githubusercontent.com/u/20769039?s=200&v=4" width="35" height="35"/>© 2020-2021 The OpenEBS Authors. All materials licensed under [Apache v2.0](https://www.apache.org/licenses/LICENSE-2.0.html)'
+  footer: '<img src="https://avatars.githubusercontent.com/u/20769039?s=200&v=4" width="35" height="35"/>© 2020-2022 The OpenEBS Authors. All materials licensed under [Apache v2.0](https://www.apache.org/licenses/LICENSE-2.0.html)'
 
 nfpms:
   - file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
