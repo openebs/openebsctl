@@ -19,7 +19,7 @@ package cmd
 import (
 	"flag"
 
-	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
+	"github.com/openebs/openebsctl/cmd/clusterinfo"
 	"github.com/openebs/openebsctl/cmd/completion"
 	"github.com/openebs/openebsctl/cmd/describe"
 	"github.com/openebs/openebsctl/cmd/generate"
@@ -81,7 +81,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
-		cluster_info.NewCmdClusterInfo(cmd),
+		clusterinfo.NewCmdClusterInfo(cmd),
 		upgrade.NewCmdVolumeUpgrade(cmd),
 		generate.NewCmdGenerate(),
 	)

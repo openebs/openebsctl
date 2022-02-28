@@ -17,7 +17,7 @@ limitations under the License.
 package clusterinfo
 
 import (
-	cluster_info "github.com/openebs/openebsctl/pkg/cluster-info"
+	"github.com/openebs/openebsctl/pkg/clusterinfo"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -36,7 +36,7 @@ func NewCmdClusterInfo(rootCmd *cobra.Command) *cobra.Command {
 		Use:   "cluster-info",
 		Short: "Show component version, status and running components for each installed engine",
 		Run: func(cmd *cobra.Command, args []string) {
-			util.CheckErr(cluster_info.ShowClusterInfo(), util.Fatal)
+			util.CheckErr(clusterinfo.ShowClusterInfo(), util.Fatal)
 		},
 	}
 	cmd.SetUsageTemplate(clusterInfoCmdHelp)
