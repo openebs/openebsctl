@@ -1,11 +1,11 @@
 /*
-Copyright 2020 The OpenEBS Authors
+Copyright 2020-2022 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -41,7 +41,7 @@ func TestCheckForVol(t *testing.T) {
 		{
 			"volume_not_attached_to_storage_class",
 			args{name: "cstor_volume", vols: map[string]*Volume{"cstor_volume_two": {CSIVolumeAttachmentName: "volume_one"}}},
-			&Volume{StorageClass: NotAttached, Node: NotAttached, AttachementStatus: NotAttached, AccessMode: NotAttached},
+			&Volume{StorageClass: NotAvailable, Node: NotAvailable, AttachementStatus: NotAvailable, AccessMode: NotAvailable},
 		},
 	}
 	for _, tt := range tests {

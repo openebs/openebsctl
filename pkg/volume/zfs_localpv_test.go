@@ -1,11 +1,11 @@
 /*
-Copyright 2020-2021 The OpenEBS Authors
+Copyright 2020-2022 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/openebs/openebsctl/pkg/client"
+	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/fake"
 	fakezfs "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset/typed/zfs/v1/fake"
 	corev1 "k8s.io/api/core/v1"
@@ -120,7 +121,7 @@ func TestGetZFSLocalPVs(t *testing.T) {
 			wantErr: false,
 			want: []metav1.TableRow{
 				{
-					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", "N/A", "4.0GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
+					Cells: []interface{}{"zfslocalpv", "pvc-1", "Ready", util.NotAvailable, "4.0GiB", "zfs-sc-1", corev1.VolumeBound, corev1.ReadWriteOnce, "node1"},
 				},
 			},
 		},

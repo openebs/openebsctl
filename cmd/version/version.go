@@ -1,11 +1,11 @@
 /*
-Copyright 2020-2021 The OpenEBS Authors
+Copyright 2020-2022 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -93,16 +93,18 @@ func checkForLatestVersion(currVersion string) {
 	// getting the latest version of openebsctl from sigs.k8s.io/krew-index
 	resp, err := http.Get("https://raw.githubusercontent.com/kubernetes-sigs/krew-index/master/plugins/openebs.yaml")
 	if err != nil {
-		// The seperator for the error print
+		// The separator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error fetching latest version %s", err.Error())
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		// The seperator for the error print
+		// The separator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error reading response body %s", err.Error())
 		return
@@ -111,7 +113,7 @@ func checkForLatestVersion(currVersion string) {
 	var data map[string]interface{}
 	err = yaml.Unmarshal(body, &data)
 	if err != nil {
-		// The seperator for the error print
+		// The separator for the error print
 		fmt.Println()
 		fmt.Fprintf(os.Stderr, "Error parsing yaml %s", err.Error())
 		return

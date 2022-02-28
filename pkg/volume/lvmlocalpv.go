@@ -1,11 +1,11 @@
 /*
-Copyright 2020-2021 The OpenEBS Authors
+Copyright 2020-2022 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -53,7 +53,7 @@ func GetLVMLocalPV(c *client.K8sClient, pvList *corev1.PersistentVolumeList, ope
 		version = CSIctrl.Labels["openebs.io/version"]
 	}
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 	for _, pv := range pvList.Items {
 		var attachedNode, customStatus, ns string
@@ -95,7 +95,7 @@ func DescribeLVMLocalPVs(c *client.K8sClient, vol *corev1.PersistentVolume) erro
 	}
 	// Assign N/A if not found
 	if version == "" {
-		version = "N/A"
+		version = util.NotAvailable
 	}
 	// 2. Fill the details using the Persistent Volume
 	v := util.LVMVolDesc{

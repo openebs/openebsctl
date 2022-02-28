@@ -1,11 +1,11 @@
 /*
-Copyright 2020-2021 The OpenEBS Authors
+Copyright 2020-2022 The OpenEBS Authors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,7 +19,7 @@ package cmd
 import (
 	"flag"
 
-	cluster_info "github.com/openebs/openebsctl/cmd/cluster-info"
+	"github.com/openebs/openebsctl/cmd/clusterinfo"
 	"github.com/openebs/openebsctl/cmd/completion"
 	"github.com/openebs/openebsctl/cmd/describe"
 	"github.com/openebs/openebsctl/cmd/generate"
@@ -81,7 +81,7 @@ Find out more about OpenEBS on https://openebs.io/`,
 		get.NewCmdGet(cmd),
 		describe.NewCmdDescribe(cmd),
 		v.NewCmdVersion(cmd),
-		cluster_info.NewCmdClusterInfo(cmd),
+		clusterinfo.NewCmdClusterInfo(cmd),
 		upgrade.NewCmdVolumeUpgrade(cmd),
 		generate.NewCmdGenerate(),
 	)
