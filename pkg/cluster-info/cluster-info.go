@@ -23,6 +23,7 @@ import (
 	"github.com/openebs/openebsctl/pkg/client"
 	"github.com/openebs/openebsctl/pkg/util"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/printers"
 )
@@ -59,9 +60,8 @@ func compute(k *client.K8sClient) error {
 	}
 	if len(clusterInfoRows) == 0 {
 		return fmt.Errorf("none Of the OpenEBS Storage Engines are installed in this cluster")
-	} else {
-		util.TablePrinter(util.ClusterInfoColumnDefinitions, clusterInfoRows, printers.PrintOptions{})
 	}
+	util.TablePrinter(util.ClusterInfoColumnDefinitions, clusterInfoRows, printers.PrintOptions{})
 	return nil
 }
 
@@ -74,7 +74,7 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 		for _, item := range podList.Items {
 			if val, ok := componentDataMap[item.Labels["openebs.io/component-name"]]; ok {
 				// Update only if the status of the component is not running.
-				if val.Status != "Running" {
+				if val.Status != string(v1.PodRunning) {
 					componentDataMap[item.Labels["openebs.io/component-name"]] = util.ComponentData{
 						Namespace: item.Namespace,
 						Status:    string(item.Status.Phase),
@@ -97,10 +97,10 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 		engineComponents := 0
 		for key := range componentDataMap {
 			if !strings.Contains(util.NDMComponentNames, key) && strings.Contains(util.CasTypeToComponentNamesMap[casType], key) {
-				engineComponents += 1
+				engineComponents++
 				if casType == util.JivaCasType && key == util.HostpathComponentNames {
 					// Since hostpath component is not a unique engine component for jiva
-					engineComponents -= 1
+					engineComponents--
 				}
 			}
 		}
@@ -118,17 +118,16 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 		}
 
 		return componentDataMap, nil
-	} else {
-		return nil, fmt.Errorf("components for %s engine are not installed", casType)
 	}
+	return nil, fmt.Errorf("components for %s engine are not installed", casType)
 }
 
 func getStatus(componentDataMap map[string]util.ComponentData) (string, string) {
 	totalComponents := len(componentDataMap)
 	healthyComponents := 0
 	for _, val := range componentDataMap {
-		if val.Status == "Running" {
-			healthyComponents += 1
+		if val.Status == string(v1.PodRunning) {
+			healthyComponents++
 		}
 	}
 	if healthyComponents == totalComponents {

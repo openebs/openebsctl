@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cluster_info
+package clusterinfo
 
 import (
 	cluster_info "github.com/openebs/openebsctl/pkg/cluster-info"
