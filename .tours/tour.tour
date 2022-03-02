@@ -1,0 +1,72 @@
+{
+  "$schema": "https://aka.ms/codetour-schema",
+  "title": "tour",
+  "steps": [
+    {
+      "file": "cmd/openebs.go",
+      "description": "This function gets called when the binary runs via kubectl or directly, read about kubectl plugins or watch this [Kubecon talk](https://www.youtube.com/watch?v=83ITOTsXsHU)",
+      "line": 66
+    },
+    {
+      "file": "cmd/get/get.go",
+      "description": "The CLI supports getting these resources, think of them as the nouns the CLI can get(verb). Read about [spf13/cobra](https://github.com/spf13/cobra) to understand more",
+      "line": 53
+    },
+    {
+      "file": "cmd/get/blockdevice.go",
+      "description": "This function is called when `kubectl openebs get bd` is run",
+      "line": 46
+    },
+    {
+      "file": "cmd/get/get.go",
+      "description": "Each command can have some local or global flags.",
+      "line": 56
+    },
+    {
+      "file": "cmd/get/storage.go",
+      "description": "This function is called when user runs `kubectl openebs get storage`",
+      "line": 49
+    },
+    {
+      "file": "pkg/storage/storage.go",
+      "description": "If the storage(pools) of a well defined `casType` are requested, only that function, `f` is called, this happens when user runs something like `kubectl openebs get storage --cas-type=cstor`.",
+      "line": 34
+    },
+    {
+      "file": "pkg/storage/storage.go",
+      "description": "When no cas-type is specified, each Storage Engines' storage(pool) is listed",
+      "line": 49
+    },
+    {
+      "file": "pkg/storage/storage.go",
+      "description": "While some or all of `storage` conceptual resource can be listed, they can also be described individually, this function handles that.",
+      "line": 76
+    },
+    {
+      "file": "cmd/describe/volume.go",
+      "description": "Like storage, volumes can be described too",
+      "line": 49
+    },
+    {
+      "file": "cmd/clusterinfo/cluster-info.go",
+      "description": "Besides listing information about the cluster's storage resources of storage engines, the CLI can also identify which storage components are installed on the current cluster & can offer some version and health information.",
+      "line": 39
+    },
+    {
+      "file": "cmd/upgrade/upgrade.go",
+      "description": "The CLI can also schedule jobs to trigger data plane upgrades of the storage components, right now only Jiva and some upgrade features of cstor are supported.",
+      "line": 56
+    },
+    {
+      "file": "pkg/volume/cstor.go",
+      "description": "The logic for showing volumes are in the pkg/volumes package, all code is seggregated by the storage engine named filename.",
+      "line": 62
+    },
+    {
+      "file": "docs/cstor/README.md",
+      "description": "When a new feature for a storage engine is added, it's usually documented here.",
+      "line": 5
+    }
+  ],
+  "ref": "codewalk"
+}

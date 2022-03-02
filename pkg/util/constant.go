@@ -43,7 +43,8 @@ const (
 	Healthy = "Healthy"
 	// StorageKey key present in pvc status.capacity
 	StorageKey = "storage"
-	//NotAvailable to show when CVA is not present
+	// NotAvailable shows something is missing, could be a component,
+	// unknown version, or some other unknowns
 	NotAvailable = "N/A"
 	// CVAVolnameKey present in label of CVA
 	CVAVolnameKey = "Volname"
