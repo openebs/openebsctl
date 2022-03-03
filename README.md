@@ -23,6 +23,7 @@ The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS
 ## Table of Contents
 * [Installation](#installation)
 * [Build](#build)
+* [Code Walkthrough](#code-walkthrough)
 * [Usage](#usage)
 * [Contributing](#contributing)
 
@@ -50,6 +51,7 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
 * Or, if you don't want to setup krew, you run the following to get latest version :-
    ```shell
    wget https://raw.githubusercontent.com/openebs/openebsctl/develop/scripts/install-latest.sh -O - | bash
+   ```
 
 ## Build
 
@@ -57,13 +59,19 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
 - `cd openebsctl`
 - Run `make openebsctl`
 
+## Code Walkthrough
+
+1. Install [vscode](https://code.visualstudio.com/)
+2. Install [CodeTour plugin](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour) on vscode
+3. Open this project on vscode & press `[ctrl] + [shift] + [p]` or `[command] + [shift] + [p]` and click `CodeTour: Open The Tour File` and locate the appropriate `*.tour` file. The code walkthrough will begin. Happy Contributing!
+
 ## Usage
 
 * ```bash
   $ kubectl openebs
   openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
   Find out more about OpenEBS on https://openebs.io/
-  
+
   Usage:
   kubectl openebs [command] [resource] [...names] [flags]
   
