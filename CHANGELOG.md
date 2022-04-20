@@ -1,3 +1,25 @@
+# Release v0.6.0
+
+<img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
+
+## Notes
+
+Users are encouraged to install this tool, use it and help us know what can be better.<br/>
+You can checkout the [documentation](https://github.com/openebs/openebsctl#readme) for more information.<br/>
+
+## Notable Changes
+
+* Code-tour has been added to help make contributing to openebsctl easier.
+* Jiva upgrade job logs can be streamed via status sub-command.
+* The Cstor CSPCs can be upgraded via the CLI, after the cstor control-plane components are upgraded.
+
+
+## Resolved Bugs
+
+* [#135](https://github.com/openebs/openebsctl/issues/135) Fix headings for cstor volume describe.
+* [#105](https://github.com/openebs/openebsctl/issues/105) Fix incorrect linting configuration of GolangCI-Lint.
+
+
 # Release v0.5.0
 
 <img width="300" align="right" alt="OpenEBS Logo" src="https://raw.githubusercontent.com/cncf/artwork/master/projects/openebs/stacked/color/openebs-stacked-color.png" xmlns="http://www.w3.org/1999/html">
