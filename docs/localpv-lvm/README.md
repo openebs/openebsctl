@@ -50,24 +50,24 @@
       ```
     * #### Describe `LocalPV-LVM` volume
       ```bash
-      $ kubectl openebs describe vol pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
-  
-      pvc-9999274f-ad01-48bc-9b21-7c51b47a870c Details :
+      $ kubectl openebs describe vol pvc-5265bc5e-dd55-4272-b1d0-2bb3a172970d 
+
+      pvc-5265bc5e-dd55-4272-b1d0-2bb3a172970d Details :
       ------------------
-      Name            : pvc-9999274f-ad01-48bc-9b21-7c51b47a870c
-      Namespace       : openebs
-      AccessMode      : ReadWriteOnce
-      CSIDriver       : local.csi.openebs.io
-      Capacity        : 4Gi
-      PVC             : csi-lvmpv
-      VolumePhase     : Bound
-      StorageClass    : openebs-lvmpv
-      Version         : ci
-      Status          : Ready
-      VolumeGroup     : lvmvg
-      Shared          : no
-      ThinProvisioned : no
-      NodeID          : worker-sh1
+      NAME              : pvc-5265bc5e-dd55-4272-b1d0-2bb3a172970d
+      NAMESPACE         : lvm
+      ACCESS MODE       : ReadWriteOnce
+      CSI DRIVER        : local.csi.openebs.io
+      CAPACITY          : 5Gi
+      PVC NAME          : csi-lvmpv
+      VOLUME PHASE      : Bound
+      STORAGE CLASS     : openebs-lvmpv
+      VERSION           : 1.4.0
+      LVM VOLUME STATUS : Ready
+      VOLUME GROUP      : lvmvg
+      SHARED            : no
+      THIN PROVISIONED  : no
+      NODE ID           : node-0-152720
       ```
     * #### Describe `LocalPV-LVM` PVCs
       ```bash

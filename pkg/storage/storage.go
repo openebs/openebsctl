@@ -69,13 +69,13 @@ func Get(pools []string, openebsNS string, casType string) error {
 // CasList has a list of method implementations for different cas-types
 func CasList() []func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	return []func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error){
-		GetCstorPools, GetVolumeGroups, GetZFSPools}
+		GetVolumeGroups, GetZFSPools}
 }
 
 // Describe manages various implementations of Storage Describing
 func Describe(storages []string, openebsNs, casType string) error {
 	if len(storages) == 0 || storages == nil {
-		return errors.New("please provide atleast one pv name to describe")
+		return errors.New("please provide atleast one storage node name to describe")
 	}
 	// 1. Create the clientset
 	k := client.NewK8sClient(openebsNs)
@@ -121,9 +121,8 @@ func Describe(storages []string, openebsNs, casType string) error {
 func CasListMap() map[string]func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error) {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, []string) ([]metav1.TableColumnDefinition, []metav1.TableRow, error){
-		util.CstorCasType: GetCstorPools,
-		util.LVMCasType:   GetVolumeGroups,
-		util.ZFSCasType:   GetZFSPools,
+		util.LVMCasType: GetVolumeGroups,
+		util.ZFSCasType: GetZFSPools,
 	}
 }
 
@@ -131,13 +130,12 @@ func CasListMap() map[string]func(*client.K8sClient, []string) ([]metav1.TableCo
 func CasDescribeMap() map[string]func(*client.K8sClient, string) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, string) error{
-		util.CstorCasType: DescribeCstorPool,
-		util.ZFSCasType:   DescribeZFSNode,
-		util.LVMCasType:   DescribeLVMvg,
+		util.ZFSCasType: DescribeZFSNode,
+		util.LVMCasType: DescribeLVMvg,
 	}
 }
 
-// CasDescribeList returns a list of functions which describe a Storage i.e. a pool/volume-group
+// CasDescribeList returns a list of functions which describe a Storage i.e. a zfspool/volume-group
 func CasDescribeList() []func(*client.K8sClient, string) error {
-	return []func(*client.K8sClient, string) error{DescribeCstorPool, DescribeZFSNode, DescribeLVMvg}
+	return []func(*client.K8sClient, string) error{DescribeZFSNode, DescribeLVMvg}
 }

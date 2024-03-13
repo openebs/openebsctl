@@ -32,7 +32,7 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 
 	"github.com/pkg/errors"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 var Kubeconfig string
@@ -65,7 +65,7 @@ func ColorText(s string, c Color) string {
 // Fatal prints the message (if provided) and then exits. If V(2) or greater,
 // klog.Fatal is invoked for extended information.
 func Fatal(msg string) {
-	if klog.V(2) {
+	if klog.V(2).Enabled() {
 		klog.FatalDepth(2, msg)
 	}
 	if len(msg) > 0 {

@@ -17,37 +17,28 @@ limitations under the License.
 package get
 
 import (
+	"fmt"
+
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/openebs/openebsctl/pkg/volume"
 	"github.com/spf13/cobra"
 )
 
-var (
-	volumesListCommandHelpText = `Usage: 
-  kubectl openebs get volume [flags]
-
-Flags:
-  -h, --help                           help for openebs get command
-      --openebs-namespace string       filter by a fixed OpenEBS namespace
-                                       If not provided it is determined from components.
-      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
-                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
-`
-)
-
 // NewCmdGetVolume displays status of OpenEBS Volume(s)
 func NewCmdGetVolume() *cobra.Command {
+	var openebsNs string
+	var casType string
 	cmd := &cobra.Command{
 		Use:     "volume",
 		Aliases: []string{"vol", "v", "volumes"},
 		Short:   "Displays status information about Volume(s)",
 		Run: func(cmd *cobra.Command, args []string) {
-			// TODO: Should this method create the k8sClient object
 			openebsNS, _ := cmd.Flags().GetString("openebs-namespace")
 			casType, _ := cmd.Flags().GetString("cas-type")
 			util.CheckErr(volume.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
-	cmd.SetUsageTemplate(volumesListCommandHelpText)
+	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
+	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", fmt.Sprintf("the type of the engine %s, %s", util.LVMCasType, util.ZFSCasType))
 	return cmd
 }

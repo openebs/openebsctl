@@ -18,7 +18,7 @@ package get
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -28,14 +28,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/printers"
-)
-
-const (
-	versionCmdHelp = `Usage:
-  kubectl openebs version
-Flags:
-  -h, --help                           help for openebs get command
-`
 )
 
 // Get versions of components, return "Not Installed" on empty version
@@ -68,16 +60,13 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 					Cells: []interface{}{"Client", getValidVersion(rootCmd.Version)},
 				},
 				{
-					Cells: []interface{}{"OpenEBS CStor", getValidVersion(componentVersionMap[util.CstorCasType])},
-				},
-				{
-					Cells: []interface{}{"OpenEBS Jiva", getValidVersion(componentVersionMap[util.JivaCasType])},
-				},
-				{
 					Cells: []interface{}{"OpenEBS LVM LocalPV", getValidVersion(componentVersionMap[util.LVMCasType])},
 				},
 				{
 					Cells: []interface{}{"OpenEBS ZFS LocalPV", getValidVersion(componentVersionMap[util.ZFSCasType])},
+				},
+				{
+					Cells: []interface{}{"OpenEBS HostPath LocalPV", getValidVersion(componentVersionMap[util.LocalPvHostpathCasType])},
 				},
 			}
 
@@ -85,7 +74,6 @@ func NewCmdVersion(rootCmd *cobra.Command) *cobra.Command {
 			checkForLatestVersion(rootCmd.Version)
 		},
 	}
-	cmd.SetUsageTemplate(versionCmdHelp)
 	return cmd
 }
 
@@ -102,7 +90,7 @@ func checkForLatestVersion(currVersion string) {
 		_ = resp.Body.Close()
 	}()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		// The separator for the error print
 		fmt.Println()

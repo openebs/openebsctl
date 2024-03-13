@@ -40,16 +40,7 @@ func compute(k *client.K8sClient) error {
 	for casType, componentNames := range util.CasTypeToComponentNamesMap {
 		componentDataMap, err := getComponentDataByComponents(k, componentNames, casType)
 		if err == nil && len(componentDataMap) != 0 {
-			status, working := "", ""
-			if casType == util.LocalDeviceCasType {
-				var err error
-				status, working, err = getLocalPVDeviceStatus(componentDataMap)
-				if err != nil {
-					continue
-				}
-			} else {
-				status, working = getStatus(componentDataMap)
-			}
+			status, working := getStatus(componentDataMap)
 			version := getVersion(componentDataMap)
 			namespace := getNamespace(componentDataMap)
 			clusterInfoRows = append(
@@ -67,7 +58,6 @@ func compute(k *client.K8sClient) error {
 
 func getComponentDataByComponents(k *client.K8sClient, componentNames string, casType string) (map[string]util.ComponentData, error) {
 	var podList *corev1.PodList
-	// Fetch Cstor Components
 	componentDataMap := make(map[string]util.ComponentData)
 	podList, _ = k.GetPods(fmt.Sprintf("openebs.io/component-name in (%s)", componentNames), "", "")
 	if len(podList.Items) != 0 {
@@ -92,25 +82,6 @@ func getComponentDataByComponents(k *client.K8sClient, componentNames string, ca
 			}
 		}
 
-		// Below is to handle corner cases in case of cstor and jiva, as they use components like ndm and localpv provisioner
-		// which are also used by other engine, below has been added to strictly identify the installed engine.
-		engineComponents := 0
-		for key := range componentDataMap {
-			if !strings.Contains(util.NDMComponentNames, key) && strings.Contains(util.CasTypeToComponentNamesMap[casType], key) {
-				engineComponents++
-				if casType == util.JivaCasType && key == util.HostpathComponentNames {
-					// Since hostpath component is not a unique engine component for jiva
-					engineComponents--
-				}
-			}
-		}
-		if engineComponents == 0 {
-			return nil, fmt.Errorf("components for %s engine are not installed", casType)
-		}
-
-		// The below is to fill in the expected components, for example if 5 out of 7 cstor components are there
-		// in the cluster, we would not be able what was the expected number of components, the below would ensure cstor
-		// needs 7 component always to work.
 		for _, item := range strings.Split(componentNames, ",") {
 			if _, ok := componentDataMap[item]; !ok {
 				componentDataMap[item] = util.ComponentData{}
@@ -139,21 +110,9 @@ func getStatus(componentDataMap map[string]util.ComponentData) (string, string) 
 	}
 }
 
-func getLocalPVDeviceStatus(componentDataMap map[string]util.ComponentData) (string, string, error) {
-	if ndmData, ok := componentDataMap["ndm"]; ok {
-		if localPVData, ok := componentDataMap["openebs-localpv-provisioner"]; ok {
-			if ndmData.Namespace == localPVData.Namespace && localPVData.Namespace != "" && localPVData.CasType != "" {
-				status, working := getStatus(componentDataMap)
-				return status, working, nil
-			}
-		}
-	}
-	return "", "", fmt.Errorf("installed NDM is not for Device LocalPV")
-}
-
 func getVersion(componentDataMap map[string]util.ComponentData) string {
-	for key, val := range componentDataMap {
-		if !strings.Contains(util.NDMComponentNames, key) && val.Version != "" && val.Status == "Running" {
+	for _, val := range componentDataMap {
+		if val.Version != "" && val.Status == "Running" {
 			return val.Version
 		}
 	}
@@ -161,8 +120,8 @@ func getVersion(componentDataMap map[string]util.ComponentData) string {
 }
 
 func getNamespace(componentDataMap map[string]util.ComponentData) string {
-	for key, val := range componentDataMap {
-		if !strings.Contains(util.NDMComponentNames, key) && val.Namespace != "" {
+	for _, val := range componentDataMap {
+		if val.Namespace != "" {
 			return val.Namespace
 		}
 	}

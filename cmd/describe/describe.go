@@ -20,37 +20,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	volumeCommandHelpText = `Show detailed description of a specific OpenEBS resource:
-
-Usage:
-  kubectl openebs describe [volume|storage|pvc] [...names] [flags]
-
-Describe a Volume:
-  kubectl openebs describe volume [...names] [flags]
-
-Describe PVCs present in the same namespace:
-  kubectl openebs describe pvc [...names] [flags]
-
-Describe a Storage :
-  kubectl openebs describe storage [...names] [flags]
-
-Flags:
-  -h, --help                           help for openebs
-  -n, --namespace string               to read the namespace for the pvc.
-      --openebs-namespace string       to read the openebs namespace from user.
-                                       If not provided it is determined from components.
-      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
-                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
-      --debug                          to launch the debugging mode for cstor pvcs.
-`
-)
-
 // NewCmdDescribe provides options for managing OpenEBS Volume
 func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "describe",
-		ValidArgs: []string{"pool", "volume", "pvc"},
+		ValidArgs: []string{"storage", "volume", "pvc"},
 		Short:     "Provide detailed information about an OpenEBS resource",
 	}
 	cmd.AddCommand(
@@ -58,6 +32,5 @@ func NewCmdDescribe(rootCmd *cobra.Command) *cobra.Command {
 		NewCmdDescribePVC(),
 		NewCmdDescribeStorage(),
 	)
-	cmd.SetUsageTemplate(volumeCommandHelpText)
 	return cmd
 }

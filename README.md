@@ -18,7 +18,7 @@ OpenEBSCTL is a kubectl plugin to manage OpenEBS storage components.
 ## Project Status
 
 **Alpha**. Under active development and seeking [contributions from the community](#contributing).
-The CLI currently supports managing `cStor`, `Jiva`, `LocalPV-LVM`, `LocalPV-ZFS` Cas-Engines.
+The CLI currently supports managing `LocalPV-LVM`, `LocalPV-ZFS` and `LocalPV-HostPath` Engines.
 
 ## Table of Contents
 * [Installation](#installation)
@@ -59,44 +59,33 @@ OpenEBSCTL is available on Linux, macOS and Windows platforms.
 - `cd openebsctl`
 - Run `make openebsctl`
 
-## Code Walkthrough
-
-1. Install [vscode](https://code.visualstudio.com/)
-2. Install [CodeTour plugin](https://marketplace.visualstudio.com/items?itemName=vsls-contrib.codetour) on vscode
-3. Open this project on vscode & press `[ctrl] + [shift] + [p]` or `[command] + [shift] + [p]` and click `CodeTour: Open The Tour File` and locate the appropriate `*.tour` file. The code walkthrough will begin. Happy Contributing!
-
 ## Usage
 
 * ```bash
   $ kubectl openebs
-  openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(pools, volumegroups), volumes, blockdevices, pvcs.
+  kubectl openebs is a a kubectl plugin for interacting with OpenEBS storage components such as storage(zfspools, volumegroups), volumes, pvcs.
   Find out more about OpenEBS on https://openebs.io/
-
+  
   Usage:
-  kubectl openebs [command] [resource] [...names] [flags]
+  openebs [command]
   
   Available Commands:
-  completion  Outputs shell completion code for the specified shell (bash or zsh)
-  describe    Provide detailed information about an OpenEBS resource
-  get         Provides fetching operations related to a Volume/Pool
-  help        Help about any command
-  version     Shows openebs kubectl plugin's version
+  cluster-info Show component version, status and running components for each installed engine
+  completion   Outputs shell completion code for the specified shell (bash or zsh)
+  describe     Provide detailed information about an OpenEBS resource
+  get          Provides fetching operations related to a Volume/Storage
+  help         Help about any command
+  version      Shows openebs kubectl plugin's version
   
   Flags:
-  -h, --help                           help for openebs
-  -n, --namespace string               If present, the namespace scope for this CLI request
-      --openebs-namespace string       to read the openebs namespace from user.
-                                       If not provided it is determined from components.
-      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
-                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
-      --debug                          to launch the debugging mode for cstor pvcs.
+  -h, --help                help for openebs
+  -c, --kubeconfig string   path to config file
+  -v, --version             version for openebs
   
-  Use "kubectl openebs command --help" for more information about a command.
+  Use "openebs [command] --help" for more information about a command.
   ```
 
 * To know more about various engine specific commands check these:-
-  * [cStor](docs/cstor/README.md)
-  * [Jiva](docs/jiva/README.md)
   * [LocalPV-LVM](docs/localpv-lvm/README.md)
   * [LocalPV-ZFS](docs/localpv-zfs/README.md)
   

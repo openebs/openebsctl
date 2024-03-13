@@ -84,14 +84,12 @@ func Describe(pvcs []string, namespace string, openebsNs string) error {
 func CasDescribeMap() map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume, string) error {
 	// a good hack to implement immutable maps in Golang & also write tests for it
 	return map[string]func(*client.K8sClient, *corev1.PersistentVolumeClaim, *corev1.PersistentVolume, string) error{
-		util.JivaCasType:  DescribeJivaVolumeClaim,
-		util.CstorCasType: DescribeCstorVolumeClaim,
-		util.LVMCasType:   DescribeLVMVolumeClaim,
-		util.ZFSCasType:   DescribeZFSVolumeClaim,
+		util.LVMCasType: DescribeLVMVolumeClaim,
+		util.ZFSCasType: DescribeZFSVolumeClaim,
 	}
 }
 
-//GetMountPods filters the array of Pods and returns an array of Pods that mount the PersistentVolumeClaim
+// GetMountPods filters the array of Pods and returns an array of Pods that mount the PersistentVolumeClaim
 func GetMountPods(pvcName string, nsPods []corev1.Pod) []corev1.Pod {
 	var pods []corev1.Pod
 	for _, pod := range nsPods {
@@ -107,7 +105,7 @@ func GetMountPods(pvcName string, nsPods []corev1.Pod) []corev1.Pod {
 	return pods
 }
 
-//SortPods sorts the array of Pods by name
+// SortPods sorts the array of Pods by name
 func SortPods(pods []corev1.Pod) []corev1.Pod {
 	sort.Slice(pods, func(i, j int) bool {
 		cmpKey := func(pod corev1.Pod) string {
@@ -118,10 +116,10 @@ func SortPods(pods []corev1.Pod) []corev1.Pod {
 	return pods
 }
 
-//PodsToString Flattens the array of Pods and returns a string fit to display in the output
+// PodsToString Flattens the array of Pods and returns a string fit to display in the output
 func PodsToString(pods []corev1.Pod) string {
 	if len(pods) == 0 {
-		return "<none>"
+		return "none"
 	}
 	str := ""
 	for _, pod := range pods {

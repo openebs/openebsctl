@@ -17,27 +17,19 @@ limitations under the License.
 package client
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
-
-	"github.com/ghodss/yaml"
 
 	lvmclient "github.com/openebs/lvm-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/openebs/openebsctl/pkg/util"
 	zfsclient "github.com/openebs/zfs-localpv/pkg/generated/clientset/internalclientset"
 	"github.com/pkg/errors"
 
-	openebsclientset "github.com/openebs/api/v2/pkg/client/clientset/versioned"
-
 	appsv1 "k8s.io/api/apps/v1"
-	batchV1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -61,9 +53,6 @@ type K8sClient struct {
 	// K8sCS refers to the Clientset capable of communicating
 	// with the K8s cluster
 	K8sCS kubernetes.Interface
-	// OpenebsClientset capable of accessing the OpenEBS
-	// components
-	OpenebsCS openebsclientset.Interface
 	// LVMCS is the client for accessing OpenEBS LVM components
 	LVMCS lvmclient.Interface
 	// ZFCS is the client for accessing OpenEBS ZFS components
@@ -108,18 +97,13 @@ func newK8sClient(ns string) (*K8sClient, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to build Kubernetes clientset")
 	}
-	openebsCS, err := getOpenEBSClient(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to build OpenEBS clientset")
-	}
 	lv, _ := getLVMclient(config)
 	zf, _ := getZFSclient(config)
 	return &K8sClient{
-		Ns:        ns,
-		K8sCS:     k8sCS,
-		OpenebsCS: openebsCS,
-		LVMCS:     lv,
-		ZFCS:      zf,
+		Ns:    ns,
+		K8sCS: k8sCS,
+		LVMCS: lv,
+		ZFCS:  zf,
 	}, nil
 }
 
@@ -161,20 +145,6 @@ func getK8sClient(kubeconfig string) (*kubernetes.Clientset, error) {
 	return clientset, nil
 }
 
-// getOpenEBSClient returns OpenEBS clientset by taking kubeconfig as an
-// argument
-func getOpenEBSClient(kubeconfig string) (*openebsclientset.Clientset, error) {
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not build config from flags")
-	}
-	client, err := openebsclientset.NewForConfig(config)
-	if err != nil {
-		return nil, errors.Wrap(err, "Could not get new config")
-	}
-	return client, nil
-}
-
 func homeDir() string {
 	if h := os.Getenv("HOME"); h != "" {
 		return h
@@ -196,7 +166,7 @@ func (k K8sClient) GetOpenEBSNamespace(casType string) (string, error) {
 	return pods.Items[0].Namespace, nil
 }
 
-// GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[cstor] = cstor-ns
+// GetOpenEBSNamespaceMap maps the cas-type to it's namespace, e.g. n[zfs] = zfs-ns
 // NOTE: This will not work correctly if CSI controller pod runs in kube-system NS
 func (k K8sClient) GetOpenEBSNamespaceMap() (map[string]string, error) {
 	label := "openebs.io/component-name in ("
@@ -416,128 +386,6 @@ func (k K8sClient) GetPVCs(namespace string, pvcNames []string, labelselector st
 	return &corev1.PersistentVolumeClaimList{
 		Items: items,
 	}, nil
-}
-
-/*
-   UPGRADE SPECIFIC METHODS
-*/
-
-// Create Batch Job From a JobSpec Object
-func (k K8sClient) CreateBatchJob(jobSpec *batchV1.Job, namespace string) {
-	jobs := k.K8sCS.BatchV1().Jobs(namespace)
-
-	// 1. Do a dry-run to check if the process can went without problems
-	fmt.Println("Creating Dry-run job...")
-	_, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{DryRun: []string{"All"}})
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Dry-run failed: ", err)
-		fmt.Println()
-		return
-	}
-
-	// The trial code to show Job before starting
-	// Needs another approach, since it is throwing a lot of things which is not needed
-	out, err := yaml.Marshal(jobSpec)
-	if err != nil {
-		fmt.Println("error Marshalling yaml:", err)
-	}
-	s := string(out[:])
-	fmt.Println(s)
-
-	if contnue := util.PromptToStartAgain("Continue?", true); !contnue {
-		fmt.Println("Job not started on user's choice")
-		os.Exit(0)
-	}
-
-	// 2. Create an actual persisted job run
-	fmt.Println("Creating a batch job...")
-	_, err = jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
-
-	if err != nil {
-		fmt.Fprint(os.Stderr, "Job creation failed: ", err)
-		return
-	}
-
-	fmt.Println("Job Created successfully: ", jobSpec.ObjectMeta.Name)
-}
-
-// GetBatchJob returns batch-job by name
-func (k K8sClient) GetBatchJob(name string, namespace string) (*batchV1.Job, error) {
-	job, err := k.K8sCS.BatchV1().Jobs(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	return job, nil
-}
-
-// GetBatchJobs returns batch jobs running in the namespace with the label
-func (k K8sClient) GetBatchJobs(namespace string, labelSelector string) (*batchV1.JobList, error) {
-	list, err := k.K8sCS.BatchV1().Jobs(namespace).List(context.Background(), metav1.ListOptions{LabelSelector: labelSelector})
-	if err != nil {
-		return nil, err
-	}
-
-	return list, nil
-}
-
-// Delete a Batch Job by name
-func (k K8sClient) DeleteBatchJob(name string, namespace string) error {
-	return k.K8sCS.BatchV1().Jobs(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
-}
-
-// GetPodLogs returns logs from the containers running in the pod
-func (k K8sClient) GetPodLogs(podName string, ns string) string {
-	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
-	podLogs, err := req.Stream(context.TODO())
-	if err != nil {
-		log.Fatal("err getting logs ", err)
-	}
-	defer podLogs.Close()
-
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, podLogs)
-	if err != nil {
-		log.Fatal("err converting log buffer", err)
-	}
-
-	return buf.String()
-}
-
-// StartPodLogsStream starts stream of logs for the given pod
-func (k K8sClient) StartPodLogsStream(podName string, ns string) {
-	req := k.K8sCS.CoreV1().Pods(ns).GetLogs(podName, &corev1.PodLogOptions{})
-	stream, err := req.Stream(context.TODO())
-	if err != nil {
-		log.Fatal("err getting logs ", err)
-	}
-	defer stream.Close()
-
-	fmt.Println("Waiting for the Pod Logs...")
-
-	for {
-		buf := make([]byte, 2000)
-		numBytes, err := stream.Read(buf)
-
-		// No newer logs
-		if numBytes == 0 {
-			// sleeping for 2 seconds to save CPU power of host running infinite loop
-			time.Sleep(2 * time.Second)
-			continue
-		}
-
-		// Logs stream ended
-		if err == io.EOF {
-			break
-		}
-
-		// Err fetching logs
-		if err != nil {
-			log.Fatal("stopping pod logs stream, err:", err)
-		}
-
-		message := string(buf[:numBytes])
-		fmt.Print(util.ColorText(message, util.Blue))
-	}
 }
 
 // GetDeploymentList returns the deployment-list with a specific

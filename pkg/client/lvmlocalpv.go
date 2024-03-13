@@ -113,7 +113,7 @@ func (k K8sClient) GetLVMNodes(lVols []string, rType util.ReturnType, labelSelec
 			if lv, ok := lvsMap[name]; ok {
 				list = append(list, lv)
 			} else {
-				fmt.Printf("Error from server (NotFound): lvmvolume %s not found\n", name)
+				fmt.Printf("Error from server (NotFound): lvmnode %s not found\n", name)
 			}
 		}
 	}
