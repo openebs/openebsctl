@@ -21,7 +21,7 @@ changelog:
     exclude: ['^docs:', '^test:', 'Merge pull request', 'Merge branch']
 
 archives:
-  - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+  - name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch "386" }}x86_32{{ else if eq .Arch "amd64"}}x86_64{{ else }}{{ .Arch }}{{ end }}'
     format_overrides:
       - goos: 'windows'
         format: 'zip'
@@ -30,12 +30,6 @@ archives:
     files:
       - README.md
       - LICENSE
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: x86_32
-      amd64: x86_64
 
 checksum:
   name_template: 'checksums_{{ .Tag }}.txt'
@@ -47,16 +41,10 @@ release:
   footer: '<img src="https://avatars.githubusercontent.com/u/20769039?s=200&v=4" width="35" height="35"/>© 2020-2022 The OpenEBS Authors. All materials licensed under [Apache v2.0](https://www.apache.org/licenses/LICENSE-2.0.html)'
 
 nfpms:
-  - file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+  - file_name_template: '{{ .ProjectName }}_{{ .Tag }}_{{ title .Os }}_{{ if eq .Arch "386" }}x86_32{{ else if eq .Arch "amd64"}}x86_64{{ else }}{{ .Arch }}{{ end }}'
     vendor: OpenEBS
     homepage: https://openebs.io/
     description: OpenebsCTL is a plugin for kubectl. It allows users to fetch details of their OpenEBS storage components for information and debuggability.
     license: Apache 2.0
     formats:
       - deb
-    overrides:
-      deb:
-        replacements:
-          linux: Linux
-          386: x86_32
-          amd64: x86_64
