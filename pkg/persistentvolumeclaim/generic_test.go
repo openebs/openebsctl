@@ -37,8 +37,8 @@ func TestDescribeGenericVolumeClaim(t *testing.T) {
 		{
 			name: "All Valid Values",
 			args: args{
-				pv:        &cstorPV1,
-				pvc:       &cstorPVC1,
+				pv:        &zfsPV1,
+				pvc:       &zfsPVC1,
 				casType:   "some-cas",
 				mountPods: "",
 			},
@@ -48,7 +48,7 @@ func TestDescribeGenericVolumeClaim(t *testing.T) {
 			name: "PV missing",
 			args: args{
 				pv:        nil,
-				pvc:       &cstorPVC1,
+				pvc:       &zfsPVC1,
 				casType:   "some-cas",
 				mountPods: "",
 			},

@@ -46,10 +46,9 @@ func TestGetVolumeGroup(t *testing.T) {
 			"no LVM volumegroups present",
 			args{
 				c: &client.K8sClient{
-					Ns:        "lvmlocalpv",
-					K8sCS:     nil,
-					OpenebsCS: nil,
-					LVMCS:     fakelvmclient.NewSimpleClientset()},
+					Ns:    "lvmlocalpv",
+					K8sCS: nil,
+					LVMCS: fakelvmclient.NewSimpleClientset()},
 				vg:      nil,
 				lvmfunc: lvnNodeNotFound,
 			},
@@ -121,7 +120,7 @@ func TestDescribeLVMvg(t *testing.T) {
 	}{
 		{
 			"no LVM vgs exist",
-			args{c: &client.K8sClient{Ns: "", LVMCS: fakelvmclient.NewSimpleClientset()}, lvmFunc: lvnNodeNotFound, vg: "cstor-pv1"},
+			args{c: &client.K8sClient{Ns: "", LVMCS: fakelvmclient.NewSimpleClientset()}, lvmFunc: lvnNodeNotFound, vg: "some-vg-name"},
 			true,
 		},
 		{

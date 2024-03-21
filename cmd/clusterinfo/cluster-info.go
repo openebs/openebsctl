@@ -22,14 +22,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	clusterInfoCmdHelp = `Usage:
-	kubectl openebs cluster-info
-Flags:
-  -h, --help                           help for openebs get command
-`
-)
-
 // NewCmdClusterInfo shows OpenEBSCTL cluster-info
 func NewCmdClusterInfo(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
@@ -39,6 +31,5 @@ func NewCmdClusterInfo(rootCmd *cobra.Command) *cobra.Command {
 			util.CheckErr(clusterinfo.ShowClusterInfo(), util.Fatal)
 		},
 	}
-	cmd.SetUsageTemplate(clusterInfoCmdHelp)
 	return cmd
 }

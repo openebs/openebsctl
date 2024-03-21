@@ -19,20 +19,9 @@ package util
 import (
 	"strconv"
 
-	cstorv1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/storage/v1"
 )
-
-// GetUsedCapacityFromCVR as the healthy replicas would have the correct used capacity details
-func GetUsedCapacityFromCVR(cvrList *cstorv1.CStorVolumeReplicaList) string {
-	for _, item := range cvrList.Items {
-		if item.Status.Phase == Healthy {
-			return item.Status.Capacity.Used
-		}
-	}
-	return ""
-}
 
 // GetCasType from the v1pv and v1sc, this is a fallback checker method, it checks
 // both the resource only if the castype is not found.
@@ -106,5 +95,5 @@ func GetReadyContainers(containers []corev1.ContainerStatus) string {
 
 // IsValidCasType to return true if the casType is supported
 func IsValidCasType(casType string) bool {
-	return casType == CstorCasType || casType == JivaCasType || casType == LVMCasType || casType == ZFSCasType
+	return casType == LVMCasType || casType == ZFSCasType
 }

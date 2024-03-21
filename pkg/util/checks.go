@@ -17,18 +17,8 @@ limitations under the License.
 package util
 
 import (
-	v1 "github.com/openebs/api/v2/pkg/apis/cstor/v1"
-
 	corev1 "k8s.io/api/core/v1"
 )
-
-// CheckVersion returns a message based on the status of the version
-func CheckVersion(versionDetail v1.VersionDetails) string {
-	if string(versionDetail.Status.State) == "Reconciled" || string(versionDetail.Status.State) == "" {
-		return versionDetail.Status.Current
-	}
-	return string(versionDetail.Status.State) + ", desired version " + versionDetail.Desired
-}
 
 // CheckForVol is used to check if the we can get the volume, if no volume attachment
 // to SC for the corresponding volume is found display error
@@ -46,7 +36,7 @@ func CheckForVol(name string, vols map[string]*Volume) *Volume {
 	return errVol
 }
 
-//AccessModeToString Flattens the arrat of AccessModes and returns a string fit to display in the output
+// AccessModeToString Flattens the arrat of AccessModes and returns a string fit to display in the output
 func AccessModeToString(accessModeArray []corev1.PersistentVolumeAccessMode) string {
 	accessModes := ""
 	for _, mode := range accessModeArray {

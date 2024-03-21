@@ -17,41 +17,10 @@ limitations under the License.
 package util
 
 import (
-	"reflect"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
 )
-
-func TestCheckForVol(t *testing.T) {
-	type args struct {
-		name string
-		vols map[string]*Volume
-	}
-	tests := []struct {
-		name string
-		args args
-		want *Volume
-	}{
-		{
-			"volume_attached_to_storage_class",
-			args{name: "cstor_volume", vols: map[string]*Volume{"cstor_volume": {CSIVolumeAttachmentName: "volume_one"}}},
-			&Volume{CSIVolumeAttachmentName: "volume_one"},
-		},
-		{
-			"volume_not_attached_to_storage_class",
-			args{name: "cstor_volume", vols: map[string]*Volume{"cstor_volume_two": {CSIVolumeAttachmentName: "volume_one"}}},
-			&Volume{StorageClass: NotAvailable, Node: NotAvailable, AttachementStatus: NotAvailable, AccessMode: NotAvailable},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := CheckForVol(tt.args.name, tt.args.vols); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CheckForVol() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestAccessModeToString(t *testing.T) {
 	type args struct {

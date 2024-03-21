@@ -40,6 +40,7 @@ func GetZFSPools(c *client.K8sClient, zfsnodes []string) ([]metav1.TableColumnDe
 	if err != nil {
 		return nil, nil, err
 	}
+
 	var rows []metav1.TableRow
 	for _, zfsNode := range zfsNodes.Items {
 		rows = append(rows, metav1.TableRow{Cells: []interface{}{zfsNode.Name, ""}})

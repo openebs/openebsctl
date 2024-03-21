@@ -17,28 +17,17 @@ limitations under the License.
 package get
 
 import (
+	"fmt"
+
 	"github.com/openebs/openebsctl/pkg/storage"
 	"github.com/openebs/openebsctl/pkg/util"
 	"github.com/spf13/cobra"
 )
 
-var (
-	storageListCommandHelpText = `This command lists of all/specific known storages in the Cluster.
-
-Usage:
-  kubectl openebs get storage [flags]
-
-Flags:
-  -h, --help                           help for openebs get command
-      --openebs-namespace string       filter by a fixed OpenEBS namespace
-                                       If not provided it is determined from components.
-      --cas-type                       to specify the cas-type of the engine, for engine based filtering.
-                                       ex- cstor, jiva, localpv-lvm, localpv-zfs.
-`
-)
-
 // NewCmdGetStorage displays status of OpenEBS Pool(s)
 func NewCmdGetStorage() *cobra.Command {
+	var casType string
+	var openebsNs string
 	cmd := &cobra.Command{
 		Use:     "storage",
 		Aliases: []string{"storages", "s"},
@@ -49,6 +38,7 @@ func NewCmdGetStorage() *cobra.Command {
 			util.CheckErr(storage.Get(args, openebsNS, casType), util.Fatal)
 		},
 	}
-	cmd.SetUsageTemplate(storageListCommandHelpText)
+	cmd.PersistentFlags().StringVarP(&openebsNs, "openebs-namespace", "", "", "to read the openebs namespace from user.\nIf not provided it is determined from components.")
+	cmd.PersistentFlags().StringVarP(&casType, "cas-type", "", "", fmt.Sprintf("the type of the engine %s, %s", util.LVMCasType, util.ZFSCasType))
 	return cmd
 }

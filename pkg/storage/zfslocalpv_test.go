@@ -115,7 +115,7 @@ func TestDescribeZFSNode(t *testing.T) {
 		},
 		{
 			"two ZFS node exist, none asked for",
-			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode1, &zfsNode3)}, sName: "cstor-pool-name"},
+			args{c: &client.K8sClient{Ns: "zfs", ZFCS: fakezfsclient.NewSimpleClientset(&zfsNode1, &zfsNode3)}, sName: "some-pool-name"},
 			true,
 		},
 	}

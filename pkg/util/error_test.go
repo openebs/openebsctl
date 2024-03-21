@@ -83,9 +83,9 @@ func TestHandleEmptyTableError(t *testing.T) {
 			args{
 				resource: "ResourceType",
 				ns:       "InValid",
-				casType:  "jiva",
+				casType:  "zfs",
 			},
-			fmt.Errorf("no jiva ResourceType found in InValid namespace"),
+			fmt.Errorf("no zfs ResourceType found in InValid namespace"),
 		},
 		{
 			"",

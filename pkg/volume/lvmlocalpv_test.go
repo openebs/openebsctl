@@ -47,12 +47,11 @@ func TestGetLVMLocalPV(t *testing.T) {
 			name: "no lvm volumes present",
 			args: args{
 				c: &client.K8sClient{
-					Ns:        "random-namespace",
-					LVMCS:     fake.NewSimpleClientset(),
-					K8sCS:     k8sfake.NewSimpleClientset(),
-					OpenebsCS: nil,
+					Ns:    "random-namespace",
+					LVMCS: fake.NewSimpleClientset(),
+					K8sCS: k8sfake.NewSimpleClientset(),
 				},
-				pvList:      &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{jivaPV1, pv2, pv3}},
+				pvList:      &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{zfsPV1, localHostpathPv1}},
 				lvmReactors: lvmVolNotExists,
 				openebsNS:   "openebs",
 			},
@@ -67,7 +66,7 @@ func TestGetLVMLocalPV(t *testing.T) {
 					K8sCS: k8sfake.NewSimpleClientset(&localpvCSICtrlSTS),
 					LVMCS: fake.NewSimpleClientset(&lvmVol1),
 				},
-				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{jivaPV1, lvmPV1}},
+				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{zfsPV1, lvmPV1}},
 				openebsNS: "lvmlocalpv",
 			},
 			wantErr: false,
@@ -95,11 +94,11 @@ func TestGetLVMLocalPV(t *testing.T) {
 			name: "only one lvm volume present, namespace conflicts",
 			args: args{
 				c: &client.K8sClient{
-					Ns:    "jiva",
+					Ns:    "zfs",
 					K8sCS: k8sfake.NewSimpleClientset(&localpvCSICtrlSTS),
 					LVMCS: fake.NewSimpleClientset(&lvmVol1),
 				},
-				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{jivaPV1, lvmPV1}},
+				pvList:    &corev1.PersistentVolumeList{Items: []corev1.PersistentVolume{zfsPV1, lvmPV1}},
 				openebsNS: "lvmlocalpvXYZ",
 			},
 			wantErr: false,
@@ -174,7 +173,7 @@ func TestDescribeLVMLocalPVs(t *testing.T) {
 		{
 			"one lvm volume present and some other volume asked for",
 			args{c: &client.K8sClient{Ns: "lvm", K8sCS: k8sfake.NewSimpleClientset(&lvmPV1), LVMCS: fake.NewSimpleClientset(&lvmVol1)},
-				vol:     &cstorPV2,
+				vol:     &zfsPV1,
 				lvmfunc: lvmVolNotExists},
 			false,
 		},

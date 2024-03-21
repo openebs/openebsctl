@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"k8s.io/klog"
+	"k8s.io/klog/v2"
 )
 
 const (
@@ -49,7 +49,7 @@ func NewCmdCompletion(rootCmd *cobra.Command) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:       "completion",
 		ValidArgs: []string{"bash", "zsh"},
-		Args:      cobra.ExactValidArgs(1),
+		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 		Short:     "Outputs shell completion code for the specified shell (bash or zsh)",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		},
