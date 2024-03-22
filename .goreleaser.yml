@@ -50,7 +50,8 @@ nfpms:
       - deb
 
 krews:
-- skip_upload: true
+- name: openebs
+  skip_upload: true
   homepage: https://github.com/openebs/openebsctl
   short_description: View and debug OpenEBS storage resources
   description: |
